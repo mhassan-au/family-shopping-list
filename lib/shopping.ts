@@ -38,12 +38,29 @@ export async function addItem(text: string) {
 
     shop: "",
 
+    category: "",
+
     createdAt: serverTimestamp(),
 
   });
 
 }
 
+export async function updateItemDetails(
+  id: string,
+  shop: string,
+  category: string
+) {
+
+  await updateDoc(
+    doc(db, "shopping_items", id),
+    {
+      shop,
+      category,
+    }
+  );
+
+}
 
 export async function toggleItem(
   id: string,
