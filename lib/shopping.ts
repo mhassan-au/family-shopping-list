@@ -30,19 +30,30 @@ export async function addItem(text: string) {
 
   if (!text.trim()) return;
 
-  await addDoc(shoppingCollection, {
 
-    text: text.trim(),
+  const items = text
+    .split(",")
+    .map(x => x.trim())
+    .filter(Boolean);
 
-    completed: false,
 
-    shop: "",
+  for (const item of items) {
 
-    category: "",
+    await addDoc(shoppingCollection, {
 
-    createdAt: serverTimestamp(),
+      text: item,
 
-  });
+      completed: false,
+
+      shop: "",
+
+      category: "",
+
+      createdAt: serverTimestamp(),
+
+    });
+
+  }
 
 }
 
