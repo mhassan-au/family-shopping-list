@@ -10,7 +10,8 @@ import {
   shoppingQuery,
   addItem,
   toggleItem,
-  deleteItem
+  deleteItem,
+  clearCompleted
 } from "@/lib/shopping";
 
 import { ShoppingItem } from "@/lib/types";
@@ -121,8 +122,6 @@ export default function ShoppingList() {
 
       )}
 
-
-
       <div className="space-y-2">
 
 
@@ -179,9 +178,7 @@ export default function ShoppingList() {
 
               </span>
 
-
             </label>
-
 
 
             <button
@@ -205,6 +202,29 @@ export default function ShoppingList() {
 
       </div>
 
+    {items.some(item => item.completed) && (
+
+    <div className="mt-8 text-center">
+
+        <button
+
+        onClick={clearCompleted}
+
+        className="
+        text-sm
+        text-gray-500
+        underline
+        "
+
+        >
+
+        🧹 Clear completed
+
+        </button>
+
+    </div>
+
+    )}
 
       {!loading && items.length===0 && (
 

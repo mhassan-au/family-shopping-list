@@ -7,6 +7,8 @@ import {
   serverTimestamp,
   query,
   orderBy,
+  getDocs,
+  writeBatch,
 } from "firebase/firestore";
 
 import { db } from "./firebase";
@@ -65,5 +67,30 @@ export async function deleteItem(
   await deleteDoc(
     doc(db, "shopping_items", id)
   );
+
+}
+
+export async function clearCompleted() {
+
+  const snapshot = await getDocs(shoppingCollection);
+
+  const batch = writeBatch(db);
+
+
+  snapshot.docs.forEach((item) => {
+
+    const data = item.data();
+
+
+    if (data.completed === true) {
+
+      batch.delete(item.ref);
+
+    }
+
+  });
+
+
+  await batch.commit();
 
 }
