@@ -1,5 +1,6 @@
 "use client";
 
+import ItemEditor from "./ItemEditor";
 import { useEffect, useState } from "react";
 
 import {
@@ -22,7 +23,7 @@ export default function ShoppingList() {
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [newItem, setNewItem] = useState("");
   const [loading, setLoading] = useState(true);
-
+  const [editing, setEditing] = useState<ShoppingItem | null>(null);
 
   useEffect(() => {
 
@@ -125,79 +126,114 @@ export default function ShoppingList() {
       <div className="space-y-2">
 
 
-        {items.map((item)=>(
+{items.map((item)=>(
+
+  <div key={item.id}>
+
+    <div
+      className="
+      flex
+      justify-between
+      items-center
+      border
+      rounded-lg
+      p-3
+      "
+    >
+
+      <div className="flex gap-3 items-center">
+
+        <input
+          type="checkbox"
+          checked={item.completed}
+          onChange={()=>{
+            toggleItem(
+              item.id,
+              item.completed
+            );
+          }}
+        />
 
 
-          <div
+        <span
+        onClick={()=>{
+            if (!item.completed) {
+            setEditing(item);
+            }
+        }}
+        className={
+            `
+            cursor-pointer
+            ${
+            item.completed
+            ? "line-through text-gray-400"
+            : ""
+            }
+            `
+        }
+        >
+        {item.text}
 
-            key={item.id}
+        {(item.shop || item.category) && (
 
-            className="
-            flex
-            justify-between
-            items-center
-            border
-            rounded-lg
-            p-3
-            "
+            <span className="ml-2 text-xs">
 
-          >
+            {item.shop && (
+                <span className="
+                bg-blue-100
+                px-2
+                py-1
+                rounded
+                mr-1
+                ">
+                {item.shop}
+                </span>
+            )}
 
-            <label className="flex gap-3">
+            {item.category && (
+                <span className="
+                bg-green-100
+                px-2
+                py-1
+                rounded
+                ">
+                {item.category}
+                </span>
+            )}
 
+            </span>
 
-              <input
+        )}
 
-                type="checkbox"
-
-                checked={item.completed}
-
-                onChange={()=>{
-
-                  toggleItem(
-                    item.id,
-                    item.completed
-                  );
-
-                }}
-
-              />
-
-
-              <span
-                className={
-                  item.completed
-                  ?
-                  "line-through text-gray-400"
-                  :
-                  ""
-                }
-              >
-
-                {item.text}
-
-              </span>
-
-            </label>
-
-
-            <button
-
-              onClick={()=>deleteItem(item.id)}
-
-              className="text-red-500"
-
-            >
-
-              🗑
-
-            </button>
+        </span>
 
 
-          </div>
+      </div>
 
 
-        ))}
+      <button
+        onClick={()=>deleteItem(item.id)}
+        className="text-red-500"
+      >
+        🗑
+      </button>
+
+
+    </div>
+
+
+    {editing?.id === item.id && (
+
+      <ItemEditor
+        item={item}
+        close={()=>setEditing(null)}
+      />
+
+    )}
+
+  </div>
+
+))}
 
 
       </div>
