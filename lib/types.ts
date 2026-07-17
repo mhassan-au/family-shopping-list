@@ -1,5 +1,4 @@
 export interface ShoppingItem {
-
   id: string;
 
   text: string;
@@ -10,6 +9,7 @@ export interface ShoppingItem {
 
   category: string;
 
-  createdAt?: unknown;
+  priority: string;
 
+  createdAt?: unknown;
 }

@@ -27,3 +27,18 @@ export const CATEGORIES: TagOption[] = [
   { label: "Household", color: "bg-slate-100 text-slate-800" },
   { label: "Other...", color: "bg-gray-200 text-gray-700" },
 ];
+
+export const PRIORITIES = [
+  {
+    label: "",
+    color: "",
+  },
+  {
+    label: "MustHave",
+    color: "bg-red-100 text-red-800",
+  },
+  {
+    label: "LowQty",
+    color: "bg-orange-100 text-orange-800",
+  },
+];
