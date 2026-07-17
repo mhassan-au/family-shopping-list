@@ -1,7 +1,9 @@
 "use client";
 
+import { SHOPS, CATEGORIES } from "@/lib/config";
 import ItemEditor from "./ItemEditor";
 import { useEffect, useState } from "react";
+import { getTagColor } from "@/lib/tagColor";
 
 import {
   onSnapshot
@@ -24,6 +26,8 @@ export default function ShoppingList() {
   const [newItem, setNewItem] = useState("");
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<ShoppingItem | null>(null);
+  const [selectedShop, setSelectedShop] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
 
   useEffect(() => {
 
@@ -56,7 +60,11 @@ export default function ShoppingList() {
 
   async function handleAdd() {
 
-    await addItem(newItem);
+    await addItem(
+      newItem,
+      selectedShop,
+      selectedCategory
+    );
 
     setNewItem("");
 
@@ -83,13 +91,13 @@ export default function ShoppingList() {
 
           value={newItem}
 
-          onChange={(e)=>
+          onChange={(e) =>
             setNewItem(e.target.value)
           }
 
-          onKeyDown={(e)=>{
+          onKeyDown={(e) => {
 
-            if(e.key==="Enter"){
+            if (e.key === "Enter") {
               handleAdd();
             }
 
@@ -97,6 +105,38 @@ export default function ShoppingList() {
 
         />
 
+        <select
+          className="border rounded-lg p-2"
+          value={selectedShop}
+          onChange={(e) => setSelectedShop(e.target.value)}
+        >
+
+          {SHOPS.map(shop => (
+            <option
+              key={shop.label}
+              value={shop.label}
+            >
+              {shop.label || "Shop"}
+            </option>
+          ))}
+
+        </select>
+        <select
+          className="border rounded-lg p-2"
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+        >
+
+          {CATEGORIES.map(category => (
+            <option
+              key={category.label}
+              value={category.label}
+            >
+              {category.label || "Category"}
+            </option>
+          ))}
+
+        </select>
 
         <button
 
@@ -126,12 +166,12 @@ export default function ShoppingList() {
       <div className="space-y-2">
 
 
-{items.map((item)=>(
+        {items.map((item) => (
 
-  <div key={item.id}>
+          <div key={item.id}>
 
-    <div
-      className="
+            <div
+              className="
       flex
       justify-between
       items-center
@@ -139,130 +179,131 @@ export default function ShoppingList() {
       rounded-lg
       p-3
       "
-    >
+            >
 
-      <div className="flex gap-3 items-center">
+              <div className="flex gap-3 items-center">
 
-        <input
-          type="checkbox"
-          checked={item.completed}
-          onChange={()=>{
-            toggleItem(
-              item.id,
-              item.completed
-            );
-          }}
-        />
+                <input
+                  type="checkbox"
+                  checked={item.completed}
+                  onChange={() => {
+                    toggleItem(
+                      item.id,
+                      item.completed
+                    );
+                  }}
+                />
 
 
-        <span
-        onClick={()=>{
-            if (!item.completed) {
-            setEditing(item);
-            }
-        }}
-        className={
-            `
+                <span
+                  onClick={() => {
+                    if (!item.completed) {
+                      setEditing(item);
+                    }
+                  }}
+                  className={
+                    `
             cursor-pointer
-            ${
-            item.completed
-            ? "line-through text-gray-400"
-            : ""
-            }
+            ${item.completed
+                      ? "line-through text-gray-400"
+                      : ""
+                    }
             `
-        }
-        >
-        {item.text}
+                  }
+                >
+                  {item.text}
 
-        {(item.shop || item.category) && (
+                  {(item.shop || item.category) && (
 
-            <span className="ml-2 text-xs">
+                    <span className="ml-2 text-xs">
 
-            {item.shop && (
-                <span className="
-                bg-blue-100
-                px-2
-                py-1
-                rounded
-                mr-1
-                ">
-                {item.shop}
+
+                      {item.shop && (
+
+                        <span
+                          className={`ml-2 px-2 py-1 rounded-full text-xs ${getTagColor(item.shop)}`}
+                        >
+
+                          {item.shop}
+
+                        </span>
+
+                      )}
+
+                      {item.category && (
+
+                        <span
+                          className={`ml-1 px-2 py-1 rounded-full text-xs ${getTagColor(item.category)}`}
+                        >
+
+                          {item.category}
+
+                        </span>
+
+                      )}
+
+                    </span>
+
+                  )}
+
                 </span>
+
+
+              </div>
+
+
+              <button
+                onClick={() => deleteItem(item.id)}
+                className="text-red-500"
+              >
+                🗑
+              </button>
+
+
+            </div>
+
+
+            {editing?.id === item.id && (
+
+              <ItemEditor
+                item={item}
+                close={() => setEditing(null)}
+              />
+
             )}
 
-            {item.category && (
-                <span className="
-                bg-green-100
-                px-2
-                py-1
-                rounded
-                ">
-                {item.category}
-                </span>
-            )}
+          </div>
 
-            </span>
-
-        )}
-
-        </span>
+        ))}
 
 
       </div>
 
+      {items.some(item => item.completed) && (
 
-      <button
-        onClick={()=>deleteItem(item.id)}
-        className="text-red-500"
-      >
-        🗑
-      </button>
+        <div className="mt-8 text-center">
 
+          <button
 
-    </div>
+            onClick={clearCompleted}
 
-
-    {editing?.id === item.id && (
-
-      <ItemEditor
-        item={item}
-        close={()=>setEditing(null)}
-      />
-
-    )}
-
-  </div>
-
-))}
-
-
-      </div>
-
-    {items.some(item => item.completed) && (
-
-    <div className="mt-8 text-center">
-
-        <button
-
-        onClick={clearCompleted}
-
-        className="
+            className="
         text-sm
         text-gray-500
         underline
         "
 
-        >
+          >
 
-        🧹 Clear completed
+            🧹 Clear completed
 
-        </button>
+          </button>
 
-    </div>
+        </div>
 
-    )}
+      )}
 
-      {!loading && items.length===0 && (
+      {!loading && items.length === 0 && (
 
         <p className="text-gray-500 text-center mt-5">
 

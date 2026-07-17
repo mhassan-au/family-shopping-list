@@ -26,7 +26,11 @@ export const shoppingQuery = query(
 );
 
 
-export async function addItem(text: string) {
+export async function addItem(
+  text: string,
+  shop: string,
+  category: string
+) {
 
   if (!text.trim()) return;
 
@@ -45,9 +49,9 @@ export async function addItem(text: string) {
 
       completed: false,
 
-      shop: "",
+      shop,
 
-      category: "",
+      category,
 
       createdAt: serverTimestamp(),
 

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { updateItemDetails } from "@/lib/shopping";
 import { ShoppingItem } from "@/lib/types";
+import { SHOPS, CATEGORIES } from "@/lib/config";
 
 interface Props {
   item: ShoppingItem;
@@ -35,20 +36,48 @@ export default function ItemEditor({ item, close }: Props) {
       </h3>
 
 
-      <input
-        className="border p-2 rounded w-full mb-2"
-        placeholder="Shop"
+      <select
         value={shop}
-        onChange={(e)=>setShop(e.target.value)}
-      />
+        onChange={(e) => setShop(e.target.value)}
+        className="border rounded p-2 w-full mb-2"
+      >
+
+        {SHOPS.map(shop => (
+
+          <option
+            key={shop.label}
+            value={shop.label}
+          >
+
+            {shop.label || "-- Select Shop --"}
+
+          </option>
+
+        ))}
+
+      </select>
 
 
-      <input
-        className="border p-2 rounded w-full mb-3"
-        placeholder="Category"
+      <select
         value={category}
-        onChange={(e)=>setCategory(e.target.value)}
-      />
+        onChange={(e) => setCategory(e.target.value)}
+        className="border rounded p-2 w-full mb-3"
+      >
+
+        {CATEGORIES.map(category => (
+
+          <option
+            key={category.label}
+            value={category.label}
+          >
+
+            {category.label || "-- Select Category --"}
+
+          </option>
+
+        ))}
+
+      </select>
 
 
       <div className="flex gap-2">
