@@ -81,75 +81,70 @@ export default function ShoppingList() {
       </h1>
 
 
-      <div className="flex gap-2 mb-5">
+      <div className="mb-5">
 
-        <input
+        <div className="flex gap-2">
 
-          className="border rounded-lg p-2 flex-1"
+          <input
+            className="border rounded-lg p-2 flex-1"
+            placeholder="Add grocery item"
+            value={newItem}
+            onChange={(e) => setNewItem(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleAdd();
+              }
+            }}
+          />
 
-          placeholder="Add grocery item"
+          <button
+            onClick={handleAdd}
+            className="bg-black text-white px-4 rounded-lg"
+          >
+            Add
+          </button>
 
-          value={newItem}
+        </div>
 
-          onChange={(e) =>
-            setNewItem(e.target.value)
-          }
 
-          onKeyDown={(e) => {
+        <div className="flex gap-2 mt-3">
 
-            if (e.key === "Enter") {
-              handleAdd();
-            }
+          <select
+            className="border rounded-lg p-2 flex-1"
+            value={selectedShop}
+            onChange={(e) => setSelectedShop(e.target.value)}
+          >
 
-          }}
+            {SHOPS.map(shop => (
+              <option
+                key={shop.label}
+                value={shop.label}
+              >
+                {shop.label || "Shop"}
+              </option>
+            ))}
 
-        />
+          </select>
 
-        <select
-          className="border rounded-lg p-2"
-          value={selectedShop}
-          onChange={(e) => setSelectedShop(e.target.value)}
-        >
 
-          {SHOPS.map(shop => (
-            <option
-              key={shop.label}
-              value={shop.label}
-            >
-              {shop.label || "Shop"}
-            </option>
-          ))}
+          <select
+            className="border rounded-lg p-2 flex-1"
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+          >
 
-        </select>
-        <select
-          className="border rounded-lg p-2"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-        >
+            {CATEGORIES.map(category => (
+              <option
+                key={category.label}
+                value={category.label}
+              >
+                {category.label || "Category"}
+              </option>
+            ))}
 
-          {CATEGORIES.map(category => (
-            <option
-              key={category.label}
-              value={category.label}
-            >
-              {category.label || "Category"}
-            </option>
-          ))}
+          </select>
 
-        </select>
-
-        <button
-
-          onClick={handleAdd}
-
-          className="bg-black text-white px-4 rounded-lg"
-
-        >
-
-          +
-
-        </button>
-
+        </div>
 
       </div>
 
@@ -284,19 +279,16 @@ export default function ShoppingList() {
         <div className="mt-8 text-center">
 
           <button
-
             onClick={clearCompleted}
-
             className="
-        text-sm
-        text-gray-500
-        underline
-        "
-
+bg-gray-200
+px-4
+py-2
+rounded-lg
+text-sm
+"
           >
-
             🧹 Clear completed
-
           </button>
 
         </div>
