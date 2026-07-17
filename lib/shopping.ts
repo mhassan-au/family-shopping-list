@@ -63,6 +63,37 @@ export async function updateItemDetails(
   });
 }
 
+export async function completeItem(
+  id:string,
+  qty:number,
+  unitPrice:number,
+  lastQty:number,
+  lastUnitPrice:number
+){
+
+const ref = doc(
+  db,
+  "shopping_items",
+  id
+);
+
+
+await updateDoc(ref,{
+
+completed:true,
+
+qty,
+
+unitPrice,
+
+lastQty,
+
+lastUnitPrice
+
+});
+
+}
+
 export async function toggleItem(id: string, completed: boolean) {
   await updateDoc(doc(db, "shopping_items", id), {
     completed: !completed,

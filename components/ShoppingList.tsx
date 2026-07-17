@@ -6,6 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 import { getTagColor } from "@/lib/tagColor";
 import { FiTrash2, FiEdit3, FiFilter } from "react-icons/fi";
 import { onSnapshot } from "firebase/firestore";
+import CompleteItemDialog from "./CompleteItemDialog";
+import { completeItem } from "@/lib/shopping";
 
 import {
   shoppingQuery,
@@ -19,6 +21,15 @@ import { ShoppingItem } from "@/lib/types";
 
 export default function ShoppingList() {
   const [items, setItems] = useState<ShoppingItem[]>([]);
+  // Sort active items first
+
+  const displayItems = [
+
+    ...items.filter(item => !item.completed),
+
+    ...items.filter(item => item.completed)
+
+  ];
   const [newItem, setNewItem] = useState("");
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<ShoppingItem | null>(null);
@@ -31,6 +42,10 @@ export default function ShoppingList() {
   const [viewMode, setViewMode] = useState<"flat" | "shop" | "category">("flat");
   const [priorityFilter, setPriorityFilter] = useState("");
   const [showPriorityFilter, setShowPriorityFilter] = useState(false);
+
+  {/* Complete Item Dialog */ }
+  const [completingItem, setCompletingItem] =
+    useState<ShoppingItem | null>(null);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(shoppingQuery, (snapshot) => {
@@ -387,11 +402,23 @@ items-center
 flex-1
 min-w-0
 ">
+                      {/* Complete Checkbox */}
+
                       <input
                         type="checkbox"
                         checked={item.completed}
                         onChange={() => {
-                          toggleItem(item.id, item.completed);
+
+                          if (item.completed) {
+
+                            toggleItem(item.id, true);
+
+                          } else {
+
+                            setCompletingItem(item);
+
+                          }
+
                         }}
                       />
 
@@ -404,14 +431,38 @@ min-w-0
                       >
                         <span
                           onClick={() => {
-                            toggleItem(
-                              item.id,
-                              item.completed
-                            );
+                            if (item.completed) {
+
+                              toggleItem(item.id, true);
+
+                            } else {
+
+                              setCompletingItem(item);
+
+                            }
                           }}
                           className="cursor-pointer text-lg wrap-break-words"
                         >
                           {item.text}
+                          {/* Completed Item Price */}
+
+                          {item.completed &&
+                            (item.qty && item.unitPrice) && (
+
+                              <span className="
+ml-2
+font-bold
+text-green-600
+">
+
+                                ${(
+                                  item.qty *
+                                  item.unitPrice
+                                ).toFixed(2)}
+
+                              </span>
+
+                            )}
                         </span>
 
                         {(item.shop || item.category || item.priority) && (
@@ -456,35 +507,36 @@ min-w-0
                         )}
                       </span>
                     </div>
-
-                    <div className="flex gap-3 shrink-0">
-
-                      <button
-                        onClick={() => {
-                          if (!item.completed) {
-                            setEditing(item);
+                    {!item.completed && (
+                      <div className="flex gap-3 shrink-0">
+                        {/* Edit button */}
+                        <button
+                          onClick={() => {
+                            if (!item.completed) {
+                              setEditing(item);
+                            }
+                          }}
+                          className={
+                            item.completed
+                              ? "text-gray-300"
+                              : ""
                           }
-                        }}
-                        className={
-                          item.completed
-                            ? "text-gray-300"
-                            : ""
-                        }
-                      >
-                        <FiEdit3 size={18} />
-                      </button>
+                        >
+                          <FiEdit3 size={18} />
+                        </button>
 
+                        {/* Delete button */}
+                        <button
+                          onClick={() => {
+                            setDeleteTarget(item);
+                          }}
+                          className="text-red-500"
+                        >
+                          <FiTrash2 size={18} />
+                        </button>
 
-                      <button
-                        onClick={() => {
-                          setDeleteTarget(item);
-                        }}
-                        className="text-red-500"
-                      >
-                        <FiTrash2 size={18} />
-                      </button>
-
-                    </div>
+                      </div>
+                    )}
                   </div>
 
                   {editing?.id === item.id && !item.completed && (
@@ -521,7 +573,31 @@ text-sm
           >
             🧹 Clear completed
           </button>
+          {/* Shopping Total */}
+
+          <div className="
+mt-5
+text-right
+font-bold
+">
+
+            Total: $
+
+            {items
+              .filter(item => item.completed)
+              .reduce(
+                (sum, item) =>
+                  sum +
+                  ((item.qty || 0) *
+                    (item.unitPrice || 0)),
+                0
+              )
+              .toFixed(2)
+            }
+
+          </div>
         </div>
+
       )}
 
       {!loading && items.length === 0 && (
@@ -674,6 +750,49 @@ rounded
           </div>
 
         </div>
+
+      )}
+      {/* Complete Item Dialog */}
+
+      {completingItem && (
+
+        <CompleteItemDialog
+
+          itemName={completingItem.text}
+
+          defaultQty={completingItem.lastQty || 1}
+
+          defaultUnitPrice={
+            completingItem.lastUnitPrice || 0
+          }
+
+          onCancel={() => {
+
+            setCompletingItem(null);
+
+          }}
+
+          onSave={async (qty, unitPrice) => {
+
+            await completeItem(
+
+              completingItem.id,
+
+              qty,
+
+              unitPrice,
+
+              qty,
+
+              unitPrice
+
+            );
+
+            setCompletingItem(null);
+
+          }}
+
+        />
 
       )}
     </main>

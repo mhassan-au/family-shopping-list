@@ -1,15 +1,25 @@
 export interface ShoppingItem {
+
   id: string;
 
   text: string;
 
   completed: boolean;
 
-  shop: string;
+  createdAt: number;
 
-  category: string;
+  shop?: string;
 
-  priority: string;
+  category?: string;
 
-  createdAt?: unknown;
+  priority?: string;
+
+  qty?: number;
+
+  unitPrice?: number;
+
+  lastQty?: number;
+
+  lastUnitPrice?: number;
+
 }
