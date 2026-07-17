@@ -28,6 +28,7 @@ export default function ShoppingList() {
   const [editing, setEditing] = useState<ShoppingItem | null>(null);
   const [selectedShop, setSelectedShop] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [clearing, setClearing] = useState(false);
 
   useEffect(() => {
 
@@ -67,6 +68,8 @@ export default function ShoppingList() {
     );
 
     setNewItem("");
+    setSelectedShop("");
+    setSelectedCategory("");
 
   }
 
@@ -101,7 +104,7 @@ export default function ShoppingList() {
             onClick={handleAdd}
             className="bg-black text-white px-4 rounded-lg"
           >
-            Add
+            +
           </button>
 
         </div>
@@ -278,18 +281,28 @@ export default function ShoppingList() {
 
         <div className="mt-8 text-center">
 
-          <button
-            onClick={clearCompleted}
-            className="
+<button
+onClick={async()=>{
+  
+  setClearing(true);
+
+  await clearCompleted();
+
+  setClearing(false);
+
+}}
+className="
 bg-gray-200
 px-4
 py-2
 rounded-lg
 text-sm
 "
-          >
-            🧹 Clear completed
-          </button>
+>
+
+{clearing ? "Clearing..." : "🧹 Clear completed"}
+
+</button>
 
         </div>
 

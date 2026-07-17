@@ -108,6 +108,8 @@ export async function clearCompleted() {
 
   const batch = writeBatch(db);
 
+  let count = 0;
+
 
   snapshot.docs.forEach((item) => {
 
@@ -118,11 +120,15 @@ export async function clearCompleted() {
 
       batch.delete(item.ref);
 
+      count++;
+
     }
 
   });
 
 
-  await batch.commit();
+  if(count > 0) {
+    await batch.commit();
+  }
 
 }
