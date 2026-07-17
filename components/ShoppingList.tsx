@@ -1,13 +1,19 @@
 "use client";
 
-import { SHOPS, CATEGORIES, PRIORITIES } from "@/lib/config";
-import ItemEditor from "./ItemEditor";
+import { PRIORITIES } from "@/lib/config";
 import { useEffect, useMemo, useState } from "react";
-import { getTagColor } from "@/lib/tagColor";
-import { FiTrash2, FiEdit3, FiFilter } from "react-icons/fi";
 import { onSnapshot } from "firebase/firestore";
-import CompleteItemDialog from "./CompleteItemDialog";
 import { completeItem } from "@/lib/shopping";
+import { ShoppingItem } from "@/lib/types";
+import GroceryItem from "./GroceryItem";
+import ViewSelector from "./ViewSelector";
+import CompleteItemDialog from "./CompleteItemDialog";
+import GroceryInput from "./GroceryInput";
+import GroceryGroup from "./GroceryGroup";
+import ConfirmDialog from "./ConfirmDialog";
+
+
+import ShoppingSummary from "./ShoppingSummary";
 
 import {
   shoppingQuery,
@@ -17,7 +23,7 @@ import {
   clearCompleted,
 } from "@/lib/shopping";
 
-import { ShoppingItem } from "@/lib/types";
+
 
 export default function ShoppingList() {
   const [items, setItems] = useState<ShoppingItem[]>([]);
@@ -41,7 +47,7 @@ export default function ShoppingList() {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [viewMode, setViewMode] = useState<"flat" | "shop" | "category">("flat");
   const [priorityFilter, setPriorityFilter] = useState("");
-  const [showPriorityFilter, setShowPriorityFilter] = useState(false);
+
 
   {/* Complete Item Dialog */ }
   const [completingItem, setCompletingItem] =
@@ -131,474 +137,116 @@ export default function ShoppingList() {
     <main className="w-full max-w-md mx-auto p-4 sm:p-5">
       <h1 className="text-3xl font-bold mb-6">🛒 MyGrocery</h1>
 
-      <div className="mb-5">
-        <div className="flex gap-2 w-full">
-          <input
-            className="border rounded-lg p-2 flex-1"
-            placeholder="Add grocery item"
-            value={newItem}
-            onChange={(e) => setNewItem(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleAdd();
-              }
-            }}
-          />
+      {/* Grocery Input */}
 
-          <button
-            onClick={handleAdd}
-            className="bg-black text-white px-4 rounded-lg"
-          >
-            +
-          </button>
-        </div>
+      <GroceryInput
 
-        {/* Dropdown Section */}
-        <div className="
-  grid
-  grid-cols-1
-  sm:grid-cols-3
-  gap-2
-  mt-3
-">
-          {/* Shop dropdown */}
-          <select
-            className="border rounded-lg p-2 flex-1"
-            value={selectedShop}
-            onChange={(e) => setSelectedShop(e.target.value)}
-          >
-            {SHOPS.map((shop) => (
-              <option key={shop.label} value={shop.label}>
-                {shop.label || "Shop"}
-              </option>
-            ))}
-          </select>
-          {/* Category dropdown */}
-          <select
-            className="border rounded-lg p-2 flex-1"
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-          >
-            {CATEGORIES.map((category) => (
-              <option key={category.label} value={category.label}>
-                {category.label || "Category"}
-              </option>
-            ))}
-          </select>
-          {/* Priority dropdown */}
-          <select
-            className="border rounded-lg p-2 flex-1"
-            value={selectedPriority}
-            onChange={(e) => setSelectedPriority(e.target.value)}
-          >
-            {PRIORITIES.map((priority) => (
-              <option key={priority.label} value={priority.label}>
-                {priority.label || "Priority"}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+        newItem={newItem}
+
+        setNewItem={setNewItem}
+
+        selectedShop={selectedShop}
+
+        setSelectedShop={setSelectedShop}
+
+        selectedCategory={selectedCategory}
+
+        setSelectedCategory={setSelectedCategory}
+
+        selectedPriority={selectedPriority}
+
+        setSelectedPriority={setSelectedPriority}
+
+        onAdd={handleAdd}
+
+      />
 
       {loading && <p>Loading...</p>}
 
-      {/** View Mode Selection */}
+      {/* View Selector */}
 
-      <div className="
-  flex
-  flex-wrap
-  justify-between
-  items-center
-  gap-2
-  mb-4
-">
+      <ViewSelector
 
-        <div className="
-  flex
-  gap-2
-  flex-wrap
-">
+        viewMode={viewMode}
 
-          <button
-            onClick={() => setViewMode("flat")}
-            className={`px-3 py-1 rounded ${viewMode === "flat"
-              ? "bg-black text-white"
-              : "bg-gray-200"
-              }`}
-          >
-            Flat
-          </button>
+        setViewMode={setViewMode}
 
+        priorityFilter={priorityFilter}
 
-          <button
-            onClick={() => setViewMode("shop")}
-            className={`px-3 py-1 rounded ${viewMode === "shop"
-              ? "bg-black text-white"
-              : "bg-gray-200"
-              }`}
-          >
-            Shop
-          </button>
+        setPriorityFilter={setPriorityFilter}
 
+      />
 
-          <button
-            onClick={() => setViewMode("category")}
-            className={`px-3 py-1 rounded ${viewMode === "category"
-              ? "bg-black text-white"
-              : "bg-gray-200"
-              }`}
-          >
-            Category
-          </button>
+      {/* Grocery Groups */}
 
-        </div>
-
-
-        {/* Priority Filter */}
-
-        <div className="relative">
-
-          <button
-            onClick={() => {
-              setShowPriorityFilter(!showPriorityFilter);
-            }}
-            className={`
-      p-2
-      rounded-lg
-      ${priorityFilter
-                ? "bg-red-100"
-                : "bg-gray-200"
-              }
-    `}
-          >
-            <FiFilter size={20} />
-          </button>
-
-
-          {showPriorityFilter && (
-
-            <div className="
-    absolute
-    right-0
-    mt-2
-    bg-white
-    border
-    rounded-lg
-    shadow
-    p-2
-    z-20
-    w-40
-  ">
-
-              <button
-                onClick={() => {
-                  setPriorityFilter("");
-                  setShowPriorityFilter(false);
-                }}
-
-                className={`
-        block
-        w-full
-        text-left
-        px-2
-        py-2
-        rounded
-        hover:bg-gray-100
-        ${priorityFilter === ""
-                    ? "bg-gray-200 font-bold"
-                    : ""
-                  }
-      `}
-              >
-                All
-              </button>
-
-
-              {PRIORITIES
-                .filter(p => p.label)
-                .map(priority => (
-
-                  <button
-                    key={priority.label}
-
-                    onClick={() => {
-                      setPriorityFilter(priority.label);
-                      setShowPriorityFilter(false);
-                    }}
-
-                    className={`
-          block
-          w-full
-          text-left
-          px-2
-          py-2
-          rounded
-          hover:bg-gray-100
-          ${priorityFilter === priority.label
-                        ? "bg-gray-200 font-bold"
-                        : ""
-                      }
-        `}
-                  >
-                    {priority.label}
-                  </button>
-
-                ))}
-
-            </div>
-
-          )}
-
-        </div>
-
-
-      </div>
       <div className="space-y-5">
 
-        {Object.entries(groupedItems).map(([groupName, groupItems]) => (
 
-          <div key={groupName}>
-
-            {viewMode !== "flat" && (
-
-              <div
-                className="
-          sticky
-          top-0
-          bg-white
-          font-bold
-          text-lg
-          border-b
-          pb-2
-          mb-2
-          z-10
-          "
-              >
-                {groupName}
-              </div>
-
-            )}
-
-            <div className="space-y-2">
-
-              {groupItems.map((item) => (
-
-                <div key={item.id}>
-                  <div
-                    className="
-     flex
-justify-between
-items-start
-gap-2
-border
-rounded-lg
-p-3
-      "
-                  >
-                    <div className="
-flex
-gap-3
-items-center
-flex-1
-min-w-0
-">
-                      {/* Complete Checkbox */}
-
-                      <input
-                        type="checkbox"
-                        checked={item.completed}
-                        onChange={() => {
-
-                          if (item.completed) {
-
-                            toggleItem(item.id, true);
-
-                          } else {
-
-                            setCompletingItem(item);
-
-                          }
-
-                        }}
-                      />
-
-                      <span
-
-                        className={`
-            cursor-pointer
-            ${item.completed ? "line-through text-gray-400" : ""}
-            `}
-                      >
-                        <span
-                          onClick={() => {
-                            if (item.completed) {
-
-                              toggleItem(item.id, true);
-
-                            } else {
-
-                              setCompletingItem(item);
-
-                            }
-                          }}
-                          className="cursor-pointer text-lg wrap-break-words"
-                        >
-                          {item.text}
-                          {/* Completed Item Price */}
-
-                          {item.completed &&
-                            (item.qty && item.unitPrice) && (
-
-                              <span className="
-ml-2
-font-bold
-text-green-600
-">
-
-                                ${(
-                                  item.qty *
-                                  item.unitPrice
-                                ).toFixed(2)}
-
-                              </span>
-
-                            )}
-                        </span>
-
-                        {(item.shop || item.category || item.priority) && (
-
-                          <span className="ml-2 text-xs">
-
-                            {item.shop && (
-                              <span
-                                className={`ml-2 px-2 py-1 rounded-full text-xs ${getTagColor(item.shop)}`}
-                              >
-                                {item.shop}
-                              </span>
-                            )}
+        {Object.entries(groupedItems).map(
+          ([groupName, groupItems]) => (
 
 
-                            {item.category && (
-                              <span
-                                className={`ml-1 px-2 py-1 rounded-full text-xs ${getTagColor(item.category)}`}
-                              >
-                                {item.category}
-                              </span>
-                            )}
+            <GroceryGroup
+
+              key={groupName}
+
+              groupName={groupName}
+
+              groupItems={groupItems}
+
+              viewMode={viewMode}
+
+              editing={editing}
+
+              setEditing={setEditing}
+
+              onDelete={(item) => {
+
+                setDeleteTarget(item);
+
+              }}
+
+              onComplete={(item) => {
 
 
-                            {item.priority && (
-                              <span
-                                className={`
-          ml-1
-          px-2
-          py-1
-          rounded-full
-          text-xs
-          ${getTagColor(item.priority)}
-        `}
-                              >
-                                {item.priority}
-                              </span>
-                            )}
+                if (item.completed) {
 
-                          </span>
+                  toggleItem(
+                    item.id,
+                    true
+                  );
 
-                        )}
-                      </span>
-                    </div>
-                    {!item.completed && (
-                      <div className="flex gap-3 shrink-0">
-                        {/* Edit button */}
-                        <button
-                          onClick={() => {
-                            if (!item.completed) {
-                              setEditing(item);
-                            }
-                          }}
-                          className={
-                            item.completed
-                              ? "text-gray-300"
-                              : ""
-                          }
-                        >
-                          <FiEdit3 size={18} />
-                        </button>
+                }
+                else {
 
-                        {/* Delete button */}
-                        <button
-                          onClick={() => {
-                            setDeleteTarget(item);
-                          }}
-                          className="text-red-500"
-                        >
-                          <FiTrash2 size={18} />
-                        </button>
+                  setCompletingItem(item);
 
-                      </div>
-                    )}
-                  </div>
+                }
 
-                  {editing?.id === item.id && !item.completed && (
-                    <ItemEditor
-                      item={item}
-                      close={() => setEditing(null)}
-                    />
-                  )}
-                </div>
 
-              ))}
+              }}
 
-            </div>
+            />
 
-          </div>
 
-        ))}
+          ))}
+
 
       </div>
 
-      {items.some((item) => item.completed) && (
-        <div className="mt-8 text-center">
-          <button
-            onClick={() => {
-              setShowClearConfirm(true);
-            }}
-            className="
-bg-gray-200
-px-4
-py-2
-rounded-lg
-text-sm
-"
-          >
-            🧹 Clear completed
-          </button>
-          {/* Shopping Total */}
+{/* Shopping Summary */}
 
-          <div className="
-mt-5
-text-right
-font-bold
-">
+<ShoppingSummary
 
-            Total: $
+items={items}
 
-            {items
-              .filter(item => item.completed)
-              .reduce(
-                (sum, item) =>
-                  sum +
-                  ((item.qty || 0) *
-                    (item.unitPrice || 0)),
-                0
-              )
-              .toFixed(2)
-            }
+onClear={()=>{
 
-          </div>
-        </div>
+setShowClearConfirm(true);
 
-      )}
+}}
+
+/>
 
       {!loading && items.length === 0 && (
         <p className="text-gray-500 text-center mt-5">
@@ -606,150 +254,68 @@ font-bold
         </p>
       )}
 
+      {/* Delete Confirmation */}
+
       {deleteTarget && (
 
-        <div className="
-fixed
-inset-0
-bg-black/40
-flex
-items-center
-justify-center
-">
+        <ConfirmDialog
 
-          <div className="
-bg-white
-rounded-lg
-p-5
-w-80
-">
+          title="Delete item?"
 
-            <h2 className="font-bold mb-3">
-              Delete item?
-            </h2>
+          message={deleteTarget.text}
 
+          confirmText="Delete"
 
-            <p className="mb-5">
-              {deleteTarget.text}
-            </p>
+          onCancel={() => {
 
+            setDeleteTarget(null);
 
-            <div className="flex justify-end gap-3">
+          }}
 
-              <button
+          onConfirm={async () => {
 
-                onClick={() => {
-                  setDeleteTarget(null);
-                }}
+            await deleteItem(
+              deleteTarget.id
+            );
 
-                className="px-4 py-2"
+            setDeleteTarget(null);
 
-              >
-                Cancel
-              </button>
+          }}
 
-
-              <button
-
-                onClick={async () => {
-
-                  await deleteItem(deleteTarget.id);
-
-                  setDeleteTarget(null);
-
-                }}
-
-                className="
-bg-red-500
-text-white
-px-4
-py-2
-rounded
-"
-
-              >
-                Delete
-              </button>
-
-
-            </div>
-
-          </div>
-
-        </div>
+        />
 
       )}
-      {/* Clear completed items confirmation */}
+      {/* Clear Completed Confirmation */}
+
       {showClearConfirm && (
 
-        <div className="
-fixed
-inset-0
-bg-black/40
-flex
-items-center
-justify-center
-">
+        <ConfirmDialog
 
-          <div className="
-bg-white
-rounded-lg
-p-5
-w-80
-">
+          title="Clear completed items?"
 
-            <h2 className="font-bold mb-3">
-              Clear completed items?
-            </h2>
+          confirmText="Clear"
 
+          loading={clearing}
 
-            <div className="flex justify-end gap-3">
+          onCancel={() => {
 
+            setShowClearConfirm(false);
 
-              <button
+          }}
 
-                onClick={() => {
-                  setShowClearConfirm(false);
-                }}
+          onConfirm={async () => {
 
-                className="px-4 py-2"
+            setClearing(true);
 
-              >
-                Cancel
-              </button>
+            await clearCompleted();
 
-              <button
+            setClearing(false);
 
-                onClick={async () => {
+            setShowClearConfirm(false);
 
-                  setClearing(true);
+          }}
 
-                  await clearCompleted();
-
-                  setClearing(false);
-
-                  setShowClearConfirm(false);
-
-                }}
-
-                className="
-bg-red-500
-text-white
-px-4
-py-2
-rounded
-"
-
-              >
-                {clearing ? "Clearing..." : "Clear"}
-              </button>
-
-
-            </div>
-
-          </div>
-
-        </div>
+        />
 
       )}
       {/* Complete Item Dialog */}
