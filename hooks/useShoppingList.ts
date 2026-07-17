@@ -2,197 +2,95 @@
 
 import { useEffect, useState } from "react";
 import { onSnapshot } from "firebase/firestore";
+import { shoppingQuery } from "@/lib/shopping";
 
 import {
-  shoppingQuery,
-  addItem,
-  toggleItem,
-  deleteItem,
-  clearCompleted,
-  completeItem
-} from "@/lib/shopping";
+  addShoppingItem,
+  deleteShoppingItem,
+  clearShoppingItems,
+  toggleShoppingItem,
+  completeShoppingItem
+} from "@/lib/ShoppingActions";
 
 import { ShoppingItem } from "@/lib/types";
 
-
-export function useShoppingList(){
-
-
+export function useShoppingList() {
   // Items State
 
-  const [items,setItems] =
-    useState<ShoppingItem[]>([]);
+  const [items, setItems] = useState<ShoppingItem[]>([]);
 
-
-  const [loading,setLoading] =
-    useState(true);
-
-
+  const [loading, setLoading] = useState(true);
 
   // Firebase Listener
 
-  useEffect(()=>{
-
-
+  useEffect(() => {
     const unsubscribe = onSnapshot(
-
       shoppingQuery,
 
-      (snapshot)=>{
+      (snapshot) => {
+        const data = snapshot.docs.map((doc) => ({
+          id: doc.id,
 
-
-        const data = snapshot.docs.map(doc=>({
-
-          id:doc.id,
-
-          ...(doc.data() as Omit<ShoppingItem,"id">)
-
+          ...(doc.data() as Omit<ShoppingItem, "id">),
         }));
-
 
         setItems(data);
 
         setLoading(false);
-
-
-      }
-
+      },
     );
 
-
-    return ()=>unsubscribe();
-
-
-  },[]);
-
-
+    return () => unsubscribe();
+  }, []);
 
   // Add Item
 
   async function handleAdd(
+    text: string,
 
-    text:string,
+    shop: string,
 
-    shop:string,
+    category: string,
 
-    category:string,
-
-    priority:string
-
-  ){
-
-
-    await addItem(
-
-      text,
-
-      shop,
-
-      category,
-
-      priority
-
-    );
-
-
+    priority: string,
+  ) {
+    await addShoppingItem(text, shop, category, priority);
   }
-
-
 
   // Toggle Completed
 
-  async function handleToggle(
-
-    item:ShoppingItem
-
-  ){
-
-
-    await toggleItem(
-
-      item.id,
-
-      item.completed
-
-    );
-
-
+  async function handleToggle(item: ShoppingItem) {
+    await toggleShoppingItem(item);
   }
-
-
-
 
   // Delete Item
 
-  async function handleDelete(
-
-    id:string
-
-  ){
-
-
-    await deleteItem(id);
-
-
+  async function handleDelete(id: string) {
+    await deleteShoppingItem(id);
   }
-
-
-
 
   // Clear Completed
 
-  async function handleClear(){
-
-
-    await clearCompleted();
-
-
+  async function handleClear() {
+    await clearShoppingItems();
   }
-
-
-
-
 
   // Complete Item With Price
 
   async function handleComplete(
+    item: ShoppingItem,
 
-    item:ShoppingItem,
+    qty: number,
 
-    qty:number,
-
-    unitPrice:number
-
-  ){
-
-
-    await completeItem(
-
-      item.id,
-
-      qty,
-
-      unitPrice,
-
-      qty,
-
-      unitPrice
-
-    );
-
-
+    unitPrice: number,
+  ) {
+    await completeShoppingItem(item, qty, unitPrice);
   }
 
-
-
-
   return {
-
-
     items,
 
     loading,
-
 
     handleAdd,
 
@@ -202,10 +100,6 @@ export function useShoppingList(){
 
     handleClear,
 
-    handleComplete
-
-
+    handleComplete,
   };
-
-
 }

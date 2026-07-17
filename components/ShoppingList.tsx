@@ -1,81 +1,101 @@
 "use client";
 
+import { useShoppingList } from "@/hooks/useShoppingList";
+import { useShoppingFilters } from "@/hooks/useShoppingFilters";
+import { useShoppingDialogs } from "@/hooks/useShoppingDialogs";
 import { PRIORITIES } from "@/lib/config";
-import { useEffect, useMemo, useState } from "react";
-import { onSnapshot } from "firebase/firestore";
-import { completeItem } from "@/lib/shopping";
+import { useEffect, useState } from "react";
+
 import { ShoppingItem } from "@/lib/types";
-import GroceryItem from "./GroceryItem";
 import ViewSelector from "./ViewSelector";
 import CompleteItemDialog from "./CompleteItemDialog";
 import GroceryInput from "./GroceryInput";
 import GroceryGroup from "./GroceryGroup";
 import ConfirmDialog from "./ConfirmDialog";
-
-
 import ShoppingSummary from "./ShoppingSummary";
-
-import {
-  shoppingQuery,
-  addItem,
-  toggleItem,
-  deleteItem,
-  clearCompleted,
-} from "@/lib/shopping";
-
 
 
 export default function ShoppingList() {
-  const [items, setItems] = useState<ShoppingItem[]>([]);
-  // Sort active items first
 
-  const displayItems = [
-
-    ...items.filter(item => !item.completed),
-
-    ...items.filter(item => item.completed)
-
-  ];
   const [newItem, setNewItem] = useState("");
-  const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<ShoppingItem | null>(null);
   const [selectedShop, setSelectedShop] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [clearing, setClearing] = useState(false);
   const [selectedPriority, setSelectedPriority] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<ShoppingItem | null>(null);
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [viewMode, setViewMode] = useState<"flat" | "shop" | "category">("flat");
   const [priorityFilter, setPriorityFilter] = useState("");
 
 
-  {/* Complete Item Dialog */ }
-  const [completingItem, setCompletingItem] =
-    useState<ShoppingItem | null>(null);
+  const {
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(shoppingQuery, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
+    items,
 
-        ...(doc.data() as Omit<ShoppingItem, "id">),
-      }));
+    loading,
 
-      setItems(data);
+    handleAdd,
 
-      setLoading(false);
-    });
+    handleToggle,
 
-    return () => unsubscribe();
-  }, []);
+    handleDelete,
 
-  async function handleAdd() {
-    await addItem(newItem, selectedShop, selectedCategory, selectedPriority);
+    handleClear,
+
+    handleComplete
+
+  } = useShoppingList();
+
+  // Shopping filters
+  const {
+
+    groupedItems
+
+  } = useShoppingFilters(
+
+    items,
+
+    viewMode,
+
+    priorityFilter
+
+  );
+
+  const {
+
+    deleteTarget,
+
+    setDeleteTarget,
+
+    showClearConfirm,
+
+    setShowClearConfirm,
+
+    completingItem,
+
+    setCompletingItem
+
+  } = useShoppingDialogs();
+
+  // Add grocery item
+
+  async function handleAddNew() {
+
+    await handleAdd(
+      newItem,
+      selectedShop,
+      selectedCategory,
+      selectedPriority
+    );
+
 
     setNewItem("");
+
     setSelectedShop("");
+
     setSelectedCategory("");
+
     setSelectedPriority("");
+
   }
 
   const priorityOrder = Object.fromEntries(
@@ -85,53 +105,6 @@ export default function ShoppingList() {
     ])
   );
 
-  const groupedItems = useMemo(() => {
-
-    const filteredItems = priorityFilter
-      ? items.filter(
-        item => item.priority === priorityFilter
-      )
-      : items;
-
-
-    if (viewMode === "flat") {
-
-      return {
-        Flat: filteredItems
-      };
-
-    }
-
-
-    const groups: Record<string, ShoppingItem[]> = {};
-
-
-    filteredItems.forEach(item => {
-
-      const key =
-        viewMode === "shop"
-          ? (item.shop || "No Shop")
-          : (item.category || "No Category");
-
-
-      if (!groups[key]) {
-        groups[key] = [];
-      }
-
-
-      groups[key].push(item);
-
-    });
-
-
-    return groups;
-
-
-  }, [
-    items,
-    viewMode,
-    priorityFilter
-  ]);
 
   return (
     <main className="w-full max-w-md mx-auto p-4 sm:p-5">
@@ -157,7 +130,7 @@ export default function ShoppingList() {
 
         setSelectedPriority={setSelectedPriority}
 
-        onAdd={handleAdd}
+        onAdd={handleAddNew}
 
       />
 
@@ -211,10 +184,7 @@ export default function ShoppingList() {
 
                 if (item.completed) {
 
-                  toggleItem(
-                    item.id,
-                    true
-                  );
+                  handleToggle(item);
 
                 }
                 else {
@@ -234,19 +204,19 @@ export default function ShoppingList() {
 
       </div>
 
-{/* Shopping Summary */}
+      {/* Shopping Summary */}
 
-<ShoppingSummary
+      <ShoppingSummary
 
-items={items}
+        items={items}
 
-onClear={()=>{
+        onClear={() => {
 
-setShowClearConfirm(true);
+          setShowClearConfirm(true);
 
-}}
+        }}
 
-/>
+      />
 
       {!loading && items.length === 0 && (
         <p className="text-gray-500 text-center mt-5">
@@ -274,7 +244,7 @@ setShowClearConfirm(true);
 
           onConfirm={async () => {
 
-            await deleteItem(
+            await handleDelete(
               deleteTarget.id
             );
 
@@ -307,7 +277,7 @@ setShowClearConfirm(true);
 
             setClearing(true);
 
-            await clearCompleted();
+            await handleClear()
 
             setClearing(false);
 
@@ -340,18 +310,10 @@ setShowClearConfirm(true);
 
           onSave={async (qty, unitPrice) => {
 
-            await completeItem(
-
-              completingItem.id,
-
+            await handleComplete(
+              completingItem,
               qty,
-
-              unitPrice,
-
-              qty,
-
               unitPrice
-
             );
 
             setCompletingItem(null);

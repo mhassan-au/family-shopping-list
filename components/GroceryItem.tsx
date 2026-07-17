@@ -78,28 +78,33 @@ export default function GroceryItem({
 
                     <div
                         onClick={handleComplete}
-                        className="
-            cursor-pointer
-            text-lg
-            "
+                        className={`
+  cursor-pointer
+  text-lg
+  ${item.completed
+                                ? "line-through text-gray-400"
+                                : ""
+                            }
+  `}
                     >
 
                         {item.text}
 
-
+                        {/* Completed Item Price */}
                         {item.completed &&
-                            item.qty &&
-                            item.unitPrice && (
+                            Number(item.unitPrice || 0) !== 0 && (
 
-                                <span className="
-              ml-2
-              font-bold
-              text-green-600
-              ">
-
-                                    ${(item.qty *
-                                        item.unitPrice).toFixed(2)}
-
+                                <span
+                                    className="
+    ml-2
+    font-bold
+    text-green-600
+    "
+                                >
+                                    ${(
+                                        Number(item.qty || 0) *
+                                        Number(item.unitPrice || 0)
+                                    ).toFixed(2)}
                                 </span>
 
                             )}
