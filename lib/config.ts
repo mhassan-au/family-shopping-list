@@ -32,13 +32,16 @@ export const PRIORITIES = [
   {
     label: "",
     color: "",
+    order: 3
   },
   {
     label: "MustHave",
     color: "bg-red-100 text-red-800",
+    order: 0
   },
   {
     label: "LowQty",
     color: "bg-orange-100 text-orange-800",
-  },
+    order: 1
+  }
 ];
