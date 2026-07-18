@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -12,26 +12,26 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  themeColor: "#16a34a",
+};
+
 export const metadata = {
 
   title: "MyGrocery",
   description: "Family shopping list",
   manifest: "/manifest.json",
- 
-  icons:{
-    icon:"/icon-192.png",
-    apple:"/icon-192.png"
-  }, 
+
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/icon-512.png"
+  },
   appleWebApp: {
     capable: true,
     title: "MyGrocery",
     statusBarStyle: "default",
   }
 
-};
-
-export const viewport = {
-  themeColor: "#16a34a",
 };
 
 export default function RootLayout({
@@ -44,7 +44,12 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <link
+          rel="apple-touch-startup-image"
+          href="/apple-splash.png"
+        />
+        {children}</body>
     </html>
   );
 }
