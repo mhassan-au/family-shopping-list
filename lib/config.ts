@@ -45,3 +45,10 @@ export const PRIORITIES = [
     order: 1
   }
 ];
+
+export const HIDDEN_PRIORITIES = [
+  {
+    label: "WalkIn",
+    order: 99
+  },
+];

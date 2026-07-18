@@ -5,122 +5,122 @@ import { SHOPS, CATEGORIES, PRIORITIES } from "@/lib/config";
 
 interface Props {
 
-  newItem: string;
+    newItem: string;
 
-  setNewItem: (value:string)=>void;
+    setNewItem: (value: string) => void;
 
-  selectedShop: string;
+    selectedShop: string;
 
-  setSelectedShop: (value:string)=>void;
+    setSelectedShop: (value: string) => void;
 
-  selectedCategory: string;
+    selectedCategory: string;
 
-  setSelectedCategory: (value:string)=>void;
+    setSelectedCategory: (value: string) => void;
 
-  selectedPriority: string;
+    selectedPriority: string;
 
-  setSelectedPriority: (value:string)=>void;
+    setSelectedPriority: (value: string) => void;
 
-  onAdd: ()=>void;
+    onAdd: () => void;
 
 }
 
 
 export default function GroceryInput({
 
-  newItem,
+    newItem,
 
-  setNewItem,
+    setNewItem,
 
-  selectedShop,
+    selectedShop,
 
-  setSelectedShop,
+    setSelectedShop,
 
-  selectedCategory,
+    selectedCategory,
 
-  setSelectedCategory,
+    setSelectedCategory,
 
-  selectedPriority,
+    selectedPriority,
 
-  setSelectedPriority,
+    setSelectedPriority,
 
-  onAdd
+    onAdd
 
 }: Props) {
 
 
-  {/* Handle Enter Key */}
+    {/* Handle Enter Key */ }
 
-  function handleKeyDown(
-    e:React.KeyboardEvent<HTMLInputElement>
-  ){
+    function handleKeyDown(
+        e: React.KeyboardEvent<HTMLInputElement>
+    ) {
 
-    if(e.key==="Enter"){
+        if (e.key === "Enter") {
 
-      onAdd();
+            onAdd();
+
+        }
 
     }
 
-  }
+
+    return (
+
+        <div className="mb-5">
 
 
-  return (
+            {/* Input Box */}
 
-    <div className="mb-5">
-
-
-      {/* Input Box */}
-
-      <div className="flex gap-2 w-full">
+            <div className="flex gap-2 w-full">
 
 
-        <input
+                <input
 
-          className="
+                    className="
           border
           rounded-lg
           p-2
           flex-1
           "
 
-          placeholder="Add grocery item"
+                    placeholder="Add grocery item"
 
-          value={newItem}
+                    value={newItem}
 
-          onChange={(e)=>
-            setNewItem(e.target.value)
-          }
+                    onChange={(e) =>
+                        setNewItem(e.target.value)
+                    }
 
-          onKeyDown={handleKeyDown}
+                    onKeyDown={handleKeyDown}
 
-        />
+                />
 
 
-        <button
+                <button
 
-          onClick={onAdd}
+                    onClick={onAdd}
 
-          className="
+                    className="
           bg-black
           text-white
           px-4
           rounded-lg
           "
 
-        >
+                >
 
-          +
+                    +
 
-        </button>
-
-
-      </div>
+                </button>
 
 
+            </div>
 
-      {/* Dropdown Section */}
 
-      <div className="
+
+            {/* Dropdown Section */}
+
+            <div className="
       grid
       grid-cols-1
       sm:grid-cols-3
@@ -128,130 +128,123 @@ export default function GroceryInput({
       mt-3
       ">
 
+                {/* Priority Dropdown */}
 
-        {/* Shop Dropdown */}
+                <select
 
-        <select
-
-          className="
+                    className="
           border
           rounded-lg
           p-2
           "
 
-          value={selectedShop}
+                    value={selectedPriority}
 
-          onChange={(e)=>
-            setSelectedShop(e.target.value)
-          }
+                    onChange={(e) =>
+                        setSelectedPriority(e.target.value)
+                    }
 
-        >
+                >
 
-          {SHOPS.map(shop=>(
+                    {PRIORITIES.map(priority => (
 
-            <option
+                        <option
 
-              key={shop.label}
+                            key={priority.label}
 
-              value={shop.label}
+                            value={priority.label}
 
-            >
+                        >
 
-              {shop.label || "Shop"}
+                            {priority.label || "Priority"}
 
-            </option>
+                        </option>
 
-          ))}
-
-
-        </select>
+                    ))}
 
 
+                </select>
 
+                {/* Shop Dropdown */}
 
-        {/* Category Dropdown */}
+                <select
 
-        <select
-
-          className="
+                    className="
           border
           rounded-lg
           p-2
           "
 
-          value={selectedCategory}
+                    value={selectedShop}
 
-          onChange={(e)=>
-            setSelectedCategory(e.target.value)
-          }
+                    onChange={(e) =>
+                        setSelectedShop(e.target.value)
+                    }
 
-        >
+                >
 
-          {CATEGORIES.map(category=>(
+                    {SHOPS.map(shop => (
 
-            <option
+                        <option
 
-              key={category.label}
+                            key={shop.label}
 
-              value={category.label}
+                            value={shop.label}
 
-            >
+                        >
 
-              {category.label || "Category"}
+                            {shop.label || "Shop"}
 
-            </option>
+                        </option>
 
-          ))}
-
-
-        </select>
+                    ))}
 
 
+                </select>
 
 
-        {/* Priority Dropdown */}
+                {/* Category Dropdown */}
 
-        <select
+                <select
 
-          className="
+                    className="
           border
           rounded-lg
           p-2
           "
 
-          value={selectedPriority}
+                    value={selectedCategory}
 
-          onChange={(e)=>
-            setSelectedPriority(e.target.value)
-          }
+                    onChange={(e) =>
+                        setSelectedCategory(e.target.value)
+                    }
 
-        >
+                >
 
-          {PRIORITIES.map(priority=>(
+                    {CATEGORIES.map(category => (
 
-            <option
+                        <option
 
-              key={priority.label}
+                            key={category.label}
 
-              value={priority.label}
+                            value={category.label}
 
-            >
+                        >
 
-              {priority.label || "Priority"}
+                            {category.label || "Category"}
 
-            </option>
+                        </option>
 
-          ))}
-
-
-        </select>
+                    ))}
 
 
-      </div>
+                </select>
+
+            </div>
 
 
-    </div>
+        </div>
 
-  );
+    );
 
 }
