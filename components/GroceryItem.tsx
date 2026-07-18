@@ -1,5 +1,9 @@
 "use client";
 
+import { useState } from "react";
+import TagEditorDialog from "./TagEditorDialog";
+import { updateItemDetails } from "@/lib/shopping";
+
 import { FiTrash2, FiEdit3 } from "react-icons/fi";
 import { ShoppingItem } from "@/lib/types";
 import { getTagColor } from "@/lib/tagColor";
@@ -38,6 +42,12 @@ export default function GroceryItem({
 
 }: Props) {
 
+    // Tag editor state
+
+    const [editingTag, setEditingTag] = useState<{
+        type: "shop" | "category" | "priority";
+        value: string;
+    } | null>(null);
 
     {/* Handle complete */ }
 
@@ -123,8 +133,15 @@ export default function GroceryItem({
                     <div className="text-xs">
 
                         {!hideShopTag && item.shop &&
-                            <span className={`
-            ml-1 px-2 py-1 rounded-full
+                            <span
+                                onClick={() =>
+                                    setEditingTag({
+                                        type: "shop",
+                                        value: item.shop!,
+                                    })
+                                }
+                                className={`
+            ml-1 px-2 py-1 rounded-full text-xs cursor-pointer active:scale-95 transition
             ${getTagColor(item.shop)}
             `}>
                                 {item.shop}
@@ -132,8 +149,15 @@ export default function GroceryItem({
 
 
                         {!hideCategoryTag && item.category &&
-                            <span className={`
-            ml-1 px-2 py-1 rounded-full
+                            <span
+                                onClick={() =>
+                                    setEditingTag({
+                                        type: "category",
+                                        value: item.category!,
+                                    })
+                                }
+                                className={`
+            ml-1 px-2 py-1 rounded-full text-xs cursor-pointer active:scale-95 transition
             ${getTagColor(item.category)}
             `}>
                                 {item.category}
@@ -141,8 +165,21 @@ export default function GroceryItem({
 
 
                         {item.priority &&
-                            <span className={`
-            ml-1 px-2 py-1 rounded-full
+                            <span
+                                onClick={() => {
+
+                                    if (item.priority !== "WalkIn") {
+
+                                        setEditingTag({
+                                            type: "priority",
+                                            value: item.priority!,
+                                        });
+
+                                    }
+
+                                }}
+                                className={`
+            ml-1 px-2 py-1 rounded-full text-xs cursor-pointer active:scale-95 transition
             ${getTagColor(item.priority)}
             `}>
                                 {item.priority}
@@ -182,7 +219,68 @@ export default function GroceryItem({
 
             )}
 
+            {/* Tag Edit Dialog */}
 
+            {editingTag && (
+
+                <TagEditorDialog
+
+                    type={editingTag.type}
+
+                    currentValue={editingTag.value}
+
+                    onCancel={() => setEditingTag(null)}
+
+                    onSave={async (value) => {
+
+                        await updateItemDetails(
+
+                            item.id,
+
+                            editingTag.type === "shop"
+                                ? value
+                                : item.shop ?? "",
+
+                            editingTag.type === "category"
+                                ? value
+                                : item.category ?? "",
+
+                            editingTag.type === "priority"
+                                ? value
+                                : item.priority ?? ""
+
+                        );
+                        setEditingTag(null);
+
+                    }}
+
+                    onRemove={async () => {
+
+                        await updateItemDetails(
+
+                            item.id,
+
+                            editingTag.type === "shop"
+                                ? ""
+                                : item.shop ?? "",
+
+                            editingTag.type === "category"
+                                ? ""
+                                : item.category ?? "",
+
+                            editingTag.type === "priority"
+                                ? ""
+                                : item.priority ?? ""
+
+                        );
+
+                        setEditingTag(null);
+
+                    }}
+
+                />
+
+            )}
         </div>
 
     );
