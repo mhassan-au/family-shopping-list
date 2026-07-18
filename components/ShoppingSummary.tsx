@@ -43,62 +43,55 @@ export default function ShoppingSummary({
 
 
 
-  return (
+return (
 
-    <div className="
-    mt-8
-    text-center
-    ">
+  <div className="mt-8 text-center">
 
 
-      {/* Clear Completed Button */}
+    {/* Shopping Total */}
 
-      {items.some(item=>item.completed) && (
+    <div
+      className="
+      text-2xl
+      font-bold
+      mb-4
+      "
+    >
 
-        <button
+      Total: $
 
-          onClick={onClear}
-
-          className="
-          bg-gray-200
-          px-4
-          py-2
-          rounded-lg
-          text-sm
-          "
-
-        >
-
-          🧹 Clear completed
-
-        </button>
-
-      )}
-
-
-
-
-      {/* Shopping Total */}
-
-      {total > 0 && (
-
-        <div className="
-        mt-5
-        text-right
-        font-bold
-        ">
-
-          Total: $
-
-          {total.toFixed(2)}
-
-        </div>
-
-      )}
-
+      {total.toFixed(2)}
 
     </div>
 
-  );
+
+    {/* Clear Completed Button */}
+
+    {items.some(item => item.completed) && (
+
+      <button
+
+        onClick={onClear}
+
+        className="
+        bg-gray-200
+        px-4
+        py-2
+        rounded-lg
+        text-sm
+        "
+
+      >
+
+        🧹 Clear completed
+
+      </button>
+
+    )}
+
+
+  </div>
+
+);
 
 }

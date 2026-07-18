@@ -17,11 +17,21 @@ export const metadata = {
   title: "MyGrocery",
   description: "Family shopping list",
   manifest: "/manifest.json",
+ 
   icons:{
     icon:"/icon-192.png",
     apple:"/icon-192.png"
+  }, 
+  appleWebApp: {
+    capable: true,
+    title: "MyGrocery",
+    statusBarStyle: "default",
   }
 
+};
+
+export const viewport = {
+  themeColor: "#16a34a",
 };
 
 export default function RootLayout({

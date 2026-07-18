@@ -36,7 +36,7 @@ export const PRIORITIES = [
   },
   {
     label: "MustHave",
-    color: "bg-red-100 text-red-800",
+    color: "bg-red-700 text-white font-bold",
     order: 0
   },
   {

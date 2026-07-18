@@ -15,6 +15,10 @@ interface Props {
 
     onComplete: (item: ShoppingItem) => void;
 
+    hideShopTag?: boolean;
+
+    hideCategoryTag?: boolean;
+
 }
 
 
@@ -26,7 +30,11 @@ export default function GroceryItem({
 
     onDelete,
 
-    onComplete
+    onComplete,
+
+    hideShopTag = false,
+
+    hideCategoryTag = false
 
 }: Props) {
 
@@ -114,7 +122,7 @@ export default function GroceryItem({
 
                     <div className="text-xs">
 
-                        {item.shop &&
+                        {!hideShopTag && item.shop &&
                             <span className={`
             ml-1 px-2 py-1 rounded-full
             ${getTagColor(item.shop)}
@@ -123,7 +131,7 @@ export default function GroceryItem({
                             </span>}
 
 
-                        {item.category &&
+                        {!hideCategoryTag && item.category &&
                             <span className={`
             ml-1 px-2 py-1 rounded-full
             ${getTagColor(item.category)}

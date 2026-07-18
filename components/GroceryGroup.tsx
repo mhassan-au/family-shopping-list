@@ -89,6 +89,10 @@ export default function GroceryGroup({
 
               item={item}
 
+              hideCategoryTag={viewMode === "category"}
+
+              hideShopTag={viewMode === "shop"}
+              
               onEdit={(item)=>{
 
                 setEditing(item);
