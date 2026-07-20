@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FiFilter } from "react-icons/fi";
 import { PRIORITIES } from "@/lib/config";
-
+import { getTagColor } from "@/lib/tagColor";
 
 interface Props {
 
@@ -15,7 +15,7 @@ interface Props {
 
   priorityFilter: string;
 
-  setPriorityFilter: (value:string)=>void;
+  setPriorityFilter: (value: string) => void;
 
 }
 
@@ -62,17 +62,16 @@ export default function ViewSelector({
 
         <button
 
-          onClick={()=>setViewMode("flat")}
+          onClick={() => setViewMode("flat")}
 
           className={`
           px-3
           py-1
           rounded
-          ${
-            viewMode==="flat"
-            ?"bg-black text-white"
-            :"bg-gray-200"
-          }
+          ${viewMode === "flat"
+              ? "bg-black text-white"
+              : "bg-gray-200"
+            }
           `}
 
         >
@@ -84,17 +83,16 @@ export default function ViewSelector({
 
         <button
 
-          onClick={()=>setViewMode("shop")}
+          onClick={() => setViewMode("shop")}
 
           className={`
           px-3
           py-1
           rounded
-          ${
-            viewMode==="shop"
-            ?"bg-black text-white"
-            :"bg-gray-200"
-          }
+          ${viewMode === "shop"
+              ? "bg-black text-white"
+              : "bg-gray-200"
+            }
           `}
 
         >
@@ -106,17 +104,16 @@ export default function ViewSelector({
 
         <button
 
-          onClick={()=>setViewMode("category")}
+          onClick={() => setViewMode("category")}
 
           className={`
           px-3
           py-1
           rounded
-          ${
-            viewMode==="category"
-            ?"bg-black text-white"
-            :"bg-gray-200"
-          }
+          ${viewMode === "category"
+              ? "bg-black text-white"
+              : "bg-gray-200"
+            }
           `}
 
         >
@@ -132,138 +129,147 @@ export default function ViewSelector({
 
       {/* Priority Filter */}
 
-      <div className="relative">
+      <div className="flex items-center gap-2">
+
+        {/* Current Filter */}
+
+        {priorityFilter && (
+
+          <span
+
+            className={`
+      px-2
+      py-1
+      rounded-full
+      text-xs
+      font-semibold
+      ${getTagColor(priorityFilter)}
+      `}
+
+          >
+
+            {priorityFilter}
+
+          </span>
+
+        )}
 
 
-        <button
+        <div className="relative">
 
-          onClick={()=>{
+          <button
 
-            setShowPriorityFilter(
-              !showPriorityFilter
-            );
+            onClick={() => {
 
-          }}
+              setShowPriorityFilter(
+                !showPriorityFilter
+              );
 
-          className={`
-          p-2
-          rounded-lg
-          ${
-            priorityFilter
-            ?"bg-red-100"
-            :"bg-gray-200"
-          }
-          `}
+            }}
 
-        >
-
-          <FiFilter size={20}/>
-
-        </button>
-
-
-
-        {showPriorityFilter && (
-
-          <div className="
-          absolute
-          right-0
-          mt-2
-          bg-white
-          border
-          rounded-lg
-          shadow
-          p-2
-          z-20
-          w-40
-          ">
-
-
-            <button
-
-              onClick={()=>{
-
-                setPriorityFilter("");
-
-                setShowPriorityFilter(false);
-
-              }}
-
-              className={`
-              block
-              w-full
-              text-left
-              px-2
-              py-2
-              rounded
-              hover:bg-gray-100
-              ${
-                priorityFilter===""
-                ?"bg-gray-200 font-bold"
-                :""
+            className={`
+      p-2
+      rounded-lg
+      ${priorityFilter
+                ? "bg-red-100"
+                : "bg-gray-200"
               }
-              `}
+      `}
 
+          >
+
+            <FiFilter size={20} />
+
+          </button>
+
+
+          {showPriorityFilter && (
+
+            <div
+              className="
+        absolute
+        right-0
+        mt-2
+        bg-white
+        border
+        rounded-lg
+        shadow
+        p-2
+        z-20
+        w-40
+        "
             >
-
-              All
-
-            </button>
-
-
-
-            {PRIORITIES
-            .filter(p=>p.label)
-            .map(priority=>(
-
 
               <button
 
-                key={priority.label}
+                onClick={() => {
 
-
-                onClick={()=>{
-
-                  setPriorityFilter(
-                    priority.label
-                  );
+                  setPriorityFilter("");
 
                   setShowPriorityFilter(false);
 
                 }}
 
-
                 className={`
-                block
-                w-full
-                text-left
-                px-2
-                py-2
-                rounded
-                hover:bg-gray-100
-
-                ${
-                  priorityFilter === priority.label
-                  ?"bg-gray-200 font-bold"
-                  :""
-                }
-
-                `}
-
+          block
+          w-full
+          text-left
+          px-2
+          py-2
+          rounded
+          hover:bg-gray-100
+          ${priorityFilter === ""
+                    ? "bg-gray-200 font-bold"
+                    : ""
+                  }
+          `}
               >
 
-                {priority.label}
+                All
 
               </button>
 
 
-            ))}
+              {PRIORITIES.map(priority => (
 
+                <button
 
-          </div>
+                  key={priority.label}
 
-        )}
+                  onClick={() => {
 
+                    setPriorityFilter(priority.label);
+
+                    setShowPriorityFilter(false);
+
+                  }}
+
+                  className={`
+            block
+            w-full
+            text-left
+            px-2
+            py-2
+            rounded
+            hover:bg-gray-100
+            ${priorityFilter === priority.label
+                      ? "bg-gray-200 font-bold"
+                      : ""
+                    }
+            `}
+                >
+
+                  {priority.label}
+
+                </button>
+
+              ))}
+
+            </div>
+
+          )}
+
+        </div>
 
       </div>
 

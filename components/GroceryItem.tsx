@@ -91,104 +91,173 @@ export default function GroceryItem({
 
                 />
 
+                {/* Item text + tags */}
 
-                <div>
+                <div
+                    className="
+    flex
+    flex-wrap
+    items-center
+    gap-1
+    flex-1
+    min-w-0
+    "
+                >
 
-                    <div
+                    {/* Item name */}
+
+                    <span
+
                         onClick={handleComplete}
+
                         className={`
-  cursor-pointer
-  text-lg
-  ${item.completed
+        cursor-pointer
+        text-lg
+        break-words
+        ${item.completed
                                 ? "line-through text-gray-400"
                                 : ""
                             }
-  `}
+        `}
+
                     >
 
                         {item.text}
 
-                        {/* Completed Item Price */}
-                        {item.completed &&
-                            Number(item.unitPrice || 0) !== 0 && (
-
-                                <span
-                                    className="
-    ml-2
-    font-bold
-    text-green-600
-    "
-                                >
-                                    ${(
-                                        Number(item.qty || 0) *
-                                        Number(item.unitPrice || 0)
-                                    ).toFixed(2)}
-                                </span>
-
-                            )}
-
-                    </div>
+                    </span>
 
 
-                    <div className="text-xs">
+                    {/* Completed price */}
 
-                        {!hideShopTag && item.shop &&
+                    {item.completed &&
+                        Number(item.unitPrice || 0) > 0 && (
+
                             <span
-                                onClick={() =>
-                                    setEditingTag({
-                                        type: "shop",
-                                        value: item.shop!,
-                                    })
-                                }
-                                className={`
-            ml-1 px-2 py-1 rounded-full text-xs cursor-pointer active:scale-95 transition
+                                className="
+                font-bold
+                text-green-600
+                ml-1
+                "
+                            >
+
+                                ${(
+                                    Number(item.qty || 0) *
+                                    Number(item.unitPrice || 0)
+                                ).toFixed(2)}
+
+                            </span>
+
+                        )}
+
+
+                    {/* Shop */}
+
+                    {!hideShopTag && item.shop && (
+
+                        <span
+
+                            onClick={() =>
+                                setEditingTag({
+                                    type: "shop",
+                                    value: item.shop,
+                                })
+                            }
+
+                            className={`
+            px-2
+            py-1
+            rounded-full
+            text-xs
+            cursor-pointer
+            active:scale-95
+            transition
             ${getTagColor(item.shop)}
-            `}>
-                                {item.shop}
-                            </span>}
+            `}
+
+                        >
+
+                            {item.shop}
+
+                        </span>
+
+                    )}
 
 
-                        {!hideCategoryTag && item.category &&
-                            <span
-                                onClick={() =>
-                                    setEditingTag({
-                                        type: "category",
-                                        value: item.category!,
-                                    })
-                                }
-                                className={`
-            ml-1 px-2 py-1 rounded-full text-xs cursor-pointer active:scale-95 transition
+                    {/* Category */}
+
+                    {!hideCategoryTag && item.category && (
+
+                        <span
+
+                            onClick={() =>
+                                setEditingTag({
+                                    type: "category",
+                                    value: item.category,
+                                })
+                            }
+
+                            className={`
+            px-2
+            py-1
+            rounded-full
+            text-xs
+            cursor-pointer
+            active:scale-95
+            transition
             ${getTagColor(item.category)}
-            `}>
-                                {item.category}
-                            </span>}
+            `}
+
+                        >
+
+                            {item.category}
+
+                        </span>
+
+                    )}
 
 
-                        {item.priority &&
-                            <span
-                                onClick={() => {
+                    {/* Priority */}
 
-                                    if (item.priority !== "WalkIn") {
+                    {item.priority && (
 
-                                        setEditingTag({
-                                            type: "priority",
-                                            value: item.priority!,
-                                        });
+                        <span
 
-                                    }
+                            onClick={() => {
 
-                                }}
-                                className={`
-            ml-1 px-2 py-1 rounded-full text-xs cursor-pointer active:scale-95 transition
+                                if (item.priority !== "WalkIn") {
+
+                                    setEditingTag({
+
+                                        type: "priority",
+
+                                        value: item.priority,
+
+                                    });
+
+                                }
+
+                            }}
+
+                            className={`
+            px-2
+            py-1
+            rounded-full
+            text-xs
+            cursor-pointer
+            active:scale-95
+            transition
             ${getTagColor(item.priority)}
-            `}>
-                                {item.priority}
-                            </span>}
+            `}
 
-                    </div>
+                        >
+
+                            {item.priority}
+
+                        </span>
+
+                    )}
 
                 </div>
-
 
             </div>
 

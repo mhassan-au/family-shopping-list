@@ -2,12 +2,23 @@
 
 import { useMemo } from "react";
 import { ShoppingItem } from "@/lib/types";
+import { PRIORITIES, HIDDEN_PRIORITIES } from "@/lib/config";
 
 export function useShoppingFilters(
   items: ShoppingItem[],
   viewMode: "flat" | "shop" | "category",
   priorityFilter: string,
 ) {
+  // Priority sort order
+
+  const priorityOrder = Object.fromEntries(
+    [...PRIORITIES, ...HIDDEN_PRIORITIES].map((priority) => [
+      priority.label,
+
+      priority.order,
+    ]),
+  );
+
   const groupedItems = useMemo(() => {
     // Filter by priority
 
@@ -20,9 +31,25 @@ export function useShoppingFilters(
     if (viewMode === "flat") {
       return {
         Flat: [...filteredItems].sort((a, b) => {
-          if (a.completed === b.completed) return 0;
+          // Active first
 
-          return a.completed ? 1 : -1;
+          if (a.completed !== b.completed) {
+            return a.completed ? 1 : -1;
+          }
+
+          // Priority
+
+          const aPriority = priorityOrder[a.priority ?? ""] ?? 999;
+
+          const bPriority = priorityOrder[b.priority ?? ""] ?? 999;
+
+          if (aPriority !== bPriority) {
+            return aPriority - bPriority;
+          }
+
+          // Alphabetical
+
+          return a.text.localeCompare(b.text);
         }),
       };
     }
@@ -49,9 +76,25 @@ export function useShoppingFilters(
 
     Object.values(groups).forEach((group) => {
       group.sort((a, b) => {
-        if (a.completed === b.completed) return 0;
+        // Active first
 
-        return a.completed ? 1 : -1;
+        if (a.completed !== b.completed) {
+          return a.completed ? 1 : -1;
+        }
+
+        // Priority
+
+        const aPriority = priorityOrder[a.priority ?? ""] ?? 999;
+
+        const bPriority = priorityOrder[b.priority ?? ""] ?? 999;
+
+        if (aPriority !== bPriority) {
+          return aPriority - bPriority;
+        }
+
+        // Alphabetical
+
+        return a.text.localeCompare(b.text);
       });
     });
 
