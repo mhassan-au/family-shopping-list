@@ -113,7 +113,7 @@ export default function GroceryItem({
                         className={`
         cursor-pointer
         text-lg
-        break-words
+        wrap-break-word
         ${item.completed
                                 ? "line-through text-gray-400"
                                 : ""
@@ -159,7 +159,7 @@ export default function GroceryItem({
                             onClick={() =>
                                 setEditingTag({
                                     type: "shop",
-                                    value: item.shop,
+                                    value: item.shop ?? "",
                                 })
                             }
 
@@ -192,7 +192,7 @@ export default function GroceryItem({
                             onClick={() =>
                                 setEditingTag({
                                     type: "category",
-                                    value: item.category,
+                                    value: item.category ?? "",
                                 })
                             }
 
@@ -230,7 +230,7 @@ export default function GroceryItem({
 
                                         type: "priority",
 
-                                        value: item.priority,
+                                        value: item.priority ?? "",
 
                                     });
 
