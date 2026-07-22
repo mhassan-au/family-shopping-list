@@ -12,115 +12,63 @@ import { updateDoc } from "firebase/firestore";
 
 export default function FamilyCodeScreen() {
 
-    const [code, setCode] = useState("");
-
     const [error, setError] = useState("");
-
     const [loading, setLoading] = useState(false);
-
+    const [familyCode, setFamilyCode] = useState("");
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
 
     async function handleSubmit() {
 
         setLoading(true);
-
         setError("");
-
 
         try {
 
-            const hash = await hashCode(code);
-
-
             const ref = doc(
                 db,
-                "app_config",
-                "access"
+                "families",
+                familyCode,
+                "users",
+                username.toLowerCase()
             );
-
 
             const snapshot = await getDoc(ref);
 
-
             if (!snapshot.exists()) {
-
-                throw new Error("Configuration missing");
-
+                throw new Error("Invalid login");
             }
-
 
             const data = snapshot.data();
 
+            const passwordHash = await hashCode(password);
 
-            if (data.locked) {
-
-                throw new Error(
-                    "Access locked"
-                );
-
+            if (passwordHash !== data.passwordHash) {
+                throw new Error("Invalid login");
             }
-
-
-            if (hash !== data.codeHash) {
-
-                const attempts =
-                    (data.failedAttempts || 0) + 1;
-
-
-                await updateDoc(ref, {
-
-                    failedAttempts: attempts,
-
-                    locked: attempts >= 5,
-
-                });
-
-
-                if (attempts >= 5) {
-
-                    throw new Error(
-                        "Access locked"
-                    );
-
-                }
-
-
-                throw new Error(
-                    `Invalid code. Attempt ${attempts}/5`
-                );
-
-            }
-
 
             await loginAnonymous();
 
-            await updateDoc(ref, {
-
-                failedAttempts: 0,
-
-                locked: false,
-
-            });
-
-            saveDeviceLogin();
-
+            saveDeviceLogin(
+                familyCode,
+                username.toLowerCase()
+            );
 
             window.location.reload();
-
 
         } catch (err: any) {
 
             setError(
-                err.message || "Invalid code"
+                err.message || "Login failed"
             );
+
+        } finally {
+
+            setLoading(false);
 
         }
 
-
-        setLoading(false);
-
     }
-
-
     return (
 
         <main
@@ -135,76 +83,106 @@ export default function FamilyCodeScreen() {
 
             <div
                 className="
-        w-full
-        max-w-sm
-        border
-        rounded-xl
-        p-5
-        space-y-4
-        "
+    w-full
+    max-w-sm
+    border
+    rounded-xl
+    p-5
+    space-y-4
+  "
             >
 
-                <h1 className="text-xl font-bold">
+                <h1 className="text-2xl font-bold text-center">
                     🛒 MyGrocery
                 </h1>
 
-
-                <p>
-                    Enter family code
+                <p className="text-center text-sm text-gray-500">
+                    Sign in to your family shopping list
                 </p>
 
+                {/* Family Code */}
 
-                <input
+                <div>
+                    <label className="text-sm font-medium">
+                        Family Code
+                    </label>
 
-                    type="password"
+                    <input
+                        type="text"
+                        value={familyCode}
+                        onChange={(e) => setFamilyCode(e.target.value)}
+                        className="
+        mt-1
+        border
+        rounded-lg
+        p-2
+        w-full
+      "
+                    />
+                </div>
 
-                    value={code}
+                {/* Username */}
 
-                    onChange={(e) => setCode(e.target.value)}
+                <div>
+                    <label className="text-sm font-medium">
+                        Username
+                    </label>
 
-                    className="
-          border
-          rounded-lg
-          p-2
-          w-full
-          "
+                    <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="
+        mt-1
+        border
+        rounded-lg
+        p-2
+        w-full
+      "
+                    />
+                </div>
 
-                />
+                {/* Password */}
 
+                <div>
+                    <label className="text-sm font-medium">
+                        Password
+                    </label>
+
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="
+        mt-1
+        border
+        rounded-lg
+        p-2
+        w-full
+      "
+                    />
+                </div>
 
                 {error && (
-
                     <p className="text-red-500 text-sm">
                         {error}
                     </p>
-
                 )}
 
-
                 <button
-
                     onClick={handleSubmit}
-
                     disabled={loading}
-
                     className="
-          bg-black
-          text-white
-          rounded-lg
-          px-4
-          py-2
-          w-full
-          "
-
+      bg-black
+      text-white
+      rounded-lg
+      px-4
+      py-2
+      w-full
+    "
                 >
-
-                    {loading
-                        ? "Checking..."
-                        : "Continue"
-                    }
-
+                    {loading ? "Signing in..." : "Sign In"}
                 </button>
-
 
             </div>
 

@@ -23,3 +23,8 @@ export interface ShoppingItem {
   lastUnitPrice?: number;
 
 }
+
+export interface DeviceLogin {
+  familyCode: string;
+  username: string;
+}
