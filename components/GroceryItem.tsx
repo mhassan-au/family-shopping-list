@@ -171,6 +171,10 @@ export default function GroceryItem({
             cursor-pointer
             active:scale-95
             transition
+            ${item.completed
+                                    ? "opacity-40 grayscale"
+                                    : "cursor-pointer active:scale-95"
+                                }
             ${getTagColor(item.shop)}
             `}
 
@@ -204,6 +208,10 @@ export default function GroceryItem({
             cursor-pointer
             active:scale-95
             transition
+            ${item.completed
+                                    ? "opacity-40 grayscale"
+                                    : "cursor-pointer active:scale-95"
+                                }
             ${getTagColor(item.category)}
             `}
 
@@ -246,6 +254,10 @@ export default function GroceryItem({
             cursor-pointer
             active:scale-95
             transition
+            ${item.completed
+                                    ? "opacity-40 grayscale"
+                                    : "cursor-pointer active:scale-95"
+                                }
             ${getTagColor(item.priority)}
             `}
 

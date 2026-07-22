@@ -8,7 +8,7 @@ import { addItem } from "@/lib/shopping";
 import GroceryItem from "./GroceryItem";
 import ItemEditor from "./ItemEditor";
 import { ShoppingItem } from "@/lib/types";
-
+import { getTagColor } from "@/lib/tagColor";
 
 interface Props {
 
@@ -55,29 +55,36 @@ export default function GroceryGroup({
 
     const [showQuickAdd, setShowQuickAdd] = useState(false);
 
+    const [collapsed, setCollapsed] = useState(false);
+
     return (
 
         <div>
 
             {/* Group Header */}
-
             {viewMode !== "flat" && (
 
-                <div
-                    className="
-  sticky
-  top-0
-  bg-white
-  font-bold
-  text-lg
-  border-b
-  pb-2
-  mb-2
-  z-10
-  flex
-  justify-between
-  items-center
-  "
+                <div onClick={() => setCollapsed(!collapsed)}
+                    className={`
+      sticky
+      top-0
+      z-10
+      flex
+      items-center
+      justify-between
+      px-3
+      py-2
+      mb-2
+      rounded-lg
+      font-bold
+      border
+      cursor-pointer
+
+      ${groupName.startsWith("No ")
+                            ? "bg-gray-200 text-gray-700"
+                            : getTagColor(groupName)
+                        }
+    `}
                 >
 
                     <span>
@@ -85,91 +92,73 @@ export default function GroceryGroup({
                     </span>
 
 
-                    {canQuickAdd && (
+                    {/* Future collapse button */}
 
-                        <button
+                    <span className="text-sm">
+                        {collapsed ? "▶" : "▼"}
+                    </span>
 
-                            onClick={() => setShowQuickAdd(true)}
-
-                            className="
-      bg-black
-      text-white
-      rounded-full
-      w-7
-      h-7
-      flex
-      items-center
-      justify-center
-      "
-
-                        >
-
-                            <FiPlus size={16} />
-
-                        </button>
-
-                    )}
 
                 </div>
 
             )}
             {/* Group Items */}
-
-            <div className="space-y-2">
-
-
-                {groupItems.map((item) => (
+            {!collapsed && (
+                <div className="space-y-2">
 
 
-                    <div key={item.id}>
+                    {groupItems.map((item) => (
 
 
-                        <GroceryItem
-
-                            item={item}
-
-                            hideCategoryTag={viewMode === "category"}
-
-                            hideShopTag={viewMode === "shop"}
-
-                            onEdit={(item) => {
-
-                                setEditing(item);
-
-                            }}
-
-                            onDelete={onDelete}
-
-                            onComplete={onComplete}
-
-                        />
+                        <div key={item.id}>
 
 
+                            <GroceryItem
 
-                        {/* Edit Panel */}
+                                item={item}
 
-                        {editing?.id === item.id &&
-                            !item.completed && (
+                                hideCategoryTag={viewMode === "category"}
 
-                                <ItemEditor
+                                hideShopTag={viewMode === "shop"}
 
-                                    item={item}
+                                onEdit={(item) => {
 
-                                    close={() => setEditing(null)}
+                                    setEditing(item);
 
-                                />
+                                }}
 
-                            )}
+                                onDelete={onDelete}
 
+                                onComplete={onComplete}
 
-                    </div>
-
-
-                ))}
+                            />
 
 
-            </div>
 
+                            {/* Edit Panel */}
+
+                            {editing?.id === item.id &&
+                                !item.completed && (
+
+                                    <ItemEditor
+
+                                        item={item}
+
+                                        close={() => setEditing(null)}
+
+                                    />
+
+                                )}
+
+
+                        </div>
+
+
+                    ))}
+
+
+                </div>
+            )}
             {/* Quick Add Dialog */}
 
             {showQuickAdd && (
@@ -179,7 +168,7 @@ export default function GroceryGroup({
                     groupName={groupName}
 
                     groupType={viewMode === "shop" ? "shop" : "category"}
-                    
+
                     defaultPriority={HIDDEN_PRIORITIES[0].label}
 
                     onCancel={() => setShowQuickAdd(false)}
