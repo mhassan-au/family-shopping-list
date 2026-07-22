@@ -173,7 +173,7 @@ export default function ShoppingList() {
 
               setEditing={setEditing}
 
-              canQuickAdd={viewMode !== "flat"}
+             
               
               onDelete={(item) => {
 

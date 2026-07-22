@@ -10,6 +10,7 @@ import ItemEditor from "./ItemEditor";
 import { ShoppingItem } from "@/lib/types";
 import { getTagColor } from "@/lib/tagColor";
 
+
 interface Props {
 
     groupName: string;
@@ -26,10 +27,8 @@ interface Props {
 
     onComplete: (item: ShoppingItem) => void;
 
-    // Quick add support
-    canQuickAdd: boolean;
-
 }
+
 
 export default function GroceryGroup({
 
@@ -43,48 +42,53 @@ export default function GroceryGroup({
 
     setEditing,
 
-    canQuickAdd,
-
     onDelete,
 
     onComplete
 
 }: Props) {
 
-    // Quick add dialog state
 
     const [showQuickAdd, setShowQuickAdd] = useState(false);
 
     const [collapsed, setCollapsed] = useState(false);
 
+
     return (
 
         <div>
 
+
             {/* Group Header */}
+
             {viewMode !== "flat" && (
 
-                <div onClick={() => setCollapsed(!collapsed)}
-                    className={`
-      sticky
-      top-0
-      z-10
-      flex
-      items-center
-      justify-between
-      px-3
-      py-2
-      mb-2
-      rounded-lg
-      font-bold
-      border
-      cursor-pointer
+                <div
 
-      ${groupName.startsWith("No ")
-                            ? "bg-gray-200 text-gray-700"
-                            : getTagColor(groupName)
+                    onClick={() => setCollapsed(!collapsed)}
+
+                    className={`
+                        sticky
+                        top-0
+                        z-10
+                        flex
+                        items-center
+                        justify-between
+                        px-3
+                        py-2
+                        mb-2
+                        rounded-lg
+                        font-bold
+                        border
+                        cursor-pointer
+
+                        ${
+                            groupName.startsWith("No ")
+                                ? "bg-gray-200 text-gray-700"
+                                : getTagColor(groupName)
                         }
-    `}
+                    `}
+
                 >
 
                     <span>
@@ -92,23 +96,60 @@ export default function GroceryGroup({
                     </span>
 
 
-                    {/* Future collapse button */}
+                    <div className="flex items-center gap-3">
 
-                    <span className="text-sm">
-                        {collapsed ? "▶" : "▼"}
-                    </span>
+
+                        {/* Quick Add */}
+
+                        <button
+
+                            onClick={(e) => {
+
+                                e.stopPropagation();
+
+                                setShowQuickAdd(true);
+
+                            }}
+
+                            className="
+                                text-xl
+                                active:scale-90
+                            "
+
+                        >
+
+                            <FiPlus />
+
+                        </button>
+
+
+
+                        {/* Collapse */}
+
+                        <span className="text-sm">
+
+                            {collapsed ? "▶" : "▼"}
+
+                        </span>
+
+
+                    </div>
 
 
                 </div>
 
             )}
+
+
+
             {/* Group Items */}
+
             {!collapsed && (
+
                 <div className="space-y-2">
 
 
                     {groupItems.map((item) => (
-
 
                         <div key={item.id}>
 
@@ -134,9 +175,6 @@ export default function GroceryGroup({
                             />
 
 
-
-                            {/* Edit Panel */}
-
                             {editing?.id === item.id &&
                                 !item.completed && (
 
@@ -153,12 +191,15 @@ export default function GroceryGroup({
 
                         </div>
 
-
                     ))}
 
 
                 </div>
+
             )}
+
+
+
             {/* Quick Add Dialog */}
 
             {showQuickAdd && (
@@ -167,11 +208,19 @@ export default function GroceryGroup({
 
                     groupName={groupName}
 
-                    groupType={viewMode === "shop" ? "shop" : "category"}
+                    groupType={
+                        viewMode === "shop"
+                            ? "shop"
+                            : "category"
+                    }
 
-                    defaultPriority={HIDDEN_PRIORITIES[0].label}
+                    defaultPriority={
+                        HIDDEN_PRIORITIES[0].label
+                    }
+
 
                     onCancel={() => setShowQuickAdd(false)}
+
 
                     onSave={async (
                         text,
@@ -180,6 +229,7 @@ export default function GroceryGroup({
                         priority
                     ) => {
 
+
                         await addItem(
                             text,
                             shop,
@@ -187,13 +237,16 @@ export default function GroceryGroup({
                             priority
                         );
 
+
                         setShowQuickAdd(false);
+
 
                     }}
 
                 />
 
             )}
+
 
         </div>
 
