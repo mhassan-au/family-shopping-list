@@ -100,7 +100,12 @@ export default function GroceryInput({
 
                     onClick={onAdd}
 
-                    className="btn-primary text-2xl"
+                    className="btn-primary
+      w-12
+      h-12
+      rounded-lg
+      font-bold
+      text-2xl"
 
                 >
 
