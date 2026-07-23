@@ -78,13 +78,22 @@ export default function ShoppingList() {
 
   } = useShoppingDialogs();
 
-  function handleLogout() {
+function handleLogout() {
 
-    clearDeviceLogin();
+  const confirmed = window.confirm(
+    "Are you sure you want to logout?"
+  );
 
-    window.location.reload();
-
+  if (!confirmed) {
+    return;
   }
+
+
+  clearDeviceLogin();
+
+  window.location.reload();
+
+}
   // Add grocery item
 
   async function handleAddNew() {
