@@ -13,6 +13,7 @@ import GroceryInput from "./GroceryInput";
 import GroceryGroup from "./GroceryGroup";
 import ConfirmDialog from "./ConfirmDialog";
 import ShoppingSummary from "./ShoppingSummary";
+import NotifyButton from "./NotifyButton";
 
 
 export default function ShoppingList() {
@@ -219,6 +220,12 @@ export default function ShoppingList() {
         }}
 
       />
+
+      <div className="space-y-2">
+
+        <NotifyButton />
+
+      </div>
 
       {!loading && items.length === 0 && (
         <p className="text-gray-500 text-center mt-5">

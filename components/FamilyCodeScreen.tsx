@@ -7,6 +7,8 @@ import { db } from "@/lib/firebase";
 import { hashCode } from "@/lib/hash";
 import { loginAnonymous } from "@/lib/auth";
 import { saveDeviceLogin } from "@/lib/device";
+import { saveNotificationToken } from "@/lib/notificationToken";
+import { requestNotificationPermission } from "@/lib/messaging";
 
 export default function FamilyCodeScreen() {
 
@@ -51,6 +53,31 @@ export default function FamilyCodeScreen() {
                 familyCode,
                 username.toLowerCase()
             );
+
+            try {
+
+                const token =
+                    await requestNotificationPermission();
+
+                if (token) {
+
+                    await saveNotificationToken(
+                        familyCode,
+                        username,
+                        token
+                    );
+
+                }
+
+            }
+            catch (error) {
+
+                console.log(
+                    "Notification setup skipped",
+                    error
+                );
+
+            }
 
             window.location.reload();
 
