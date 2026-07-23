@@ -14,7 +14,8 @@ import GroceryGroup from "./GroceryGroup";
 import ConfirmDialog from "./ConfirmDialog";
 import ShoppingSummary from "./ShoppingSummary";
 import NotifyButton from "./NotifyButton";
-
+import { FiLogOut } from "react-icons/fi";
+import { clearDeviceLogin } from "@/lib/device";
 
 export default function ShoppingList() {
 
@@ -77,6 +78,13 @@ export default function ShoppingList() {
 
   } = useShoppingDialogs();
 
+  function handleLogout() {
+
+    clearDeviceLogin();
+
+    window.location.reload();
+
+  }
   // Add grocery item
 
   async function handleAddNew() {
@@ -109,7 +117,42 @@ export default function ShoppingList() {
 
   return (
     <main className="w-full max-w-md mx-auto p-4 sm:p-5">
-      <h1 className="text-3xl font-bold mb-6">🛒 MyGrocery</h1>
+      <div
+        className="
+    flex
+    items-center
+    justify-between
+    w-full
+  "
+      >
+
+        <h1 className="text-xl font-bold">
+          🛒 MyGrocery
+        </h1>
+
+
+        <button
+          onClick={handleLogout}
+          className="
+      p-2
+      rounded-lg
+
+      text-gray-700
+      dark:text-gray-200
+
+      hover:bg-gray-100
+      dark:hover:bg-gray-800
+
+      transition
+    "
+          title="Logout"
+        >
+
+          <FiLogOut size={20} />
+
+        </button>
+
+      </div>
 
       {/* Grocery Input */}
 
@@ -174,8 +217,8 @@ export default function ShoppingList() {
 
               setEditing={setEditing}
 
-             
-              
+
+
               onDelete={(item) => {
 
                 setDeleteTarget(item);
