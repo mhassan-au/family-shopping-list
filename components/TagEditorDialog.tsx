@@ -68,7 +68,7 @@ export default function TagEditorDialog({
 
             <div
                 className="
-        bg-white
+        card 
         rounded-xl
         p-5
         w-80
@@ -139,7 +139,7 @@ export default function TagEditorDialog({
 
                             onClick={onCancel}
 
-                            className="px-4 py-2"
+                            className="btn-secondary"
 
                         >
                             Cancel
@@ -151,14 +151,7 @@ export default function TagEditorDialog({
 
                             onClick={() => onSave(value)}
 
-                            className="
-      bg-black
-      text-white
-      px-4
-      py-2
-      rounded-lg
-      "
-
+                            className="btn-primary"
                         >
                             Save
 

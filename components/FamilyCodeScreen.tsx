@@ -7,8 +7,6 @@ import { db } from "@/lib/firebase";
 import { hashCode } from "@/lib/hash";
 import { loginAnonymous } from "@/lib/auth";
 import { saveDeviceLogin } from "@/lib/device";
-import { updateDoc } from "firebase/firestore";
-
 
 export default function FamilyCodeScreen() {
 
@@ -172,14 +170,7 @@ export default function FamilyCodeScreen() {
                 <button
                     onClick={handleSubmit}
                     disabled={loading}
-                    className="
-      bg-black
-      text-white
-      rounded-lg
-      px-4
-      py-2
-      w-full
-    "
+                    className="w-full btn-primary"
                 >
                     {loading ? "Signing in..." : "Sign In"}
                 </button>

@@ -73,12 +73,7 @@ return (
 
         onClick={onClear}
 
-        className="
-        bg-gray-200
-        px-4
-        py-2
-        rounded-lg
-        text-sm
+        className="btn-danger text-sm
         "
 
       >

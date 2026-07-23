@@ -53,8 +53,7 @@ export default function ConfirmDialog({
 
 
       <div
-        className="
-        bg-white
+        className="card
         rounded-lg
         p-5
         w-80
@@ -95,7 +94,7 @@ export default function ConfirmDialog({
 
             onClick={onCancel}
 
-            className="px-4 py-2"
+            className="btn-secondary"
 
           >
 

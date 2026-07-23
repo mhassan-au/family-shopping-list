@@ -5,17 +5,12 @@
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #111827;
+    /* gray-900 */
+    --foreground: #f9fafb;
+    /* gray-50 */
   }
 }
 
@@ -23,6 +18,41 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+html {
+  color-scheme: light dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@layer components {
+
+  .card {
+    @apply bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg;
+  }
+
+  .input {
+    @apply bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg;
+  }
+
+  .btn-secondary {
+    @apply bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 font-medium px-4 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply bg-gray-900 hover:bg-black dark:bg-white dark:hover:bg-gray-200 text-white dark:text-black font-medium px-4 py-2 rounded-lg border border-gray-800 dark:border-gray-300 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-danger {
+    @apply bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-100 border border-red-300 dark:border-red-700 font-medium px-4 py-2 rounded-lg hover:bg-red-200 dark:hover:bg-red-800 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
 }
 
 @source inline("bg-pink-100 text-pink-800 bg-red-100 text-red-800 bg-blue-100 text-blue-800 bg-amber-100 text-amber-800 bg-lime-100 text-lime-800 bg-emerald-100 text-emerald-800 bg-orange-100 text-orange-800 bg-yellow-100 text-yellow-800 bg-green-100 text-green-800 bg-cyan-100 text-cyan-800 bg-violet-100 text-violet-800 bg-slate-100 text-slate-800 bg-gray-200 text-gray-700 bg-indigo-100 text-indigo-800");

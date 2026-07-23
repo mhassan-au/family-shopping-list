@@ -100,12 +100,7 @@ export default function GroceryInput({
 
                     onClick={onAdd}
 
-                    className="
-          bg-black
-          text-white
-          px-4
-          rounded-lg
-          "
+                    className="btn-primary text-2xl"
 
                 >
 
@@ -132,7 +127,7 @@ export default function GroceryInput({
 
                 <select
 
-                    className="
+                    className="input
           border
           rounded-lg
           p-2
@@ -169,7 +164,7 @@ export default function GroceryInput({
 
                 <select
 
-                    className="
+                    className="input
           border
           rounded-lg
           p-2
@@ -207,7 +202,7 @@ export default function GroceryInput({
 
                 <select
 
-                    className="
+                    className="input
           border
           rounded-lg
           p-2

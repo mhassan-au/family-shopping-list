@@ -34,11 +34,12 @@ export default function ItemEditor({ item, close }: Props) {
   return (
 
     <div className="
+    input
       border
       rounded-lg
       p-4
       mt-2
-      bg-gray-50
+      card
     ">
 
       <h3 className="font-bold mb-3">
@@ -57,6 +58,7 @@ export default function ItemEditor({ item, close }: Props) {
           p-2
           w-full
           mb-2
+          input
         "
       >
 
@@ -86,6 +88,7 @@ export default function ItemEditor({ item, close }: Props) {
           p-2
           w-full
           mb-2
+          input
         "
       >
 
@@ -115,6 +118,7 @@ export default function ItemEditor({ item, close }: Props) {
           p-2
           w-full
           mb-3
+          input
         "
       >
 
@@ -137,13 +141,7 @@ export default function ItemEditor({ item, close }: Props) {
 
         <button
           onClick={save}
-          className="
-            bg-black
-            text-white
-            px-3
-            py-1
-            rounded
-          "
+          className="btn-primary"
         >
           Save
         </button>
@@ -151,12 +149,7 @@ export default function ItemEditor({ item, close }: Props) {
 
         <button
           onClick={close}
-          className="
-            border
-            px-3
-            py-1
-            rounded
-          "
+          className="btn-secondary"
         >
           Cancel
         </button>
