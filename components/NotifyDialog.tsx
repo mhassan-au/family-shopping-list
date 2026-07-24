@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { NOTIFICATION_MESSAGES } from "@/lib/notificationMessages";
+import { sendNotification } from "@/lib/sendNotification";
+import { getDeviceLogin } from "@/lib/device";
 
 interface Props {
   close: () => void;
@@ -17,16 +19,28 @@ export default function NotifyDialog({
     );
 
 
-  function handleSend() {
+async function handleSend() {
 
-    console.log(
-      "Sending notification:",
-      selectedMessage
-    );
+  const device = getDeviceLogin();
 
-    close();
+  if (!device) return;
 
-  }
+  const to =
+    device.username === "shamir"
+      ? "peu"
+      : "shamir";
+
+  await sendNotification(
+    device.familyCode,
+    device.username,
+    to,
+    selectedMessage.id,
+    selectedMessage.message
+  );
+
+  close();
+
+}
 
 
   return (
