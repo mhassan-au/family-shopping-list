@@ -9,7 +9,7 @@ import GroceryItem from "./GroceryItem";
 import ItemEditor from "./ItemEditor";
 import { ShoppingItem } from "@/lib/types";
 import { getTagColor } from "@/lib/tagColor";
-
+import { getDeviceLogin } from "@/lib/device";
 
 interface Props {
 
@@ -48,12 +48,10 @@ export default function GroceryGroup({
 
 }: Props) {
 
-
     const [showQuickAdd, setShowQuickAdd] = useState(false);
-
     const [collapsed, setCollapsed] = useState(false);
-
-
+    const device = getDeviceLogin();
+   
     return (
 
         <div>
@@ -171,6 +169,8 @@ export default function GroceryGroup({
                                 onDelete={onDelete}
 
                                 onComplete={onComplete}
+
+                                currentRole={device?.role}
 
                             />
 

@@ -46,12 +46,37 @@ export default function ItemEditor({ item, close }: Props) {
         {item.text}
       </h3>
 
+      {/* Priority */}
+      <select
+        value={priority}
+        onChange={(e) => setPriority(e.target.value)}
+        className="
+          border
+          rounded
+          p-2
+          w-full
+          mb-3
+          input
+        "
+      >
+
+        {PRIORITIES.map(priority => (
+
+          <option
+            key={priority.label}
+            value={priority.label}
+          >
+            {priority.label || "-- Select Priority --"}
+          </option>
+
+        ))}
+
+      </select>
 
       {/* Shop */}
-
       <select
         value={shop}
-        onChange={(e)=>setShop(e.target.value)}
+        onChange={(e) => setShop(e.target.value)}
         className="
           border
           rounded
@@ -62,7 +87,7 @@ export default function ItemEditor({ item, close }: Props) {
         "
       >
 
-        {SHOPS.map(shop=>(
+        {SHOPS.map(shop => (
 
           <option
             key={shop.label}
@@ -76,12 +101,10 @@ export default function ItemEditor({ item, close }: Props) {
       </select>
 
 
-
       {/* Category */}
-
       <select
         value={category}
-        onChange={(e)=>setCategory(e.target.value)}
+        onChange={(e) => setCategory(e.target.value)}
         className="
           border
           rounded
@@ -92,7 +115,7 @@ export default function ItemEditor({ item, close }: Props) {
         "
       >
 
-        {CATEGORIES.map(category=>(
+        {CATEGORIES.map(category => (
 
           <option
             key={category.label}
@@ -104,38 +127,6 @@ export default function ItemEditor({ item, close }: Props) {
         ))}
 
       </select>
-
-
-
-      {/* Priority */}
-
-      <select
-        value={priority}
-        onChange={(e)=>setPriority(e.target.value)}
-        className="
-          border
-          rounded
-          p-2
-          w-full
-          mb-3
-          input
-        "
-      >
-
-        {PRIORITIES.map(priority=>(
-
-          <option
-            key={priority.label}
-            value={priority.label}
-          >
-            {priority.label || "-- Select Priority --"}
-          </option>
-
-        ))}
-
-      </select>
-
-
 
       <div className="flex gap-2">
 

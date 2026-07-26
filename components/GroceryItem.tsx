@@ -23,6 +23,8 @@ interface Props {
 
     hideCategoryTag?: boolean;
 
+    currentRole?: string;
+
 }
 
 
@@ -38,7 +40,9 @@ export default function GroceryItem({
 
     hideShopTag = false,
 
-    hideCategoryTag = false
+    hideCategoryTag = false,
+
+    currentRole
 
 }: Props) {
 
@@ -89,6 +93,8 @@ export default function GroceryItem({
 
                     onChange={handleComplete}
 
+                    disabled={currentRole === "contributor"}
+
                 />
 
                 {/* Item text + tags */}
@@ -108,7 +114,11 @@ export default function GroceryItem({
 
                     <span
 
-                        onClick={handleComplete}
+                        onClick={() => {
+                            if (currentRole !== "contributor") {
+                                handleComplete();
+                            }
+                        }}
 
                         className={`
         cursor-pointer
@@ -274,31 +284,32 @@ export default function GroceryItem({
             </div>
 
 
-            {!item.completed && (
+            {!item.completed &&
+                currentRole !== "contributor" && (
 
-                <div className="flex gap-3">
-
-
-                    <button onClick={() => onEdit(item)}>
-
-                        <FiEdit3 size={18} />
-
-                    </button>
+                    <div className="flex gap-3">
 
 
-                    <button
-                        onClick={() => onDelete(item)}
-                        className="text-red-500"
-                    >
+                        <button onClick={() => onEdit(item)}>
 
-                        <FiTrash2 size={18} />
+                            <FiEdit3 size={18} />
 
-                    </button>
+                        </button>
 
 
-                </div>
+                        <button
+                            onClick={() => onDelete(item)}
+                            className="text-red-500"
+                        >
 
-            )}
+                            <FiTrash2 size={18} />
+
+                        </button>
+
+
+                    </div>
+
+                )}
 
             {/* Tag Edit Dialog */}
 

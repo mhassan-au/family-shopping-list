@@ -2,15 +2,19 @@ const KEY = "mygrocery_auth";
 
 export function saveDeviceLogin(
   familyCode: string,
-  username: string
+  username: string,
+  role: string
 ) {
+
   localStorage.setItem(
     KEY,
     JSON.stringify({
       familyCode,
       username,
+      role,
     })
   );
+
 }
 
 export function hasDeviceLogin() {

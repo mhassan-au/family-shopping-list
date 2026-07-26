@@ -15,7 +15,7 @@ import ConfirmDialog from "./ConfirmDialog";
 import ShoppingSummary from "./ShoppingSummary";
 import NotifyButton from "./NotifyButton";
 import { FiLogOut } from "react-icons/fi";
-import { clearDeviceLogin } from "@/lib/device";
+import { clearDeviceLogin, getDeviceLogin } from "@/lib/device";
 
 export default function ShoppingList() {
 
@@ -27,7 +27,7 @@ export default function ShoppingList() {
   const [selectedPriority, setSelectedPriority] = useState("");
   const [viewMode, setViewMode] = useState<"flat" | "shop" | "category">("flat");
   const [priorityFilter, setPriorityFilter] = useState("");
-
+  const device = getDeviceLogin();
 
   const {
 
@@ -78,22 +78,22 @@ export default function ShoppingList() {
 
   } = useShoppingDialogs();
 
-function handleLogout() {
+  function handleLogout() {
 
-  const confirmed = window.confirm(
-    "Are you sure you want to logout?"
-  );
+    const confirmed = window.confirm(
+      "Are you sure you want to logout?"
+    );
 
-  if (!confirmed) {
-    return;
+    if (!confirmed) {
+      return;
+    }
+
+
+    clearDeviceLogin();
+
+    window.location.reload();
+
   }
-
-
-  clearDeviceLogin();
-
-  window.location.reload();
-
-}
   // Add grocery item
 
   async function handleAddNew() {
@@ -140,9 +140,21 @@ function handleLogout() {
         </h1>
 
 
-        <button
-          onClick={handleLogout}
-          className="
+        <div className="flex items-center gap-2">
+
+          <span className="
+    text-sm
+    font-medium
+    text-gray-700
+    dark:text-gray-200
+  ">
+            {device?.username}
+          </span>
+
+
+          <button
+            onClick={handleLogout}
+            className="
       p-2
       rounded-lg
 
@@ -154,12 +166,14 @@ function handleLogout() {
 
       transition
     "
-          title="Logout"
-        >
+            title="Logout"
+          >
 
-          <FiLogOut size={20} />
+            <FiLogOut size={20} />
 
-        </button>
+          </button>
+
+        </div>
 
       </div>
 

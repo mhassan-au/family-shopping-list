@@ -40,7 +40,7 @@ export default function FamilyCodeScreen() {
             }
 
             const data = snapshot.data();
-
+            const role = data.role;
             const passwordHash = await hashCode(password);
 
             if (passwordHash !== data.passwordHash) {
@@ -51,7 +51,8 @@ export default function FamilyCodeScreen() {
 
             saveDeviceLogin(
                 familyCode,
-                username.toLowerCase()
+                username,
+                role
             );
 
             try {

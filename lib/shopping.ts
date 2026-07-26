@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 
 import { db } from "./firebase";
+import { getDeviceLogin } from "./device";
 
 export const shoppingCollection = collection(db, "shopping_items");
 
@@ -27,6 +28,8 @@ export async function addItem(
   priority: string,
 ) {
   if (!text.trim()) return;
+
+  const device = getDeviceLogin();
 
   const items = text
     .split(",")
@@ -44,6 +47,10 @@ export async function addItem(
       category,
 
       priority,
+
+      createdBy: device?.username ?? "",
+
+      createdByRole: device?.role ?? "",
 
       createdAt: serverTimestamp(),
     });
@@ -64,34 +71,25 @@ export async function updateItemDetails(
 }
 
 export async function completeItem(
-  id:string,
-  qty:number,
-  unitPrice:number,
-  lastQty:number,
-  lastUnitPrice:number
-){
+  id: string,
+  qty: number,
+  unitPrice: number,
+  lastQty: number,
+  lastUnitPrice: number,
+) {
+  const ref = doc(db, "shopping_items", id);
 
-const ref = doc(
-  db,
-  "shopping_items",
-  id
-);
+  await updateDoc(ref, {
+    completed: true,
 
+    qty,
 
-await updateDoc(ref,{
+    unitPrice,
 
-completed:true,
+    lastQty,
 
-qty,
-
-unitPrice,
-
-lastQty,
-
-lastUnitPrice
-
-});
-
+    lastUnitPrice,
+  });
 }
 
 export async function toggleItem(id: string, completed: boolean) {
