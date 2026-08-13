@@ -27,10 +27,10 @@ export default function ViewSelector({
     useState(false);
 
   return (
-    <div className="mb-4 grid grid-cols-4 gap-2">
+    <div className="mb-4 grid grid-cols-4 gap-1.5">
       {/* View Buttons */}
 
-      <div className="contents">
+      <div className="col-span-3 grid min-w-0 grid-cols-3 gap-1.5">
         <button
           onClick={() => setViewMode("flat")}
           className={`
@@ -40,6 +40,7 @@ export default function ViewSelector({
             rounded-lg
             border
             transition
+            min-w-0
 
             ${
               viewMode === "flat"
@@ -60,6 +61,7 @@ export default function ViewSelector({
             rounded-lg
             border
             transition
+            min-w-0
 
             ${
               viewMode === "shop"
@@ -80,6 +82,7 @@ export default function ViewSelector({
             rounded-lg
             border
             transition
+            min-w-0
 
             ${
               viewMode === "category"
@@ -103,7 +106,7 @@ export default function ViewSelector({
             flex
             items-center
             justify-center
-            gap-2
+            gap-1
             px-1
             py-2
             rounded-lg

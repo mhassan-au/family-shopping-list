@@ -9,7 +9,10 @@ export default function Loading() {
       flex-col
       items-center
       justify-center
-      bg-green-600
+      bg-slate-50
+      text-slate-900
+      dark:bg-slate-900
+      dark:text-slate-50
       "
     >
 
@@ -35,7 +38,8 @@ export default function Loading() {
         className="
         text-3xl
         font-bold
-        text-white
+        text-slate-900
+        dark:text-slate-50
         "
       >
         MyGrocery
@@ -47,7 +51,8 @@ export default function Loading() {
       <p
         className="
         mt-3
-        text-white
+        text-slate-500
+        dark:text-slate-400
         text-sm
         "
       >
