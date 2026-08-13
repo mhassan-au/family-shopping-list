@@ -16,7 +16,7 @@ export const viewport: Viewport = {
   themeColor: "#16a34a",
 };
 
-export const metadata = {
+export const metadata: Metadata = {
 
   title: "MyGrocery",
   description: "Family shopping list",

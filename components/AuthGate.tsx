@@ -18,11 +18,12 @@ export default function AuthGate({
 
 
   useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setLoggedIn(hasDeviceLogin());
+      setReady(true);
+    }, 0);
 
-    setLoggedIn(hasDeviceLogin());
-
-    setReady(true);
-
+    return () => window.clearTimeout(timer);
   }, []);
 
 

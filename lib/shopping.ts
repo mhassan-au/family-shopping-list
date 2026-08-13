@@ -7,6 +7,7 @@ import {
   serverTimestamp,
   query,
   orderBy,
+  where,
   getDocs,
   writeBatch,
 } from "firebase/firestore";
@@ -103,20 +104,18 @@ export async function deleteItem(id: string) {
 }
 
 export async function clearCompleted() {
-  const snapshot = await getDocs(shoppingCollection);
+  const snapshot = await getDocs(
+    query(shoppingCollection, where("completed", "==", true)),
+  );
 
   const batch = writeBatch(db);
 
   let count = 0;
 
   snapshot.docs.forEach((item) => {
-    const data = item.data();
+    batch.delete(item.ref);
 
-    if (data.completed === true) {
-      batch.delete(item.ref);
-
-      count++;
-    }
+    count++;
   });
 
   if (count > 0) {

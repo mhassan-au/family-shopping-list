@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function Loading() {
   return (
     <main
@@ -13,9 +15,11 @@ export default function Loading() {
 
       {/* App Icon */}
 
-      <img
+      <Image
         src="/cart.png"
         alt="MyGrocery"
+        width={128}
+        height={128}
         className="
         w-32
         h-32

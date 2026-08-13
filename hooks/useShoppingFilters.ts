@@ -4,21 +4,18 @@ import { useMemo } from "react";
 import { ShoppingItem } from "@/lib/types";
 import { PRIORITIES, HIDDEN_PRIORITIES } from "@/lib/config";
 
+const priorityOrder = Object.fromEntries(
+  [...PRIORITIES, ...HIDDEN_PRIORITIES].map((priority) => [
+    priority.label,
+    priority.order,
+  ]),
+);
+
 export function useShoppingFilters(
   items: ShoppingItem[],
   viewMode: "flat" | "shop" | "category",
   priorityFilter: string,
 ) {
-  // Priority sort order
-
-  const priorityOrder = Object.fromEntries(
-    [...PRIORITIES, ...HIDDEN_PRIORITIES].map((priority) => [
-      priority.label,
-
-      priority.order,
-    ]),
-  );
-
   const groupedItems = useMemo(() => {
     // Filter by priority
 

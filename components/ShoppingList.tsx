@@ -3,8 +3,7 @@
 import { useShoppingList } from "@/hooks/useShoppingList";
 import { useShoppingFilters } from "@/hooks/useShoppingFilters";
 import { useShoppingDialogs } from "@/hooks/useShoppingDialogs";
-import { PRIORITIES } from "@/lib/config";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { ShoppingItem } from "@/lib/types";
 import ViewSelector from "./ViewSelector";
@@ -13,7 +12,6 @@ import GroceryInput from "./GroceryInput";
 import GroceryGroup from "./GroceryGroup";
 import ConfirmDialog from "./ConfirmDialog";
 import ShoppingSummary from "./ShoppingSummary";
-import NotifyButton from "./NotifyButton";
 import { FiLogOut } from "react-icons/fi";
 import { clearDeviceLogin, getDeviceLogin } from "@/lib/device";
 
@@ -34,6 +32,8 @@ export default function ShoppingList() {
     items,
 
     loading,
+
+    error,
 
     handleAdd,
 
@@ -116,14 +116,6 @@ export default function ShoppingList() {
 
   }
 
-  const priorityOrder = Object.fromEntries(
-    PRIORITIES.map(priority => [
-      priority.label,
-      priority.order
-    ])
-  );
-
-
   return (
     <main className="w-full max-w-md mx-auto p-4 sm:p-5">
       <div
@@ -202,6 +194,12 @@ export default function ShoppingList() {
       />
 
       {loading && <p>Loading...</p>}
+
+      {error && (
+        <p className="text-red-500 text-sm my-2" role="alert">
+          {error}
+        </p>
+      )}
 
       {/* View Selector */}
 
@@ -378,14 +376,18 @@ export default function ShoppingList() {
           }}
 
           onSave={async (qty, unitPrice) => {
-
-            await handleComplete(
-              completingItem,
-              qty,
-              unitPrice
-            );
-
+            const itemToComplete = completingItem;
             setCompletingItem(null);
+
+            try {
+              await handleComplete(
+                itemToComplete,
+                qty,
+                unitPrice
+              );
+            } catch {
+              // The hook restores the item and exposes a user-facing error.
+            }
 
           }}
 

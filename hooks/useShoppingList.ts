@@ -21,6 +21,8 @@ export function useShoppingList() {
 
   const [loading, setLoading] = useState(true);
 
+  const [error, setError] = useState<string | null>(null);
+
   // Firebase Listener
 
   useEffect(() => {
@@ -36,6 +38,14 @@ export function useShoppingList() {
 
         setItems(data);
 
+        setError(null);
+
+        setLoading(false);
+      },
+
+      (snapshotError) => {
+        console.error("Shopping list listener failed", snapshotError);
+        setError("Could not refresh the shopping list. Check your connection and try again.");
         setLoading(false);
       },
     );
@@ -84,13 +94,45 @@ export function useShoppingList() {
 
     unitPrice: number,
   ) {
-    await completeShoppingItem(item, qty, unitPrice);
+    const previousItem = item;
+
+    setItems((currentItems) =>
+      currentItems.map((currentItem) =>
+        currentItem.id === item.id
+          ? {
+              ...currentItem,
+              completed: true,
+              qty,
+              unitPrice,
+              lastQty: qty,
+              lastUnitPrice: unitPrice,
+            }
+          : currentItem,
+      ),
+    );
+
+    setError(null);
+
+    try {
+      await completeShoppingItem(item, qty, unitPrice);
+    } catch (completeError) {
+      console.error("Completing shopping item failed", completeError);
+      setItems((currentItems) =>
+        currentItems.map((currentItem) =>
+          currentItem.id === previousItem.id ? previousItem : currentItem,
+        ),
+      );
+      setError("The item could not be completed. Check your connection and try again.");
+      throw completeError;
+    }
   }
 
   return {
     items,
 
     loading,
+
+    error,
 
     handleAdd,
 

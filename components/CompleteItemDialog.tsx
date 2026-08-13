@@ -36,8 +36,6 @@ export default function CompleteItemDialog({
     // Unit Price State
     const [unitPrice, setUnitPrice] = useState(defaultUnitPrice);
 
-    const total = qty * unitPrice;
-
     return (
 
         <div className="

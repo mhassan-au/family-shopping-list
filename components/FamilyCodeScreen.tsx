@@ -82,10 +82,10 @@ export default function FamilyCodeScreen() {
 
             window.location.reload();
 
-        } catch (err: any) {
+        } catch (err: unknown) {
 
             setError(
-                err.message || "Login failed"
+                err instanceof Error ? err.message : "Login failed"
             );
 
         } finally {
