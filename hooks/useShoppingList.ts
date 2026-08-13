@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { onSnapshot } from "firebase/firestore";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { disableNetwork, enableNetwork, onSnapshot } from "firebase/firestore";
 import { shoppingQuery } from "@/lib/shopping";
+import { db } from "@/lib/firebase";
 
 import {
   addShoppingItem,
@@ -29,9 +30,47 @@ export function useShoppingList() {
     typeof navigator === "undefined" ? true : navigator.onLine,
   );
 
+  const [connectionStalled, setConnectionStalled] = useState(false);
+
+  const cacheOnlyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnecting = useRef(false);
+  const autoRetryAttempted = useRef(false);
+
+  const clearCacheOnlyTimer = useCallback(() => {
+    if (cacheOnlyTimer.current) {
+      clearTimeout(cacheOnlyTimer.current);
+      cacheOnlyTimer.current = null;
+    }
+  }, []);
+
+  const reconnect = useCallback(async () => {
+    if (reconnecting.current || !navigator.onLine) return;
+
+    reconnecting.current = true;
+    clearCacheOnlyTimer();
+
+    try {
+      await disableNetwork(db);
+      await enableNetwork(db);
+    } catch (reconnectError) {
+      console.error("Firestore reconnect failed", reconnectError);
+    } finally {
+      reconnecting.current = false;
+    }
+  }, [clearCacheOnlyTimer]);
+
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    const handleOnline = () => {
+      setIsOnline(true);
+      setConnectionStalled(false);
+      autoRetryAttempted.current = false;
+      void reconnect();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setConnectionStalled(false);
+      clearCacheOnlyTimer();
+    };
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
@@ -40,7 +79,7 @@ export function useShoppingList() {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, []);
+  }, [clearCacheOnlyTimer, reconnect]);
 
   // Firebase Listener
 
@@ -66,6 +105,21 @@ export function useShoppingList() {
         setSyncing(
           snapshot.metadata.fromCache || snapshot.metadata.hasPendingWrites,
         );
+
+        if (snapshot.metadata.fromCache && navigator.onLine) {
+          if (!cacheOnlyTimer.current && !autoRetryAttempted.current) {
+            cacheOnlyTimer.current = setTimeout(() => {
+              cacheOnlyTimer.current = null;
+              autoRetryAttempted.current = true;
+              setConnectionStalled(true);
+              void reconnect();
+            }, 10000);
+          }
+        } else {
+          clearCacheOnlyTimer();
+          setConnectionStalled(false);
+          autoRetryAttempted.current = false;
+        }
       },
 
       (snapshotError) => {
@@ -76,8 +130,11 @@ export function useShoppingList() {
       },
     );
 
-    return () => unsubscribe();
-  }, []);
+    return () => {
+      clearCacheOnlyTimer();
+      unsubscribe();
+    };
+  }, [clearCacheOnlyTimer, reconnect]);
 
   // Add Item
 
@@ -163,6 +220,10 @@ export function useShoppingList() {
     syncing,
 
     isOnline,
+
+    connectionStalled,
+
+    reconnect,
 
     handleAdd,
 

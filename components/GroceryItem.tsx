@@ -7,6 +7,7 @@ import { updateItemDetails } from "@/lib/shopping";
 import { FiTrash2, FiEdit3 } from "react-icons/fi";
 import { ShoppingItem } from "@/lib/types";
 import { getTagColor } from "@/lib/tagColor";
+import { FAMILY_MEMBER_COLORS } from "@/lib/config";
 
 
 interface Props {
@@ -96,6 +97,14 @@ export default function GroceryItem({
                     disabled={currentRole === "contributor"}
 
                 />
+
+                {item.createdBy && FAMILY_MEMBER_COLORS[item.createdBy.toLowerCase()] && (
+                    <span
+                        className={`h-2.5 w-2.5 shrink-0 rounded-full ${FAMILY_MEMBER_COLORS[item.createdBy.toLowerCase()]}`}
+                        title={`Added by ${item.createdBy}`}
+                        aria-label={`Added by ${item.createdBy}`}
+                    />
+                )}
 
                 {/* Item text + tags */}
 

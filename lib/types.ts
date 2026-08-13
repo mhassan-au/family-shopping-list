@@ -8,6 +8,8 @@ export interface ShoppingItem {
 
   createdAt: number;
 
+  createdBy?: string;
+
   shop?: string;
 
   category?: string;

@@ -39,6 +39,10 @@ export default function ShoppingList() {
 
     isOnline,
 
+    connectionStalled,
+
+    reconnect,
+
     handleAdd,
 
     handleToggle,
@@ -212,7 +216,18 @@ export default function ShoppingList() {
         <p className="text-xs text-amber-600 dark:text-amber-400 my-2">
           {!isOnline
             ? "Offline — changes will sync when connected"
-            : "Syncing changes..."}
+            : connectionStalled
+              ? "Connection delayed - retrying sync..."
+              : "Syncing changes..."}
+          {connectionStalled && (
+            <button
+              type="button"
+              onClick={() => void reconnect()}
+              className="ml-2 underline font-medium"
+            >
+              Retry now
+            </button>
+          )}
         </p>
       )}
 

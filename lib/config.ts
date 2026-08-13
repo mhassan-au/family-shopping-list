@@ -3,6 +3,12 @@ export interface TagOption {
   color: string;
 }
 
+export const FAMILY_MEMBER_COLORS: Record<string, string> = {
+  shamir: "bg-blue-500",
+  peu: "bg-purple-500",
+  izhaar: "bg-orange-500",
+};
+
 export const SHOPS: TagOption[] = [
   { label: "", color: "" },
 
