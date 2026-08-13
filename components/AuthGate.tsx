@@ -7,6 +7,9 @@ import { hasDeviceLogin } from "@/lib/device";
 import { auth } from "@/lib/firebase";
 import { loginAnonymous } from "@/lib/auth";
 import Loading from "@/app/loading";
+import DeviceApprovalScreen from "./DeviceApprovalScreen";
+import { getDeviceLogin } from "@/lib/device";
+import { isDeviceApproved } from "@/lib/deviceApproval";
 
 
 export default function AuthGate({
@@ -18,6 +21,7 @@ export default function AuthGate({
   const [ready, setReady] = useState(false);
 
   const [loggedIn, setLoggedIn] = useState(false);
+  const [approved, setApproved] = useState(false);
 
 
   useEffect(() => {
@@ -38,6 +42,17 @@ export default function AuthGate({
 
         if (!auth.currentUser) {
           await loginAnonymous();
+        }
+
+        const device = getDeviceLogin();
+        const uid = auth.currentUser?.uid;
+
+        if (device?.authUid && uid && uid === device.authUid) {
+          const deviceApproved = await isDeviceApproved(uid);
+
+          if (active) {
+            setApproved(deviceApproved);
+          }
         }
       } catch (error) {
         // Firestore can still serve previously cached data while offline.
@@ -69,6 +84,10 @@ export default function AuthGate({
 
     return <FamilyCodeScreen />;
 
+  }
+
+  if (!approved) {
+    return <DeviceApprovalScreen onApproved={() => setApproved(true)} />;
   }
 
 

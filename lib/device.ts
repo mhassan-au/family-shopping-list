@@ -3,7 +3,8 @@ const KEY = "mygrocery_auth";
 export function saveDeviceLogin(
   familyCode: string,
   username: string,
-  role: string
+  role: string,
+  authUid: string,
 ) {
 
   localStorage.setItem(
@@ -12,6 +13,7 @@ export function saveDeviceLogin(
       familyCode,
       username,
       role,
+      authUid,
     })
   );
 

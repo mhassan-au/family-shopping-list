@@ -29,4 +29,6 @@ export interface ShoppingItem {
 export interface DeviceLogin {
   familyCode: string;
   username: string;
+  role: string;
+  authUid: string;
 }

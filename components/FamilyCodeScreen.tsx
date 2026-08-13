@@ -9,6 +9,10 @@ import { loginAnonymous } from "@/lib/auth";
 import { saveDeviceLogin } from "@/lib/device";
 import { saveNotificationToken } from "@/lib/notificationToken";
 import { requestNotificationPermission } from "@/lib/messaging";
+import {
+    isDeviceApproved,
+    requestDeviceApproval,
+} from "@/lib/deviceApproval";
 
 export default function FamilyCodeScreen() {
 
@@ -47,15 +51,26 @@ export default function FamilyCodeScreen() {
                 throw new Error("Invalid login");
             }
 
-            await loginAnonymous();
+            const firebaseUser = await loginAnonymous();
+
+            const approved = await isDeviceApproved(firebaseUser.uid);
+
+            if (!approved) {
+                await requestDeviceApproval(
+                    firebaseUser.uid,
+                    familyCode,
+                    username
+                );
+            }
 
             saveDeviceLogin(
                 familyCode,
                 username,
-                role
+                role,
+                firebaseUser.uid
             );
 
-            try {
+            if (approved) try {
 
                 const token =
                     await requestNotificationPermission();
@@ -104,6 +119,8 @@ export default function FamilyCodeScreen() {
       items-center
       justify-center
       p-5
+      bg-slate-50
+      dark:bg-slate-900
       "
         >
 
@@ -112,13 +129,18 @@ export default function FamilyCodeScreen() {
     w-full
     max-w-sm
     border
+    border-blue-200
     rounded-xl
     p-5
     space-y-4
+    bg-white
+    shadow-sm
+    dark:border-blue-800
+    dark:bg-slate-800
   "
             >
 
-                <h1 className="text-2xl font-bold text-center">
+                <h1 className="rounded-xl bg-gradient-to-r from-blue-100 to-cyan-50 px-3 py-3 text-center text-2xl font-bold dark:from-blue-950 dark:to-slate-900">
                     🛒 MyGrocery
                 </h1>
 
@@ -137,10 +159,8 @@ export default function FamilyCodeScreen() {
                         type="text"
                         value={familyCode}
                         onChange={(e) => setFamilyCode(e.target.value)}
-                        className="
+                        className="input
         mt-1
-        border
-        rounded-lg
         p-2
         w-full
       "
@@ -158,10 +178,8 @@ export default function FamilyCodeScreen() {
                         type="text"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        className="
+                        className="input
         mt-1
-        border
-        rounded-lg
         p-2
         w-full
       "
@@ -179,10 +197,8 @@ export default function FamilyCodeScreen() {
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="
+                        className="input
         mt-1
-        border
-        rounded-lg
         p-2
         w-full
       "
@@ -198,7 +214,7 @@ export default function FamilyCodeScreen() {
                 <button
                     onClick={handleSubmit}
                     disabled={loading}
-                    className="w-full btn-primary"
+                    className="w-full rounded-lg border border-blue-700 bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-700 active:scale-95 disabled:opacity-50"
                 >
                     {loading ? "Signing in..." : "Sign In"}
                 </button>
