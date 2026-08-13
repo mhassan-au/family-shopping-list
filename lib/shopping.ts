@@ -34,7 +34,8 @@ export async function addItem(
   const items = text
     .split(",")
     .map((x) => x.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .map((item) => item.charAt(0).toLocaleUpperCase() + item.slice(1));
 
   const batch = writeBatch(db);
 

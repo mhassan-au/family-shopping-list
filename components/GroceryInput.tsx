@@ -66,21 +66,24 @@ export default function GroceryInput({
 
     return (
 
-        <div className="mb-5">
+        <div className="mb-5 rounded-xl border border-blue-200 bg-blue-50 p-3 shadow-sm dark:border-blue-800 dark:bg-blue-950/40">
 
 
             {/* Input Box */}
 
-            <div className="flex gap-2 w-full">
+            <div className="flex gap-2 w-full min-w-0">
 
 
                 <input
 
-                    className="
-          border
-          rounded-lg
+                    className="input
           p-2
           flex-1
+          min-w-0
+          focus:border-blue-400
+          focus:outline-none
+          focus:ring-2
+          focus:ring-blue-200
           "
 
                     placeholder="Add grocery item"
@@ -100,7 +103,14 @@ export default function GroceryInput({
 
                     onClick={onAdd}
 
-                    className="btn-primary
+                    className="
+      bg-blue-600
+      hover:bg-blue-700
+      text-white
+      border
+      border-blue-700
+      transition
+      active:scale-95
       w-12
       h-12
       rounded-lg
@@ -137,6 +147,7 @@ export default function GroceryInput({
           px-1
           py-2
           min-w-0
+          w-full
           text-sm
           "
 
@@ -177,6 +188,7 @@ export default function GroceryInput({
           px-1
           py-2
           min-w-0
+          w-full
           text-sm
           "
 
@@ -218,6 +230,7 @@ export default function GroceryInput({
           px-1
           py-2
           min-w-0
+          w-full
           text-sm
           "
 

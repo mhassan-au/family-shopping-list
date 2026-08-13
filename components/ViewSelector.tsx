@@ -29,29 +29,25 @@ export default function ViewSelector({
   return (
     <div
       className="
-        flex
-        flex-wrap
-        justify-between
-        items-center
-        gap-2
         mb-4
       "
     >
       {/* View Buttons */}
 
-      <div className="flex gap-2 flex-wrap">
+      <div className="grid w-full grid-cols-3 gap-2">
         <button
           onClick={() => setViewMode("flat")}
           className={`
             px-3
             py-1.5
+            text-sm
             rounded-lg
             border
             transition
 
             ${
               viewMode === "flat"
-                ? "bg-white text-black border-gray-300 font-semibold"
+                ? "bg-blue-600 text-white border-blue-600 font-semibold shadow-sm"
                 : "bg-gray-200 text-gray-800 border-gray-300 dark:bg-gray-700 dark:text-white dark:border-gray-600"
             }
           `}
@@ -64,13 +60,14 @@ export default function ViewSelector({
           className={`
             px-3
             py-1.5
+            text-sm
             rounded-lg
             border
             transition
 
             ${
               viewMode === "shop"
-                ? "bg-white text-black border-gray-300 font-semibold"
+                ? "bg-blue-600 text-white border-blue-600 font-semibold shadow-sm"
                 : "bg-gray-200 text-gray-800 border-gray-300 dark:bg-gray-700 dark:text-white dark:border-gray-600"
             }
           `}
@@ -83,13 +80,14 @@ export default function ViewSelector({
           className={`
             px-3
             py-1.5
+            text-sm
             rounded-lg
             border
             transition
 
             ${
               viewMode === "category"
-                ? "bg-white text-black border-gray-300 font-semibold"
+                ? "bg-blue-600 text-white border-blue-600 font-semibold shadow-sm"
                 : "bg-gray-200 text-gray-800 border-gray-300 dark:bg-gray-700 dark:text-white dark:border-gray-600"
             }
           `}
@@ -100,7 +98,7 @@ export default function ViewSelector({
 
       {/* Filter */}
 
-      <div className="relative">
+      <div className="relative mt-2 flex justify-end">
         <button
           onClick={() =>
             setShowPriorityFilter(!showPriorityFilter)

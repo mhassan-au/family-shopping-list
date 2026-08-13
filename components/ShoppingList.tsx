@@ -3,7 +3,7 @@
 import { useShoppingList } from "@/hooks/useShoppingList";
 import { useShoppingFilters } from "@/hooks/useShoppingFilters";
 import { useShoppingDialogs } from "@/hooks/useShoppingDialogs";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { ShoppingItem } from "@/lib/types";
 import ViewSelector from "./ViewSelector";
@@ -15,6 +15,18 @@ import ShoppingSummary from "./ShoppingSummary";
 import { FiLogOut } from "react-icons/fi";
 import { clearDeviceLogin, getDeviceLogin } from "@/lib/device";
 
+const today = new Date();
+const todayLabel = new Intl.DateTimeFormat("en-AU", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+}).format(today);
+const todayDateTime = [
+  today.getFullYear(),
+  String(today.getMonth() + 1).padStart(2, "0"),
+  String(today.getDate()).padStart(2, "0"),
+].join("-");
+
 export default function ShoppingList() {
 
   const [newItem, setNewItem] = useState("");
@@ -25,7 +37,17 @@ export default function ShoppingList() {
   const [selectedPriority, setSelectedPriority] = useState("");
   const [viewMode, setViewMode] = useState<"flat" | "shop" | "category">("flat");
   const [priorityFilter, setPriorityFilter] = useState("");
+  const [toastMessage, setToastMessage] = useState("");
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const device = getDeviceLogin();
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, []);
 
   const {
 
@@ -88,6 +110,13 @@ export default function ShoppingList() {
 
   } = useShoppingDialogs();
 
+  const remainingItemCount = items.filter((item) => !item.completed).length;
+  const syncLabel = !isOnline
+    ? "Offline"
+    : syncing
+      ? "Syncing"
+      : "Synced";
+
   function handleLogout() {
 
     const confirmed = window.confirm(
@@ -107,6 +136,26 @@ export default function ShoppingList() {
   // Add grocery item
 
   function handleAddNew() {
+    const normalizedName = newItem.trim().toLocaleLowerCase();
+    const duplicate = items.find(
+      (item) => item.text.trim().toLocaleLowerCase() === normalizedName,
+    );
+
+    if (duplicate) {
+      setToastMessage(`${duplicate.text} already added`);
+
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+
+      toastTimerRef.current = setTimeout(() => {
+        setToastMessage("");
+        toastTimerRef.current = null;
+      }, 2500);
+
+      return;
+    }
+
     const addPromise = handleAdd(
       newItem,
       selectedShop,
@@ -137,6 +186,19 @@ export default function ShoppingList() {
     items-center
     justify-between
     w-full
+    rounded-xl
+    border
+    border-blue-200
+    bg-gradient-to-r
+    from-blue-100
+    to-cyan-50
+    px-3
+    py-2
+    mb-4
+    shadow-sm
+    dark:border-blue-800
+    dark:from-blue-950
+    dark:to-slate-900
   "
       >
 
@@ -239,7 +301,7 @@ export default function ShoppingList() {
         {syncing ? "Syncing shopping list" : "Shopping list synced"}
       </span>
 
-      <section className="border border-gray-300 dark:border-gray-700 rounded-xl p-3">
+      <section className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/60">
         {/* View Selector */}
 
         <ViewSelector
@@ -330,6 +392,18 @@ export default function ShoppingList() {
           Your grocery list is empty
         </p>
       )}
+
+      <footer className="sticky bottom-2 z-10 mt-6 rounded-xl border border-blue-200 bg-blue-100/95 px-4 py-2 text-center text-sm font-medium text-blue-900 shadow-sm backdrop-blur dark:border-blue-800 dark:bg-blue-950/95 dark:text-blue-100">
+        <time dateTime={todayDateTime} suppressHydrationWarning>
+          {todayLabel}
+        </time>
+        <span aria-hidden="true"> • </span>
+        <span>
+          {remainingItemCount} {remainingItemCount === 1 ? "item" : "items"} left
+        </span>
+        <span aria-hidden="true"> • </span>
+        <span>{syncLabel}</span>
+      </footer>
 
       {/* Delete Confirmation */}
 
@@ -433,6 +507,16 @@ export default function ShoppingList() {
 
         />
 
+      )}
+
+      {toastMessage && (
+        <div
+          className="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-[#FA8072] px-4 py-3 text-sm font-medium text-gray-950 shadow-lg"
+          role="status"
+          aria-live="polite"
+        >
+          {toastMessage}
+        </div>
       )}
     </main>
   );

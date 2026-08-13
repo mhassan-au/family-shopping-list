@@ -45,7 +45,7 @@ export default function ShoppingSummary({
 
 return (
 
-  <div className="mt-8 text-center">
+  <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50/70 p-4 text-center dark:border-blue-900 dark:bg-blue-950/30">
 
 
     {/* Shopping Total */}

@@ -72,8 +72,16 @@ export default function GroceryItem({
       items-start
       gap-2
       border
+      border-slate-200
+      bg-white
       rounded-lg
       p-3
+      shadow-sm
+      transition
+      hover:border-blue-300
+      dark:border-slate-700
+      dark:bg-slate-900
+      dark:hover:border-blue-700
       "
         >
 
@@ -296,7 +304,7 @@ export default function GroceryItem({
             {!item.completed &&
                 currentRole !== "contributor" && (
 
-                    <div className="flex gap-3">
+                    <div className="flex shrink-0 gap-2">
 
 
                         <button onClick={() => onEdit(item)}>
