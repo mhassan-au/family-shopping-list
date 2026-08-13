@@ -11,7 +11,6 @@ import CompleteItemDialog from "./CompleteItemDialog";
 import GroceryInput from "./GroceryInput";
 import GroceryGroup from "./GroceryGroup";
 import ConfirmDialog from "./ConfirmDialog";
-import ShoppingSummary from "./ShoppingSummary";
 import { FiLogOut } from "react-icons/fi";
 import { clearDeviceLogin, getDeviceLogin } from "@/lib/device";
 
@@ -26,13 +25,18 @@ const todayDateTime = [
   String(today.getMonth() + 1).padStart(2, "0"),
   String(today.getDate()).padStart(2, "0"),
 ].join("-");
+const MAX_ITEMS_PER_ADD = 20;
+const MAX_ITEM_NAME_LENGTH = 80;
 
 export default function ShoppingList() {
 
+  const device = getDeviceLogin();
+  const defaultCategory =
+    device?.username?.toLocaleLowerCase() === "izhaar" ? "Izhaar" : "";
   const [newItem, setNewItem] = useState("");
   const [editing, setEditing] = useState<ShoppingItem | null>(null);
   const [selectedShop, setSelectedShop] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(defaultCategory);
   const [clearing, setClearing] = useState(false);
   const [selectedPriority, setSelectedPriority] = useState("");
   const [viewMode, setViewMode] = useState<"flat" | "shop" | "category">("flat");
@@ -43,7 +47,6 @@ export default function ShoppingList() {
     type: "success" | "error" | "duplicate";
   } | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const device = getDeviceLogin();
 
   useEffect(() => {
     return () => {
@@ -130,6 +133,13 @@ export default function ShoppingList() {
   } = useShoppingDialogs();
 
   const remainingItemCount = items.filter((item) => !item.completed).length;
+  const completedTotal = items
+    .filter((item) => item.completed)
+    .reduce(
+      (sum, item) =>
+        sum + Number(item.qty || 0) * Number(item.unitPrice || 0),
+      0,
+    );
   const syncLabel = !isOnline
     ? "Offline"
     : syncing
@@ -161,6 +171,26 @@ export default function ShoppingList() {
       .filter(Boolean);
 
     if (requestedItems.length === 0) {
+      return;
+    }
+
+    if (requestedItems.length > MAX_ITEMS_PER_ADD) {
+      showToast(
+        `Add no more than ${MAX_ITEMS_PER_ADD} items at once`,
+        "error",
+      );
+      return;
+    }
+
+    const oversizedItem = requestedItems.find(
+      (item) => item.length > MAX_ITEM_NAME_LENGTH,
+    );
+
+    if (oversizedItem) {
+      showToast(
+        `Each item must be ${MAX_ITEM_NAME_LENGTH} characters or fewer`,
+        "error",
+      );
       return;
     }
 
@@ -204,7 +234,7 @@ export default function ShoppingList() {
 
     setSelectedShop("");
 
-    setSelectedCategory("");
+    setSelectedCategory(defaultCategory);
 
     setSelectedPriority("");
 
@@ -424,19 +454,17 @@ export default function ShoppingList() {
         </div>
       </section>
 
-      {/* Shopping Summary */}
-
-      <ShoppingSummary
-
-        items={items}
-
-        onClear={() => {
-
-          setShowClearConfirm(true);
-
-        }}
-
-      />
+      {items.some((item) => item.completed) && (
+        <div className="mt-5 text-center">
+          <button
+            type="button"
+            onClick={() => setShowClearConfirm(true)}
+            className="btn-danger text-sm"
+          >
+            Clear completed
+          </button>
+        </div>
+      )}
 
       {!loading && items.length === 0 && (
         <p className="text-gray-500 text-center mt-5">
@@ -444,16 +472,23 @@ export default function ShoppingList() {
         </p>
       )}
 
-      <footer className="sticky bottom-2 z-10 mt-6 rounded-xl border border-blue-200 bg-blue-100/95 px-4 py-2 text-center text-sm font-medium text-blue-900 shadow-sm backdrop-blur dark:border-blue-800 dark:bg-blue-950/95 dark:text-blue-100">
-        <time dateTime={todayDateTime} suppressHydrationWarning>
-          {todayLabel}
-        </time>
-        <span aria-hidden="true"> • </span>
-        <span>
-          {remainingItemCount} {remainingItemCount === 1 ? "item" : "items"} left
-        </span>
-        <span aria-hidden="true"> • </span>
-        <span>{syncLabel}</span>
+      <footer className="sticky bottom-2 z-10 mt-6 rounded-xl border border-blue-200 bg-blue-100/95 p-2 text-center text-blue-900 shadow-sm backdrop-blur dark:border-blue-800 dark:bg-blue-950/95 dark:text-blue-100">
+        <div className="px-2 py-1 text-sm font-medium">
+          <time dateTime={todayDateTime} suppressHydrationWarning>
+            {todayLabel}
+          </time>
+          <span aria-hidden="true"> • </span>
+          <span>
+            {remainingItemCount} {remainingItemCount === 1 ? "item" : "items"} left
+          </span>
+          <span aria-hidden="true"> • </span>
+          <span>{syncLabel}</span>
+        </div>
+        {completedTotal > 0 && (
+          <div className="mt-1 rounded-lg bg-blue-600 px-4 py-2 text-lg font-bold text-white shadow-sm dark:bg-blue-500 dark:text-slate-950">
+            Total: ${completedTotal.toFixed(2)}
+          </div>
+        )}
       </footer>
 
       {/* Delete Confirmation */}

@@ -88,6 +88,8 @@ export default function GroceryInput({
 
                     placeholder="Add grocery item"
 
+                    maxLength={500}
+
                     value={newItem}
 
                     onChange={(e) =>
