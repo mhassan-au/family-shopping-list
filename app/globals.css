@@ -37,6 +37,26 @@ html {
   color-scheme: light dark;
 }
 
+@keyframes toast-fade {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -0.75rem);
+  }
+  10%,
+  85% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -0.5rem);
+  }
+}
+
+.toast-fade {
+  animation: toast-fade 2.8s ease-in-out forwards;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

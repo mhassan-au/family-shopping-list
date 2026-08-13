@@ -3,7 +3,7 @@
 import { useShoppingList } from "@/hooks/useShoppingList";
 import { useShoppingFilters } from "@/hooks/useShoppingFilters";
 import { useShoppingDialogs } from "@/hooks/useShoppingDialogs";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ShoppingItem } from "@/lib/types";
 import ViewSelector from "./ViewSelector";
@@ -37,7 +37,11 @@ export default function ShoppingList() {
   const [selectedPriority, setSelectedPriority] = useState("");
   const [viewMode, setViewMode] = useState<"flat" | "shop" | "category">("flat");
   const [priorityFilter, setPriorityFilter] = useState("");
-  const [toastMessage, setToastMessage] = useState("");
+  const [toast, setToast] = useState<{
+    id: number;
+    message: string;
+    type: "success" | "error" | "duplicate";
+  } | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const device = getDeviceLogin();
 
@@ -48,6 +52,21 @@ export default function ShoppingList() {
       }
     };
   }, []);
+
+  const showToast = useCallback(
+    (message: string, type: "success" | "error" | "duplicate") => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+
+      setToast({ id: Date.now(), message, type });
+      toastTimerRef.current = setTimeout(() => {
+        setToast(null);
+        toastTimerRef.current = null;
+      }, 2800);
+    },
+    [],
+  );
 
   const {
 
@@ -136,22 +155,18 @@ export default function ShoppingList() {
   // Add grocery item
 
   function handleAddNew() {
+    if (!newItem.trim()) {
+      return;
+    }
+
     const normalizedName = newItem.trim().toLocaleLowerCase();
     const duplicate = items.find(
       (item) => item.text.trim().toLocaleLowerCase() === normalizedName,
     );
 
     if (duplicate) {
-      setToastMessage(`${duplicate.text} already added`);
-
-      if (toastTimerRef.current) {
-        clearTimeout(toastTimerRef.current);
-      }
-
-      toastTimerRef.current = setTimeout(() => {
-        setToastMessage("");
-        toastTimerRef.current = null;
-      }, 2500);
+      setNewItem("");
+      showToast(`${duplicate.text} already added`, "duplicate");
 
       return;
     }
@@ -172,9 +187,12 @@ export default function ShoppingList() {
 
     setSelectedPriority("");
 
-    void addPromise.catch((addError) => {
-      console.error("Adding shopping item failed", addError);
-    });
+    void addPromise
+      .then(() => showToast("Item added", "success"))
+      .catch((addError) => {
+        console.error("Adding shopping item failed", addError);
+        showToast("Item could not be added", "error");
+      });
 
   }
 
@@ -424,12 +442,16 @@ export default function ShoppingList() {
           }}
 
           onConfirm={() => {
+            const itemName = deleteTarget.text;
             const deletePromise = handleDelete(deleteTarget.id);
             setDeleteTarget(null);
 
-            void deletePromise.catch((deleteError) => {
-              console.error("Deleting shopping item failed", deleteError);
-            });
+            void deletePromise
+              .then(() => showToast(`${itemName} deleted`, "success"))
+              .catch((deleteError) => {
+                console.error("Deleting shopping item failed", deleteError);
+                showToast("Item could not be deleted", "error");
+              });
 
           }}
 
@@ -459,8 +481,10 @@ export default function ShoppingList() {
             setShowClearConfirm(false);
 
             void handleClear()
+              .then(() => showToast("Completed list cleared", "success"))
               .catch((clearError) => {
                 console.error("Clearing completed items failed", clearError);
+                showToast("Completed list could not be cleared", "error");
               })
               .finally(() => setClearing(false));
 
@@ -499,8 +523,10 @@ export default function ShoppingList() {
                 qty,
                 unitPrice
               );
+              showToast(`${itemToComplete.text} completed`, "success");
             } catch {
               // The hook restores the item and exposes a user-facing error.
+              showToast("Item could not be completed", "error");
             }
 
           }}
@@ -509,13 +535,20 @@ export default function ShoppingList() {
 
       )}
 
-      {toastMessage && (
+      {toast && (
         <div
-          className="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-[#FA8072] px-4 py-3 text-sm font-medium text-gray-950 shadow-lg"
+          key={toast.id}
+          className={`toast-fade fixed left-1/2 top-4 z-50 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-lg border px-4 py-3 text-center text-sm font-medium shadow-lg ${
+            toast.type === "success"
+              ? "border-green-300 bg-green-100 text-green-900"
+              : toast.type === "error"
+                ? "border-red-300 bg-red-100 text-red-900"
+                : "border-[#e96f62] bg-[#FA8072] text-gray-950"
+          }`}
           role="status"
           aria-live="polite"
         >
-          {toastMessage}
+          {toast.message}
         </div>
       )}
     </main>
