@@ -2,6 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { UI_TEXT } from "@/lib/uiText";
+import {
+    INPUT_LIMITS,
+    isValidPriceInput,
+    isValidQuantity,
+    isValidQuantityInput,
+    isValidUnitPrice,
+} from "@/lib/validation";
 
 interface Props {
 
@@ -32,10 +39,12 @@ export default function CompleteItemDialog({
 }: Props) {
 
     // Qty State
-    const [qty, setQty] = useState(defaultQty);
+    const [qty, setQty] = useState(String(defaultQty));
 
     // Unit Price State
-    const [unitPrice, setUnitPrice] = useState(defaultUnitPrice);
+    const [unitPrice, setUnitPrice] = useState(
+        defaultUnitPrice > 0 ? defaultUnitPrice.toFixed(2) : "",
+    );
     const priceInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -86,7 +95,7 @@ space-y-4
 
     <button
 
-      onClick={() => setQty(Math.max(1, qty - 1))}
+      onClick={() => setQty(String(Math.max(1, Number(qty || 1) - 1)))}
 
       className="btn-primary
       w-12
@@ -106,13 +115,19 @@ space-y-4
 
     <input
 
-      type="number"
+      type="text"
 
-      min="1"
+      inputMode="numeric"
+
+      pattern="[0-9]*"
+
+      maxLength={3}
 
       value={qty}
 
-      onChange={(e)=>setQty(Number(e.target.value))}
+      onChange={(e) => {
+        if (isValidQuantityInput(e.target.value)) setQty(e.target.value);
+      }}
 
       className="
       border
@@ -130,7 +145,9 @@ space-y-4
 
     <button
 
-      onClick={() => setQty(qty + 1)}
+      onClick={() =>
+        setQty(String(Math.min(INPUT_LIMITS.quantity, Number(qty || 0) + 1)))
+      }
 
       className="btn-primary
       w-12
@@ -152,17 +169,21 @@ space-y-4
 
       ref={priceInputRef}
 
-      type="number"
+      type="text"
 
       inputMode="decimal"
 
-      step="0.01"
+      pattern="[0-9]*[.]?[0-9]{0,2}"
+
+      maxLength={8}
 
       placeholder="$"
 
-      value={unitPrice || ""}
+      value={unitPrice}
 
-      onChange={(e)=>setUnitPrice(Number(e.target.value))}
+      onChange={(e) => {
+        if (isValidPriceInput(e.target.value)) setUnitPrice(e.target.value);
+      }}
 
       className="
       border
@@ -184,7 +205,7 @@ space-y-4
 
                 <div className="font-bold text-lg">
 
-                    {UI_TEXT.items.total(qty * unitPrice)}
+                    {UI_TEXT.items.total(Number(qty || 0) * Number(unitPrice || 0))}
 
                 </div>
 
@@ -206,7 +227,17 @@ space-y-4
 
                     <button
 
-                        onClick={() => onSave(qty, unitPrice)}
+                        onClick={() => {
+                            const parsedQty = Number(qty);
+                            const parsedPrice = Number(unitPrice || 0);
+
+                            if (
+                                isValidQuantity(parsedQty) &&
+                                isValidUnitPrice(parsedPrice)
+                            ) {
+                                onSave(parsedQty, parsedPrice);
+                            }
+                        }}
 
                         className="btn-primary"
 

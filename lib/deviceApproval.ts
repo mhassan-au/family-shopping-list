@@ -12,8 +12,14 @@ export async function requestDeviceApproval(
   familyCode: string,
   username: string,
 ) {
+  const pendingRef = doc(db, "pending_devices", uid);
+
+  if ((await getDoc(pendingRef)).exists()) {
+    return;
+  }
+
   await setDoc(
-    doc(db, "pending_devices", uid),
+    pendingRef,
     {
       familyCode,
       username: username.toLowerCase(),

@@ -1,0 +1,96 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function approvedDevice() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/approved_devices/$(request.auth.uid))
+        && get(/databases/$(database)/documents/approved_devices/$(request.auth.uid)).data.approved == true;
+    }
+
+    function validText(value, maximum) {
+      return value is string
+        && value.size() > 0
+        && value.size() <= maximum;
+    }
+
+    function validOptionalText(value, maximum) {
+      return value is string && value.size() <= maximum;
+    }
+
+    function validShoppingItem() {
+      let data = request.resource.data;
+      return data.keys().hasOnly([
+          'text', 'completed', 'shop', 'category', 'priority', 'createdBy',
+          'createdAt', 'createdByRole', 'qty', 'unitPrice', 'lastQty', 'lastUnitPrice'
+        ])
+        && data.keys().hasAll([
+          'text', 'completed', 'shop', 'category', 'priority', 'createdBy',
+          'createdAt'
+        ])
+        && validText(data.text, 80)
+        && data.completed is bool
+        && validOptionalText(data.shop, 40)
+        && validOptionalText(data.category, 40)
+        && validOptionalText(data.priority, 20)
+        && validText(data.createdBy, 40)
+        && (!('createdByRole' in data) || validOptionalText(data.createdByRole, 20))
+        && data.createdAt is timestamp
+        && (!('qty' in data) || (data.qty is number && data.qty >= 1 && data.qty <= 999))
+        && (!('unitPrice' in data) || (data.unitPrice is number && data.unitPrice >= 0 && data.unitPrice <= 99999.99))
+        && (!('lastQty' in data) || (data.lastQty is number && data.lastQty >= 1 && data.lastQty <= 999))
+        && (!('lastUnitPrice' in data) || (data.lastUnitPrice is number && data.lastUnitPrice >= 0 && data.lastUnitPrice <= 99999.99));
+    }
+
+    match /shopping_items/{itemId} {
+      allow read: if approvedDevice();
+      allow create: if approvedDevice() && validShoppingItem();
+      allow update: if approvedDevice()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'completed', 'shop', 'category', 'priority', 'qty', 'unitPrice',
+          'lastQty', 'lastUnitPrice'
+        ])
+        && validShoppingItem();
+      allow delete: if approvedDevice();
+    }
+
+    // Login needs to read the selected household user after anonymous auth.
+    // User profiles cannot be changed from the app.
+    match /families/{familyId}/users/{userId} {
+      allow get: if signedIn();
+      allow list, create, update, delete: if false;
+    }
+
+    match /pending_devices/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list: if false;
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly([
+          'familyCode', 'username', 'requestedAt'
+        ])
+        && validText(request.resource.data.familyCode, 40)
+        && validText(request.resource.data.username, 30)
+        && request.resource.data.requestedAt is timestamp;
+      allow update, delete: if false;
+    }
+
+    match /approved_devices/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, create, update, delete: if false;
+    }
+
+    // The removed notification feature cannot consume Firestore quota.
+    match /notification_requests/{requestId} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

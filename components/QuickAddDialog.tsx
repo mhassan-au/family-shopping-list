@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { UI_TEXT } from "@/lib/uiText";
+import { INPUT_LIMITS, isValidItemName } from "@/lib/validation";
 
 interface Props {
   groupName: string;
@@ -25,14 +26,22 @@ export default function QuickAddDialog({
 }: Props) {
 
   const [text, setText] = useState("");
+  const [error, setError] = useState("");
 
   function save() {
 
-    if (!text.trim()) return;
+    const itemName = text.trim();
+
+    if (!itemName) return;
+
+    if (!isValidItemName(itemName)) {
+      setError(UI_TEXT.toast.invalidCharacters);
+      return;
+    }
 
 
     onSave(
-      text,
+      itemName,
       groupType === "shop" ? groupName : "",
       groupType === "category" ? groupName : "",
       defaultPriority
@@ -84,6 +93,7 @@ export default function QuickAddDialog({
           onChange={(e) => setText(e.target.value)}
 
           placeholder={UI_TEXT.input.itemName}
+          maxLength={INPUT_LIMITS.itemName}
 
           className="
           border
@@ -94,6 +104,12 @@ export default function QuickAddDialog({
           "
 
         />
+
+        {error && (
+          <p className="mb-4 text-sm text-red-600 dark:text-red-400">
+            {error}
+          </p>
+        )}
 
 
         {/* Buttons */}

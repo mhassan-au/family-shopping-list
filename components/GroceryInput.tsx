@@ -2,6 +2,7 @@
 
 import { SHOPS, CATEGORIES, PRIORITIES } from "@/lib/config";
 import { UI_TEXT } from "@/lib/uiText";
+import { INPUT_LIMITS } from "@/lib/validation";
 
 
 interface Props {
@@ -89,7 +90,7 @@ export default function GroceryInput({
 
                     placeholder={UI_TEXT.input.placeholder}
 
-                    maxLength={500}
+                    maxLength={INPUT_LIMITS.itemInput}
 
                     value={newItem}
 

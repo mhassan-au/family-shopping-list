@@ -19,6 +19,11 @@ export const UI_TEXT = {
     signingIn: "Signing in...",
     invalid: "Invalid login",
     failed: "Login failed",
+    invalidHomeCode:
+      "Home code must be 3–40 letters, numbers, hyphens, or underscores.",
+    invalidUsername:
+      "Username can contain only letters, numbers, hyphens, or underscores.",
+    invalidPassword: "Password must be 6–128 characters.",
   },
   approval: {
     title: "Device approval required",
@@ -79,6 +84,8 @@ export const UI_TEXT = {
     maxItems: (count: number) => `Add no more than ${count} items at once`,
     maxLength: (count: number) =>
       `Each item must be ${count} characters or fewer`,
+    invalidCharacters:
+      "Items can use letters, numbers, spaces, and common shopping punctuation only.",
     alreadyAdded: (names: string[], plural: boolean) =>
       `${names.join(", ")} ${plural ? "are" : "is"} already added`,
     duplicatesSkipped: (names: string[]) =>

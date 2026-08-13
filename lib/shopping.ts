@@ -13,6 +13,11 @@ import {
 
 import { db } from "./firebase";
 import { getDeviceLogin } from "./device";
+import {
+  INPUT_LIMITS,
+  isValidItemName,
+  parseItemNames,
+} from "./validation";
 
 export const shoppingCollection = collection(db, "shopping_items");
 
@@ -31,11 +36,15 @@ export async function addItem(
 
   const device = getDeviceLogin();
 
-  const items = text
-    .split(",")
-    .map((x) => x.trim())
-    .filter(Boolean)
+  const items = parseItemNames(text)
     .map((item) => item.charAt(0).toLocaleUpperCase() + item.slice(1));
+
+  if (
+    items.length > INPUT_LIMITS.itemBatch ||
+    items.some((item) => !isValidItemName(item))
+  ) {
+    throw new Error("Invalid shopping item input");
+  }
 
   const batch = writeBatch(db);
 

@@ -12,6 +12,12 @@ import {
     requestDeviceApproval,
 } from "@/lib/deviceApproval";
 import { UI_TEXT } from "@/lib/uiText";
+import {
+    INPUT_LIMITS,
+    isValidFamilyCode,
+    isValidPassword,
+    isValidUsername,
+} from "@/lib/validation";
 
 export default function FamilyCodeScreen() {
 
@@ -29,6 +35,20 @@ export default function FamilyCodeScreen() {
         try {
             const normalizedFamilyCode = familyCode.trim();
             const normalizedUsername = username.trim().toLocaleLowerCase();
+
+            if (!isValidFamilyCode(normalizedFamilyCode)) {
+                throw new Error(UI_TEXT.login.invalidHomeCode);
+            }
+
+            if (!isValidUsername(normalizedUsername)) {
+                throw new Error(UI_TEXT.login.invalidUsername);
+            }
+
+            if (!isValidPassword(password)) {
+                throw new Error(UI_TEXT.login.invalidPassword);
+            }
+
+            const firebaseUser = await loginAnonymous();
 
             const ref = doc(
                 db,
@@ -55,8 +75,6 @@ export default function FamilyCodeScreen() {
             if (passwordHash !== data.passwordHash) {
                 throw new Error(UI_TEXT.login.invalid);
             }
-
-            const firebaseUser = await loginAnonymous();
 
             const approved = await isDeviceApproved(firebaseUser.uid);
 
@@ -137,6 +155,7 @@ export default function FamilyCodeScreen() {
 
                     <input
                         type="text"
+                        maxLength={INPUT_LIMITS.familyCode}
                         value={familyCode}
                         onChange={(e) => setFamilyCode(e.target.value)}
                         className="input
@@ -156,6 +175,7 @@ export default function FamilyCodeScreen() {
 
                     <input
                         type="text"
+                        maxLength={INPUT_LIMITS.username}
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         className="input
@@ -175,6 +195,7 @@ export default function FamilyCodeScreen() {
 
                     <input
                         type="password"
+                        maxLength={INPUT_LIMITS.password}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="input

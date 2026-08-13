@@ -15,6 +15,11 @@ import CompletedItemsDialog from "./CompletedItemsDialog";
 import { FiLogOut } from "react-icons/fi";
 import { clearDeviceLogin, getDeviceLogin } from "@/lib/device";
 import { UI_TEXT } from "@/lib/uiText";
+import {
+  INPUT_LIMITS,
+  isValidItemName,
+  parseItemNames,
+} from "@/lib/validation";
 
 const today = new Date();
 const todayLabel = new Intl.DateTimeFormat("en-AU", {
@@ -27,8 +32,6 @@ const todayDateTime = [
   String(today.getMonth() + 1).padStart(2, "0"),
   String(today.getDate()).padStart(2, "0"),
 ].join("-");
-const MAX_ITEMS_PER_ADD = 20;
-const MAX_ITEM_NAME_LENGTH = 80;
 
 export default function ShoppingList() {
 
@@ -167,32 +170,34 @@ export default function ShoppingList() {
   // Add grocery item
 
   function handleAddNew() {
-    const requestedItems = newItem
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
+    const requestedItems = parseItemNames(newItem);
 
     if (requestedItems.length === 0) {
       return;
     }
 
-    if (requestedItems.length > MAX_ITEMS_PER_ADD) {
+    if (requestedItems.length > INPUT_LIMITS.itemBatch) {
       showToast(
-        UI_TEXT.toast.maxItems(MAX_ITEMS_PER_ADD),
+        UI_TEXT.toast.maxItems(INPUT_LIMITS.itemBatch),
         "error",
       );
       return;
     }
 
     const oversizedItem = requestedItems.find(
-      (item) => item.length > MAX_ITEM_NAME_LENGTH,
+      (item) => item.length > INPUT_LIMITS.itemName,
     );
 
     if (oversizedItem) {
       showToast(
-        UI_TEXT.toast.maxLength(MAX_ITEM_NAME_LENGTH),
+        UI_TEXT.toast.maxLength(INPUT_LIMITS.itemName),
         "error",
       );
+      return;
+    }
+
+    if (requestedItems.some((item) => !isValidItemName(item))) {
+      showToast(UI_TEXT.toast.invalidCharacters, "error");
       return;
     }
 
