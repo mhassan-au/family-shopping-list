@@ -25,6 +25,11 @@ export const app = getApps().length
   : initializeApp(firebaseConfig);
 
 export const db = initializeFirestore(app, {
+  // Some mobile networks and proxies buffer Firestore's streaming responses,
+  // leaving clients one update behind. Long polling trades a little overhead
+  // for reliable, prompt delivery on those connections.
+  experimentalForceLongPolling: true,
+  experimentalAutoDetectLongPolling: false,
   localCache: persistentLocalCache({
     tabManager: persistentMultipleTabManager(),
   }),

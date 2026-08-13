@@ -207,19 +207,91 @@ export function useShoppingList() {
   // Toggle Completed
 
   async function handleToggle(item: ShoppingItem) {
-    await toggleShoppingItem(item);
+    setItems((currentItems) =>
+      currentItems.map((currentItem) =>
+        currentItem.id === item.id
+          ? { ...currentItem, completed: !currentItem.completed }
+          : currentItem,
+      ),
+    );
+
+    try {
+      await toggleShoppingItem(item);
+    } catch (toggleError) {
+      console.error("Toggling shopping item failed", toggleError);
+      setItems((currentItems) =>
+        currentItems.map((currentItem) =>
+          currentItem.id === item.id ? item : currentItem,
+        ),
+      );
+      setError("The item could not be updated. Check your connection and try again.");
+      throw toggleError;
+    }
   }
 
   // Delete Item
 
   async function handleDelete(id: string) {
-    await deleteShoppingItem(id);
+    let deletedItem: ShoppingItem | undefined;
+    let deletedIndex = -1;
+
+    setItems((currentItems) => {
+      deletedIndex = currentItems.findIndex((item) => item.id === id);
+      deletedItem = currentItems[deletedIndex];
+      return currentItems.filter((item) => item.id !== id);
+    });
+
+    try {
+      await deleteShoppingItem(id);
+    } catch (deleteError) {
+      console.error("Deleting shopping item failed", deleteError);
+
+      if (deletedItem) {
+        const itemToRestore = deletedItem;
+        setItems((currentItems) => {
+          if (currentItems.some((item) => item.id === itemToRestore.id)) {
+            return currentItems;
+          }
+
+          const restoredItems = [...currentItems];
+          restoredItems.splice(
+            Math.min(Math.max(deletedIndex, 0), restoredItems.length),
+            0,
+            itemToRestore,
+          );
+          return restoredItems;
+        });
+      }
+
+      setError("The item could not be deleted. Check your connection and try again.");
+      throw deleteError;
+    }
   }
 
   // Clear Completed
 
   async function handleClear() {
-    await clearShoppingItems();
+    let completedItems: ShoppingItem[] = [];
+
+    setItems((currentItems) => {
+      completedItems = currentItems.filter((item) => item.completed);
+      return currentItems.filter((item) => !item.completed);
+    });
+
+    try {
+      await clearShoppingItems();
+    } catch (clearError) {
+      console.error("Clearing completed items failed", clearError);
+      setItems((currentItems) => {
+        const currentIds = new Set(currentItems.map((item) => item.id));
+        return [
+          ...currentItems,
+          ...completedItems.filter((item) => !currentIds.has(item.id)),
+        ];
+      });
+      setError("Completed items could not be cleared. Check your connection and try again.");
+      throw clearError;
+    }
   }
 
   // Complete Item With Price
