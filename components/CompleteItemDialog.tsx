@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { UI_TEXT } from "@/lib/uiText";
 
 interface Props {
 
@@ -35,6 +36,12 @@ export default function CompleteItemDialog({
 
     // Unit Price State
     const [unitPrice, setUnitPrice] = useState(defaultUnitPrice);
+    const priceInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        priceInputRef.current?.focus();
+        priceInputRef.current?.select();
+    }, []);
 
     return (
 
@@ -68,7 +75,7 @@ space-y-4
 <div>
 
   <label className="text-sm">
-    Quantity / Unit Price
+    {UI_TEXT.items.quantityPrice}
   </label>
 
 
@@ -143,6 +150,8 @@ space-y-4
 
     <input
 
+      ref={priceInputRef}
+
       type="number"
 
       inputMode="decimal"
@@ -175,7 +184,7 @@ space-y-4
 
                 <div className="font-bold text-lg">
 
-                    Total : ${(qty * unitPrice).toFixed(2)}
+                    {UI_TEXT.items.total(qty * unitPrice)}
 
                 </div>
 
@@ -191,7 +200,7 @@ space-y-4
 
                     >
 
-                        Cancel
+                        {UI_TEXT.common.cancel}
 
                     </button>
 
@@ -203,7 +212,7 @@ space-y-4
 
                     >
 
-                        Complete
+                        {UI_TEXT.items.complete}
 
                     </button>
 

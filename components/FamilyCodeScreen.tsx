@@ -11,6 +11,7 @@ import {
     isDeviceApproved,
     requestDeviceApproval,
 } from "@/lib/deviceApproval";
+import { UI_TEXT } from "@/lib/uiText";
 
 export default function FamilyCodeScreen() {
 
@@ -40,15 +41,19 @@ export default function FamilyCodeScreen() {
             const snapshot = await getDoc(ref);
 
             if (!snapshot.exists()) {
-                throw new Error("Invalid login");
+                throw new Error(UI_TEXT.login.invalid);
             }
 
             const data = snapshot.data();
             const role = data.role;
+            const displayName =
+                typeof data.displayName === "string" && data.displayName.trim()
+                    ? data.displayName.trim()
+                    : normalizedUsername;
             const passwordHash = await hashCode(password);
 
             if (passwordHash !== data.passwordHash) {
-                throw new Error("Invalid login");
+                throw new Error(UI_TEXT.login.invalid);
             }
 
             const firebaseUser = await loginAnonymous();
@@ -65,7 +70,7 @@ export default function FamilyCodeScreen() {
 
             saveDeviceLogin(
                 normalizedFamilyCode,
-                normalizedUsername,
+                displayName,
                 role,
                 firebaseUser.uid
             );
@@ -75,7 +80,7 @@ export default function FamilyCodeScreen() {
         } catch (err: unknown) {
 
             setError(
-                err instanceof Error ? err.message : "Login failed"
+                err instanceof Error ? err.message : UI_TEXT.login.failed
             );
 
         } finally {
@@ -116,18 +121,18 @@ export default function FamilyCodeScreen() {
             >
 
                 <h1 className="rounded-xl bg-gradient-to-r from-blue-100 to-cyan-50 px-3 py-3 text-center text-2xl font-bold dark:from-blue-950 dark:to-slate-900">
-                    🛒 MyGrocery
+                    🛒 {UI_TEXT.appName}
                 </h1>
 
                 <p className="text-center text-sm text-gray-500">
-                    Sign in to your family shopping list
+                    {UI_TEXT.login.subtitle}
                 </p>
 
                 {/* Family Code */}
 
                 <div>
                     <label className="text-sm font-medium">
-                        Family Code
+                        {UI_TEXT.login.familyCode}
                     </label>
 
                     <input
@@ -146,7 +151,7 @@ export default function FamilyCodeScreen() {
 
                 <div>
                     <label className="text-sm font-medium">
-                        Username
+                        {UI_TEXT.login.username}
                     </label>
 
                     <input
@@ -165,7 +170,7 @@ export default function FamilyCodeScreen() {
 
                 <div>
                     <label className="text-sm font-medium">
-                        Password
+                        {UI_TEXT.login.password}
                     </label>
 
                     <input
@@ -191,7 +196,7 @@ export default function FamilyCodeScreen() {
                     disabled={loading}
                     className="w-full rounded-lg border border-blue-700 bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-700 active:scale-95 disabled:opacity-50"
                 >
-                    {loading ? "Signing in..." : "Sign In"}
+                    {loading ? UI_TEXT.login.signingIn : UI_TEXT.login.signIn}
                 </button>
 
             </div>

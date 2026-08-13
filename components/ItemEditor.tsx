@@ -4,6 +4,7 @@ import { useState } from "react";
 import { updateItemDetails } from "@/lib/shopping";
 import { ShoppingItem } from "@/lib/types";
 import { SHOPS, CATEGORIES, PRIORITIES } from "@/lib/config";
+import { UI_TEXT } from "@/lib/uiText";
 
 interface Props {
   item: ShoppingItem;
@@ -79,7 +80,7 @@ export default function ItemEditor({ item, close }: Props) {
             key={priority.label}
             value={priority.label}
           >
-            {priority.label || "-- Select Priority --"}
+            {priority.label || UI_TEXT.editor.selectPriority}
           </option>
 
         ))}
@@ -106,7 +107,7 @@ export default function ItemEditor({ item, close }: Props) {
             key={shop.label}
             value={shop.label}
           >
-            {shop.label || "-- Select Shop --"}
+            {shop.label || UI_TEXT.editor.selectShop}
           </option>
 
         ))}
@@ -134,7 +135,7 @@ export default function ItemEditor({ item, close }: Props) {
             key={category.label}
             value={category.label}
           >
-            {category.label || "-- Select Category --"}
+            {category.label || UI_TEXT.editor.selectCategory}
           </option>
 
         ))}
@@ -147,7 +148,7 @@ export default function ItemEditor({ item, close }: Props) {
           onClick={save}
           className="btn-primary"
         >
-          Save
+          {UI_TEXT.common.save}
         </button>
 
 
@@ -155,7 +156,7 @@ export default function ItemEditor({ item, close }: Props) {
           onClick={close}
           className="btn-secondary"
         >
-          Cancel
+          {UI_TEXT.common.cancel}
         </button>
 
 

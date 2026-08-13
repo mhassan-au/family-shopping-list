@@ -1,4 +1,5 @@
 "use client";
+import { UI_TEXT } from "@/lib/uiText";
 
 
 interface Props {
@@ -98,7 +99,7 @@ export default function ConfirmDialog({
 
           >
 
-            Cancel
+            {UI_TEXT.common.cancel}
 
           </button>
 
@@ -118,7 +119,7 @@ export default function ConfirmDialog({
 
           >
 
-            {loading ? "Please wait..." : confirmText}
+            {loading ? UI_TEXT.common.pleaseWait : confirmText}
 
           </button>
 

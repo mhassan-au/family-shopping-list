@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { UI_TEXT } from "@/lib/uiText";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,8 +19,8 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
 
-  title: "MyGrocery",
-  description: "Family shopping list",
+  title: UI_TEXT.appName,
+  description: UI_TEXT.appDescription,
   manifest: "/manifest.json",
 
   icons: {
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: "MyGrocery",
+    title: UI_TEXT.appName,
     statusBarStyle: "default",
   }
 

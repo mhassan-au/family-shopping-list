@@ -4,6 +4,7 @@ import { useState } from "react";
 import { FiFilter } from "react-icons/fi";
 import { PRIORITIES } from "@/lib/config";
 import { getTagColor } from "@/lib/tagColor";
+import { UI_TEXT } from "@/lib/uiText";
 
 interface Props {
   viewMode: "flat" | "shop" | "category";
@@ -49,7 +50,7 @@ export default function ViewSelector({
             }
           `}
         >
-          Flat
+          {UI_TEXT.views.flat}
         </button>
 
         <button
@@ -70,7 +71,7 @@ export default function ViewSelector({
             }
           `}
         >
-          Shop
+          {UI_TEXT.views.shop}
         </button>
 
         <button
@@ -91,7 +92,7 @@ export default function ViewSelector({
             }
           `}
         >
-          Category
+          {UI_TEXT.views.category}
         </button>
       </div>
 
@@ -123,7 +124,7 @@ export default function ViewSelector({
           <FiFilter size={18} />
 
           <span className="text-sm font-medium">
-            {priorityFilter || "All"}
+            {priorityFilter || UI_TEXT.views.all}
           </span>
         </button>
 
@@ -167,7 +168,7 @@ export default function ViewSelector({
                 }
               `}
             >
-              All
+              {UI_TEXT.views.all}
             </button>
 
             {PRIORITIES.filter((p) => p.label).map(

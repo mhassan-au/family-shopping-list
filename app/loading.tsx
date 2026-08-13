@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { UI_TEXT } from "@/lib/uiText";
 
 export default function Loading() {
   return (
@@ -20,7 +21,7 @@ export default function Loading() {
 
       <Image
         src="/cart.png"
-        alt="MyGrocery"
+        alt={UI_TEXT.appName}
         width={128}
         height={128}
         className="
@@ -42,7 +43,7 @@ export default function Loading() {
         dark:text-slate-50
         "
       >
-        MyGrocery
+        {UI_TEXT.appName}
       </h1>
 
 
@@ -56,7 +57,7 @@ export default function Loading() {
         text-sm
         "
       >
-        Loading...
+        {UI_TEXT.loading}
       </p>
 
     </main>

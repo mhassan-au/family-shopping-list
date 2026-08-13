@@ -14,6 +14,7 @@ import {
 } from "@/lib/ShoppingActions";
 
 import { ShoppingItem } from "@/lib/types";
+import { UI_TEXT } from "@/lib/uiText";
 
 export function useShoppingList() {
   // Items State
@@ -224,7 +225,7 @@ export function useShoppingList() {
           currentItem.id === item.id ? item : currentItem,
         ),
       );
-      setError("The item could not be updated. Check your connection and try again.");
+      setError(UI_TEXT.errors.update);
       throw toggleError;
     }
   }
@@ -263,7 +264,7 @@ export function useShoppingList() {
         });
       }
 
-      setError("The item could not be deleted. Check your connection and try again.");
+      setError(UI_TEXT.errors.delete);
       throw deleteError;
     }
   }
@@ -289,7 +290,7 @@ export function useShoppingList() {
           ...completedItems.filter((item) => !currentIds.has(item.id)),
         ];
       });
-      setError("Completed items could not be cleared. Check your connection and try again.");
+      setError(UI_TEXT.errors.clear);
       throw clearError;
     }
   }
@@ -331,7 +332,7 @@ export function useShoppingList() {
           currentItem.id === previousItem.id ? previousItem : currentItem,
         ),
       );
-      setError("The item could not be completed. Check your connection and try again.");
+      setError(UI_TEXT.errors.complete);
       throw completeError;
     }
   }

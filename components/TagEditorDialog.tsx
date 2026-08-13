@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { SHOPS, CATEGORIES, PRIORITIES } from "@/lib/config";
+import { UI_TEXT } from "@/lib/uiText";
 
 interface Props {
 
@@ -47,10 +48,10 @@ export default function TagEditorDialog({
 
     const title =
         type === "shop"
-            ? "Change Shop"
+            ? UI_TEXT.editor.changeShop
             : type === "category"
-                ? "Change Category"
-                : "Change Priority";
+                ? UI_TEXT.editor.changeCategory
+                : UI_TEXT.editor.changePriority;
 
     return (
 
@@ -129,7 +130,7 @@ export default function TagEditorDialog({
     py-2
     "
                     >
-                        Remove
+                        {UI_TEXT.common.remove}
                     </button>
 
 
@@ -142,7 +143,7 @@ export default function TagEditorDialog({
                             className="btn-secondary"
 
                         >
-                            Cancel
+                            {UI_TEXT.common.cancel}
 
                         </button>
 
@@ -153,7 +154,7 @@ export default function TagEditorDialog({
 
                             className="btn-primary"
                         >
-                            Save
+                            {UI_TEXT.common.save}
 
                         </button>
 

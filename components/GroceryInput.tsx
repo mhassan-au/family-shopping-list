@@ -1,6 +1,7 @@
 "use client";
 
 import { SHOPS, CATEGORIES, PRIORITIES } from "@/lib/config";
+import { UI_TEXT } from "@/lib/uiText";
 
 
 interface Props {
@@ -86,7 +87,7 @@ export default function GroceryInput({
           focus:ring-blue-200
           "
 
-                    placeholder="Add grocery item"
+                    placeholder={UI_TEXT.input.placeholder}
 
                     maxLength={500}
 
@@ -171,7 +172,7 @@ export default function GroceryInput({
 
                         >
 
-                            {priority.label || "Priority"}
+                            {priority.label || UI_TEXT.input.priority}
 
                         </option>
 
@@ -212,7 +213,7 @@ export default function GroceryInput({
 
                         >
 
-                            {shop.label || "Shop"}
+                            {shop.label || UI_TEXT.input.shop}
 
                         </option>
 
@@ -254,7 +255,7 @@ export default function GroceryInput({
 
                         >
 
-                            {category.label || "Category"}
+                            {category.label || UI_TEXT.input.category}
 
                         </option>
 

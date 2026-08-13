@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { UI_TEXT } from "@/lib/uiText";
 
 interface Props {
   groupName: string;
@@ -67,7 +68,7 @@ export default function QuickAddDialog({
 
         <h2 className="font-bold text-lg mb-4">
 
-          Add to {groupName}
+          {UI_TEXT.input.addTo(groupName)}
 
         </h2>
 
@@ -82,7 +83,7 @@ export default function QuickAddDialog({
 
           onChange={(e) => setText(e.target.value)}
 
-          placeholder="Item name"
+          placeholder={UI_TEXT.input.itemName}
 
           className="
           border
@@ -107,7 +108,7 @@ export default function QuickAddDialog({
             className="btn-secondary"
            
           >
-            Cancel
+            {UI_TEXT.common.cancel}
 
           </button>
 
@@ -119,7 +120,7 @@ export default function QuickAddDialog({
             className="btn-primary"
 
           >
-            Add
+            {UI_TEXT.common.add}
 
           </button>
 

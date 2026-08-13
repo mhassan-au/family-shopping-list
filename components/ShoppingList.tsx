@@ -11,8 +11,10 @@ import CompleteItemDialog from "./CompleteItemDialog";
 import GroceryInput from "./GroceryInput";
 import GroceryGroup from "./GroceryGroup";
 import ConfirmDialog from "./ConfirmDialog";
+import CompletedItemsDialog from "./CompletedItemsDialog";
 import { FiLogOut } from "react-icons/fi";
 import { clearDeviceLogin, getDeviceLogin } from "@/lib/device";
+import { UI_TEXT } from "@/lib/uiText";
 
 const today = new Date();
 const todayLabel = new Intl.DateTimeFormat("en-AU", {
@@ -133,23 +135,23 @@ export default function ShoppingList() {
   } = useShoppingDialogs();
 
   const remainingItemCount = items.filter((item) => !item.completed).length;
-  const completedTotal = items
-    .filter((item) => item.completed)
+  const completedItems = items.filter((item) => item.completed);
+  const completedTotal = completedItems
     .reduce(
       (sum, item) =>
         sum + Number(item.qty || 0) * Number(item.unitPrice || 0),
       0,
     );
   const syncLabel = !isOnline
-    ? "Offline"
+    ? UI_TEXT.sync.offline
     : syncing
-      ? "Syncing"
-      : "Synced";
+      ? UI_TEXT.sync.syncing
+      : UI_TEXT.sync.synced;
 
   function handleLogout() {
 
     const confirmed = window.confirm(
-      "Are you sure you want to logout?"
+      UI_TEXT.logout.confirm
     );
 
     if (!confirmed) {
@@ -176,7 +178,7 @@ export default function ShoppingList() {
 
     if (requestedItems.length > MAX_ITEMS_PER_ADD) {
       showToast(
-        `Add no more than ${MAX_ITEMS_PER_ADD} items at once`,
+        UI_TEXT.toast.maxItems(MAX_ITEMS_PER_ADD),
         "error",
       );
       return;
@@ -188,7 +190,7 @@ export default function ShoppingList() {
 
     if (oversizedItem) {
       showToast(
-        `Each item must be ${MAX_ITEM_NAME_LENGTH} characters or fewer`,
+        UI_TEXT.toast.maxLength(MAX_ITEM_NAME_LENGTH),
         "error",
       );
       return;
@@ -215,7 +217,7 @@ export default function ShoppingList() {
     if (newNames.length === 0) {
       setNewItem("");
       showToast(
-        `${duplicateNames.join(", ")} ${duplicateNames.length === 1 ? "is" : "are"} already added`,
+        UI_TEXT.toast.alreadyAdded(duplicateNames, duplicateNames.length !== 1),
         "duplicate",
       );
 
@@ -242,19 +244,19 @@ export default function ShoppingList() {
       .then(() => {
         if (duplicateNames.length > 0) {
           showToast(
-            `${duplicateNames.join(", ")} skipped — already added`,
+            UI_TEXT.toast.duplicatesSkipped(duplicateNames),
             "duplicate",
           );
         } else {
           showToast(
-            `${newNames.length === 1 ? "Item" : "Items"} added`,
+            UI_TEXT.toast.added(newNames.length),
             "success",
           );
         }
       })
       .catch((addError) => {
         console.error("Adding shopping item failed", addError);
-        showToast("Item could not be added", "error");
+        showToast(UI_TEXT.toast.addFailed, "error");
       });
 
   }
@@ -284,7 +286,7 @@ export default function ShoppingList() {
       >
 
         <h1 className="text-xl font-bold">
-          🛒 MyGrocery
+          🛒 {UI_TEXT.appName}
         </h1>
 
 
@@ -314,7 +316,7 @@ export default function ShoppingList() {
 
       transition
     "
-            title="Logout"
+            title={UI_TEXT.logout.label}
           >
 
             <FiLogOut size={20} />
@@ -349,7 +351,7 @@ export default function ShoppingList() {
 
       />
 
-      {loading && <p>Loading...</p>}
+      {loading && <p>{UI_TEXT.loading}</p>}
 
       {error && (
         <p className="text-red-500 text-sm my-2" role="alert">
@@ -360,26 +362,26 @@ export default function ShoppingList() {
       {(!isOnline || syncing) && (
         <p className="text-xs text-amber-600 dark:text-amber-400 my-2">
           {!isOnline
-            ? "Offline — changes will sync when connected"
+            ? UI_TEXT.sync.offlineChanges
             : connectionStalled
-              ? "Connection delayed - retrying sync..."
+              ? UI_TEXT.sync.delayed
               : hasPendingWrites
-                ? "Uploading changes..."
-                : "Refreshing list..."}
+                ? UI_TEXT.sync.uploading
+                : UI_TEXT.sync.refreshing}
           {connectionStalled && (
             <button
               type="button"
               onClick={() => void reconnect()}
               className="ml-2 underline font-medium"
             >
-              Retry now
+              {UI_TEXT.sync.retry}
             </button>
           )}
         </p>
       )}
 
       <span className="sr-only" aria-live="polite">
-        {syncing ? "Syncing shopping list" : "Shopping list synced"}
+        {syncing ? UI_TEXT.sync.syncingList : UI_TEXT.sync.listSynced}
       </span>
 
       <section className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/60">
@@ -454,21 +456,9 @@ export default function ShoppingList() {
         </div>
       </section>
 
-      {items.some((item) => item.completed) && (
-        <div className="mt-5 text-center">
-          <button
-            type="button"
-            onClick={() => setShowClearConfirm(true)}
-            className="btn-danger text-sm"
-          >
-            Clear completed
-          </button>
-        </div>
-      )}
-
       {!loading && items.length === 0 && (
         <p className="text-gray-500 text-center mt-5">
-          Your grocery list is empty
+          {UI_TEXT.items.empty}
         </p>
       )}
 
@@ -479,15 +469,24 @@ export default function ShoppingList() {
           </time>
           <span aria-hidden="true"> • </span>
           <span>
-            {remainingItemCount} {remainingItemCount === 1 ? "item" : "items"} left
+            {UI_TEXT.items.remaining(remainingItemCount)}
           </span>
           <span aria-hidden="true"> • </span>
           <span>{syncLabel}</span>
+          {!isOnline && (
+            <div className="mt-1 text-xs font-normal text-amber-700 dark:text-amber-300">
+              {UI_TEXT.sync.offlineMode}
+            </div>
+          )}
         </div>
-        {completedTotal > 0 && (
-          <div className="mt-1 rounded-lg bg-blue-600 px-4 py-2 text-lg font-bold text-white shadow-sm dark:bg-blue-500 dark:text-slate-950">
-            Total: ${completedTotal.toFixed(2)}
-          </div>
+        {completedItems.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowClearConfirm(true)}
+            className="mt-1 w-full rounded-lg border border-blue-300 bg-gradient-to-r from-blue-50 to-cyan-100 px-4 py-2 text-lg font-bold text-red-600 shadow-sm transition hover:from-blue-100 hover:to-cyan-200 active:scale-[0.99] dark:border-blue-700 dark:from-blue-900 dark:to-cyan-950 dark:text-red-400 dark:hover:from-blue-800 dark:hover:to-cyan-900"
+          >
+            {UI_TEXT.items.total(completedTotal)}
+          </button>
         )}
       </footer>
 
@@ -497,11 +496,11 @@ export default function ShoppingList() {
 
         <ConfirmDialog
 
-          title="Delete item?"
+          title={UI_TEXT.items.deleteTitle}
 
           message={deleteTarget.text}
 
-          confirmText="Delete"
+          confirmText={UI_TEXT.items.delete}
 
           onCancel={() => {
 
@@ -515,10 +514,10 @@ export default function ShoppingList() {
             setDeleteTarget(null);
 
             void deletePromise
-              .then(() => showToast(`${itemName} deleted`, "success"))
+              .then(() => showToast(UI_TEXT.toast.deleted(itemName), "success"))
               .catch((deleteError) => {
                 console.error("Deleting shopping item failed", deleteError);
-                showToast("Item could not be deleted", "error");
+                showToast(UI_TEXT.toast.deleteFailed, "error");
               });
 
           }}
@@ -526,38 +525,29 @@ export default function ShoppingList() {
         />
 
       )}
-      {/* Clear Completed Confirmation */}
+      {/* Completed Items */}
 
       {showClearConfirm && (
 
-        <ConfirmDialog
-
-          title="Clear completed items?"
-
-          confirmText="Clear"
-
-          loading={clearing}
-
-          onCancel={() => {
-
-            setShowClearConfirm(false);
-
-          }}
-
-          onConfirm={() => {
+        <CompletedItemsDialog
+          items={completedItems}
+          total={completedTotal}
+          clearing={clearing}
+          onClose={() => setShowClearConfirm(false)}
+          onClear={() => {
             setClearing(true);
-            setShowClearConfirm(false);
 
             void handleClear()
-              .then(() => showToast("Completed list cleared", "success"))
+              .then(() => {
+                setShowClearConfirm(false);
+                showToast(UI_TEXT.toast.cleared, "success");
+              })
               .catch((clearError) => {
                 console.error("Clearing completed items failed", clearError);
-                showToast("Completed list could not be cleared", "error");
+                showToast(UI_TEXT.toast.clearFailed, "error");
               })
               .finally(() => setClearing(false));
-
           }}
-
         />
 
       )}
@@ -591,10 +581,10 @@ export default function ShoppingList() {
                 qty,
                 unitPrice
               );
-              showToast(`${itemToComplete.text} completed`, "success");
+              showToast(UI_TEXT.toast.completed(itemToComplete.text), "success");
             } catch {
               // The hook restores the item and exposes a user-facing error.
-              showToast("Item could not be completed", "error");
+              showToast(UI_TEXT.toast.completeFailed, "error");
             }
 
           }}

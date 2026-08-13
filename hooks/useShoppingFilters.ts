@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { ShoppingItem } from "@/lib/types";
+import { UI_TEXT } from "@/lib/uiText";
 import { PRIORITIES, HIDDEN_PRIORITIES } from "@/lib/config";
 
 const priorityOrder = Object.fromEntries(
@@ -27,7 +28,7 @@ export function useShoppingFilters(
 
     if (viewMode === "flat") {
       return {
-        Flat: [...filteredItems].sort((a, b) => {
+        [UI_TEXT.views.flat]: [...filteredItems].sort((a, b) => {
           // Active first
 
           if (a.completed !== b.completed) {
@@ -58,8 +59,8 @@ export function useShoppingFilters(
     filteredItems.forEach((item) => {
       const key =
         viewMode === "shop"
-          ? item.shop || "No Shop"
-          : item.category || "No Category";
+          ? item.shop || UI_TEXT.views.noShop
+          : item.category || UI_TEXT.views.noCategory;
 
       if (!groups[key]) {
         groups[key] = [];
