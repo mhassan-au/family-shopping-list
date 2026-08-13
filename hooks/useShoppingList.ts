@@ -32,7 +32,10 @@ export function useShoppingList() {
 
   const [connectionStalled, setConnectionStalled] = useState(false);
 
+  const [hasPendingWrites, setHasPendingWrites] = useState(false);
+
   const cacheOnlyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingWriteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnecting = useRef(false);
   const autoRetryAttempted = useRef(false);
 
@@ -40,6 +43,13 @@ export function useShoppingList() {
     if (cacheOnlyTimer.current) {
       clearTimeout(cacheOnlyTimer.current);
       cacheOnlyTimer.current = null;
+    }
+  }, []);
+
+  const clearPendingWriteTimer = useCallback(() => {
+    if (pendingWriteTimer.current) {
+      clearTimeout(pendingWriteTimer.current);
+      pendingWriteTimer.current = null;
     }
   }, []);
 
@@ -60,6 +70,8 @@ export function useShoppingList() {
   }, [clearCacheOnlyTimer]);
 
   useEffect(() => {
+    let hiddenAt: number | null = null;
+
     const handleOnline = () => {
       setIsOnline(true);
       setConnectionStalled(false);
@@ -72,12 +84,38 @@ export function useShoppingList() {
       clearCacheOnlyTimer();
     };
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        hiddenAt = Date.now();
+        return;
+      }
+
+      if (hiddenAt !== null && Date.now() - hiddenAt > 5000) {
+        hiddenAt = null;
+        setConnectionStalled(false);
+        autoRetryAttempted.current = false;
+        void reconnect();
+      }
+    };
+
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setConnectionStalled(false);
+        autoRetryAttempted.current = false;
+        void reconnect();
+      }
+    };
+
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
+    window.addEventListener("pageshow", handlePageShow);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("pageshow", handlePageShow);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [clearCacheOnlyTimer, reconnect]);
 
@@ -106,6 +144,21 @@ export function useShoppingList() {
           snapshot.metadata.fromCache || snapshot.metadata.hasPendingWrites,
         );
 
+        setHasPendingWrites(snapshot.metadata.hasPendingWrites);
+
+        if (snapshot.metadata.hasPendingWrites) {
+          if (!pendingWriteTimer.current && !autoRetryAttempted.current) {
+            pendingWriteTimer.current = setTimeout(() => {
+              pendingWriteTimer.current = null;
+              autoRetryAttempted.current = true;
+              setConnectionStalled(true);
+              void reconnect();
+            }, 10000);
+          }
+        } else {
+          clearPendingWriteTimer();
+        }
+
         if (snapshot.metadata.fromCache && navigator.onLine) {
           if (!cacheOnlyTimer.current && !autoRetryAttempted.current) {
             cacheOnlyTimer.current = setTimeout(() => {
@@ -132,9 +185,10 @@ export function useShoppingList() {
 
     return () => {
       clearCacheOnlyTimer();
+      clearPendingWriteTimer();
       unsubscribe();
     };
-  }, [clearCacheOnlyTimer, reconnect]);
+  }, [clearCacheOnlyTimer, clearPendingWriteTimer, reconnect]);
 
   // Add Item
 
@@ -222,6 +276,8 @@ export function useShoppingList() {
     isOnline,
 
     connectionStalled,
+
+    hasPendingWrites,
 
     reconnect,
 

@@ -41,6 +41,8 @@ export default function ShoppingList() {
 
     connectionStalled,
 
+    hasPendingWrites,
+
     reconnect,
 
     handleAdd,
@@ -218,7 +220,9 @@ export default function ShoppingList() {
             ? "Offline — changes will sync when connected"
             : connectionStalled
               ? "Connection delayed - retrying sync..."
-              : "Syncing changes..."}
+              : hasPendingWrites
+                ? "Uploading changes..."
+                : "Refreshing list..."}
           {connectionStalled && (
             <button
               type="button"
