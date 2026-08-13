@@ -220,23 +220,24 @@ export default function ShoppingList() {
         {syncing ? "Syncing shopping list" : "Shopping list synced"}
       </span>
 
-      {/* View Selector */}
+      <section className="border border-gray-300 dark:border-gray-700 rounded-xl p-3">
+        {/* View Selector */}
 
-      <ViewSelector
+        <ViewSelector
 
-        viewMode={viewMode}
+          viewMode={viewMode}
 
-        setViewMode={setViewMode}
+          setViewMode={setViewMode}
 
-        priorityFilter={priorityFilter}
+          priorityFilter={priorityFilter}
 
-        setPriorityFilter={setPriorityFilter}
+          setPriorityFilter={setPriorityFilter}
 
-      />
+        />
 
-      {/* Grocery Groups */}
+        {/* Grocery Groups */}
 
-      <div className="space-y-5">
+        <div className="space-y-5">
 
 
         {Object.entries(groupedItems).map(
@@ -288,7 +289,8 @@ export default function ShoppingList() {
           ))}
 
 
-      </div>
+        </div>
+      </section>
 
       {/* Shopping Summary */}
 

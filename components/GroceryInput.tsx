@@ -122,8 +122,7 @@ export default function GroceryInput({
 
             <div className="
       grid
-      grid-cols-1
-      sm:grid-cols-3
+      grid-cols-3
       gap-2
       mt-3
       ">
@@ -135,7 +134,10 @@ export default function GroceryInput({
                     className="input
           border
           rounded-lg
-          p-2
+          px-1
+          py-2
+          min-w-0
+          text-sm
           "
 
                     value={selectedPriority}
@@ -172,7 +174,10 @@ export default function GroceryInput({
                     className="input
           border
           rounded-lg
-          p-2
+          px-1
+          py-2
+          min-w-0
+          text-sm
           "
 
                     value={selectedShop}
@@ -210,7 +215,10 @@ export default function GroceryInput({
                     className="input
           border
           rounded-lg
-          p-2
+          px-1
+          py-2
+          min-w-0
+          text-sm
           "
 
                     value={selectedCategory}
