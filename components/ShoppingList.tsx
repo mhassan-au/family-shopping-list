@@ -37,6 +37,8 @@ export default function ShoppingList() {
 
     syncing,
 
+    isOnline,
+
     handleAdd,
 
     handleToggle,
@@ -98,9 +100,8 @@ export default function ShoppingList() {
   }
   // Add grocery item
 
-  async function handleAddNew() {
-
-    await handleAdd(
+  function handleAddNew() {
+    const addPromise = handleAdd(
       newItem,
       selectedShop,
       selectedCategory,
@@ -115,6 +116,10 @@ export default function ShoppingList() {
     setSelectedCategory("");
 
     setSelectedPriority("");
+
+    void addPromise.catch((addError) => {
+      console.error("Adding shopping item failed", addError);
+    });
 
   }
 
@@ -200,6 +205,14 @@ export default function ShoppingList() {
       {error && (
         <p className="text-red-500 text-sm my-2" role="alert">
           {error}
+        </p>
+      )}
+
+      {(!isOnline || syncing) && (
+        <p className="text-xs text-amber-600 dark:text-amber-400 my-2">
+          {!isOnline
+            ? "Offline — changes will sync when connected"
+            : "Syncing changes..."}
         </p>
       )}
 
@@ -315,13 +328,13 @@ export default function ShoppingList() {
 
           }}
 
-          onConfirm={async () => {
-
-            await handleDelete(
-              deleteTarget.id
-            );
-
+          onConfirm={() => {
+            const deletePromise = handleDelete(deleteTarget.id);
             setDeleteTarget(null);
+
+            void deletePromise.catch((deleteError) => {
+              console.error("Deleting shopping item failed", deleteError);
+            });
 
           }}
 
@@ -346,15 +359,15 @@ export default function ShoppingList() {
 
           }}
 
-          onConfirm={async () => {
-
+          onConfirm={() => {
             setClearing(true);
-
-            await handleClear()
-
-            setClearing(false);
-
             setShowClearConfirm(false);
+
+            void handleClear()
+              .catch((clearError) => {
+                console.error("Clearing completed items failed", clearError);
+              })
+              .finally(() => setClearing(false));
 
           }}
 

@@ -222,7 +222,7 @@ export default function GroceryGroup({
                     onCancel={() => setShowQuickAdd(false)}
 
 
-                    onSave={async (
+                    onSave={(
                         text,
                         shop,
                         category,
@@ -230,7 +230,7 @@ export default function GroceryGroup({
                     ) => {
 
 
-                        await addItem(
+                        const addPromise = addItem(
                             text,
                             shop,
                             category,
@@ -239,6 +239,10 @@ export default function GroceryGroup({
 
 
                         setShowQuickAdd(false);
+
+                        void addPromise.catch((addError) => {
+                            console.error("Quick add failed", addError);
+                        });
 
 
                     }}

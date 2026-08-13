@@ -323,9 +323,8 @@ export default function GroceryItem({
 
                     onCancel={() => setEditingTag(null)}
 
-                    onSave={async (value) => {
-
-                        await updateItemDetails(
+                    onSave={(value) => {
+                        const updatePromise = updateItemDetails(
 
                             item.id,
 
@@ -343,12 +342,15 @@ export default function GroceryItem({
 
                         );
                         setEditingTag(null);
+
+                        void updatePromise.catch((updateError) => {
+                            console.error("Updating item tag failed", updateError);
+                        });
 
                     }}
 
-                    onRemove={async () => {
-
-                        await updateItemDetails(
+                    onRemove={() => {
+                        const updatePromise = updateItemDetails(
 
                             item.id,
 
@@ -367,6 +369,10 @@ export default function GroceryItem({
                         );
 
                         setEditingTag(null);
+
+                        void updatePromise.catch((updateError) => {
+                            console.error("Removing item tag failed", updateError);
+                        });
 
                     }}
 

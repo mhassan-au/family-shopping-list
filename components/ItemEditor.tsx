@@ -17,9 +17,8 @@ export default function ItemEditor({ item, close }: Props) {
   const [priority, setPriority] = useState(item.priority || "");
 
 
-  async function save() {
-
-    await updateItemDetails(
+  function save() {
+    const updatePromise = updateItemDetails(
       item.id,
       shop,
       category,
@@ -27,6 +26,10 @@ export default function ItemEditor({ item, close }: Props) {
     );
 
     close();
+
+    void updatePromise.catch((updateError) => {
+      console.error("Updating shopping item failed", updateError);
+    });
 
   }
 

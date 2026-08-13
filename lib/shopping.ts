@@ -1,6 +1,5 @@
 import {
   collection,
-  addDoc,
   deleteDoc,
   doc,
   updateDoc,
@@ -37,8 +36,12 @@ export async function addItem(
     .map((x) => x.trim())
     .filter(Boolean);
 
+  const batch = writeBatch(db);
+
   for (const item of items) {
-    await addDoc(shoppingCollection, {
+    const itemRef = doc(shoppingCollection);
+
+    batch.set(itemRef, {
       text: item,
 
       completed: false,
@@ -56,6 +59,8 @@ export async function addItem(
       createdAt: serverTimestamp(),
     });
   }
+
+  await batch.commit();
 }
 
 export async function updateItemDetails(

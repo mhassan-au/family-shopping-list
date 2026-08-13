@@ -25,6 +25,23 @@ export function useShoppingList() {
 
   const [syncing, setSyncing] = useState(true);
 
+  const [isOnline, setIsOnline] = useState(() =>
+    typeof navigator === "undefined" ? true : navigator.onLine,
+  );
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
   // Firebase Listener
 
   useEffect(() => {
@@ -46,7 +63,9 @@ export function useShoppingList() {
 
         setLoading(false);
 
-        setSyncing(snapshot.metadata.fromCache);
+        setSyncing(
+          snapshot.metadata.fromCache || snapshot.metadata.hasPendingWrites,
+        );
       },
 
       (snapshotError) => {
@@ -142,6 +161,8 @@ export function useShoppingList() {
     error,
 
     syncing,
+
+    isOnline,
 
     handleAdd,
 
