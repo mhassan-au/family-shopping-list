@@ -155,24 +155,45 @@ export default function ShoppingList() {
   // Add grocery item
 
   function handleAddNew() {
-    if (!newItem.trim()) {
+    const requestedItems = newItem
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (requestedItems.length === 0) {
       return;
     }
 
-    const normalizedName = newItem.trim().toLocaleLowerCase();
-    const duplicate = items.find(
-      (item) => item.text.trim().toLocaleLowerCase() === normalizedName,
+    const knownNames = new Set(
+      items.map((item) => item.text.trim().toLocaleLowerCase()),
     );
+    const duplicateNames: string[] = [];
+    const newNames: string[] = [];
 
-    if (duplicate) {
+    requestedItems.forEach((itemName) => {
+      const normalizedName = itemName.toLocaleLowerCase();
+
+      if (knownNames.has(normalizedName)) {
+        duplicateNames.push(itemName);
+        return;
+      }
+
+      knownNames.add(normalizedName);
+      newNames.push(itemName);
+    });
+
+    if (newNames.length === 0) {
       setNewItem("");
-      showToast(`${duplicate.text} already added`, "duplicate");
+      showToast(
+        `${duplicateNames.join(", ")} ${duplicateNames.length === 1 ? "is" : "are"} already added`,
+        "duplicate",
+      );
 
       return;
     }
 
     const addPromise = handleAdd(
-      newItem,
+      newNames.join(", "),
       selectedShop,
       selectedCategory,
       selectedPriority
@@ -188,7 +209,19 @@ export default function ShoppingList() {
     setSelectedPriority("");
 
     void addPromise
-      .then(() => showToast("Item added", "success"))
+      .then(() => {
+        if (duplicateNames.length > 0) {
+          showToast(
+            `${duplicateNames.join(", ")} skipped — already added`,
+            "duplicate",
+          );
+        } else {
+          showToast(
+            `${newNames.length === 1 ? "Item" : "Items"} added`,
+            "success",
+          );
+        }
+      })
       .catch((addError) => {
         console.error("Adding shopping item failed", addError);
         showToast("Item could not be added", "error");
@@ -538,12 +571,12 @@ export default function ShoppingList() {
       {toast && (
         <div
           key={toast.id}
-          className={`toast-fade fixed left-1/2 top-4 z-50 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-lg border px-4 py-3 text-center text-sm font-medium shadow-lg ${
+          className={`toast-fade fixed inset-x-0 top-0 z-50 w-full border-b px-4 py-3 text-center text-sm font-medium shadow-lg backdrop-blur-md ${
             toast.type === "success"
-              ? "border-green-300 bg-green-100 text-green-900"
+              ? "border-green-300 bg-green-100/85 text-green-900"
               : toast.type === "error"
-                ? "border-red-300 bg-red-100 text-red-900"
-                : "border-[#e96f62] bg-[#FA8072] text-gray-950"
+                ? "border-red-300 bg-red-100/85 text-red-900"
+                : "border-[#e96f62] bg-[#FA8072]/85 text-gray-950"
           }`}
           role="status"
           aria-live="polite"
