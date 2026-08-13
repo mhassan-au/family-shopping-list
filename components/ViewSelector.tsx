@@ -27,18 +27,14 @@ export default function ViewSelector({
     useState(false);
 
   return (
-    <div
-      className="
-        mb-4
-      "
-    >
+    <div className="mb-4 grid grid-cols-4 gap-2">
       {/* View Buttons */}
 
-      <div className="grid w-full grid-cols-3 gap-2">
+      <div className="contents">
         <button
           onClick={() => setViewMode("flat")}
           className={`
-            px-3
+            px-1
             py-1.5
             text-sm
             rounded-lg
@@ -58,7 +54,7 @@ export default function ViewSelector({
         <button
           onClick={() => setViewMode("shop")}
           className={`
-            px-3
+            px-1
             py-1.5
             text-sm
             rounded-lg
@@ -78,7 +74,7 @@ export default function ViewSelector({
         <button
           onClick={() => setViewMode("category")}
           className={`
-            px-3
+            px-1
             py-1.5
             text-sm
             rounded-lg
@@ -98,7 +94,7 @@ export default function ViewSelector({
 
       {/* Filter */}
 
-      <div className="relative mt-2 flex justify-end">
+      <div className="relative min-w-0">
         <button
           onClick={() =>
             setShowPriorityFilter(!showPriorityFilter)
@@ -106,11 +102,13 @@ export default function ViewSelector({
           className={`
             flex
             items-center
+            justify-center
             gap-2
-            px-3
+            px-1
             py-2
             rounded-lg
             border
+            w-full
 
             ${
               priorityFilter
