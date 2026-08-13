@@ -37,17 +37,27 @@ export default function ItemEditor({ item, close }: Props) {
   return (
 
     <div className="
-    input
-      border
-      rounded-lg
+      fixed
+      inset-0
+      z-50
+      flex
+      items-center
+      justify-center
+      bg-black/40
       p-4
-      mt-2
-      card
     ">
 
-      <h3 className="font-bold mb-3">
-        {item.text}
-      </h3>
+      <div className="
+        card
+        w-full
+        max-w-sm
+        rounded-xl
+        p-5
+      ">
+
+        <h3 className="font-bold text-lg mb-4">
+          {item.text}
+        </h3>
 
       {/* Priority */}
       <select
@@ -131,7 +141,7 @@ export default function ItemEditor({ item, close }: Props) {
 
       </select>
 
-      <div className="flex gap-2">
+        <div className="flex justify-end gap-3 mt-4">
 
         <button
           onClick={save}
@@ -148,6 +158,8 @@ export default function ItemEditor({ item, close }: Props) {
           Cancel
         </button>
 
+
+        </div>
 
       </div>
 
