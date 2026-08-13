@@ -359,15 +359,13 @@ export default function ShoppingList() {
         </p>
       )}
 
-      {(!isOnline || syncing) && (
+      {isOnline && syncing && (
         <p className="text-xs text-amber-600 dark:text-amber-400 my-2">
-          {!isOnline
-            ? UI_TEXT.sync.offlineChanges
-            : connectionStalled
-              ? UI_TEXT.sync.delayed
-              : hasPendingWrites
-                ? UI_TEXT.sync.uploading
-                : UI_TEXT.sync.refreshing}
+          {connectionStalled
+            ? UI_TEXT.sync.delayed
+            : hasPendingWrites
+              ? UI_TEXT.sync.uploading
+              : UI_TEXT.sync.refreshing}
           {connectionStalled && (
             <button
               type="button"
