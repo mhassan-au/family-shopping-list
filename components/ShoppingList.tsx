@@ -35,6 +35,8 @@ export default function ShoppingList() {
 
     error,
 
+    syncing,
+
     handleAdd,
 
     handleToggle,
@@ -200,6 +202,10 @@ export default function ShoppingList() {
           {error}
         </p>
       )}
+
+      <span className="sr-only" aria-live="polite">
+        {syncing ? "Syncing shopping list" : "Shopping list synced"}
+      </span>
 
       {/* View Selector */}
 

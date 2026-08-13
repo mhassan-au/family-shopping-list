@@ -23,11 +23,15 @@ export function useShoppingList() {
 
   const [error, setError] = useState<string | null>(null);
 
+  const [syncing, setSyncing] = useState(true);
+
   // Firebase Listener
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
       shoppingQuery,
+
+      { includeMetadataChanges: true },
 
       (snapshot) => {
         const data = snapshot.docs.map((doc) => ({
@@ -41,12 +45,15 @@ export function useShoppingList() {
         setError(null);
 
         setLoading(false);
+
+        setSyncing(snapshot.metadata.fromCache);
       },
 
       (snapshotError) => {
         console.error("Shopping list listener failed", snapshotError);
         setError("Could not refresh the shopping list. Check your connection and try again.");
         setLoading(false);
+        setSyncing(false);
       },
     );
 
@@ -133,6 +140,8 @@ export function useShoppingList() {
     loading,
 
     error,
+
+    syncing,
 
     handleAdd,
 
