@@ -7,8 +7,6 @@ import { db } from "@/lib/firebase";
 import { hashCode } from "@/lib/hash";
 import { loginAnonymous } from "@/lib/auth";
 import { saveDeviceLogin } from "@/lib/device";
-import { saveNotificationToken } from "@/lib/notificationToken";
-import { requestNotificationPermission } from "@/lib/messaging";
 import {
     isDeviceApproved,
     requestDeviceApproval,
@@ -28,13 +26,15 @@ export default function FamilyCodeScreen() {
         setError("");
 
         try {
+            const normalizedFamilyCode = familyCode.trim();
+            const normalizedUsername = username.trim().toLocaleLowerCase();
 
             const ref = doc(
                 db,
                 "families",
-                familyCode,
+                normalizedFamilyCode,
                 "users",
-                username.toLowerCase()
+                normalizedUsername
             );
 
             const snapshot = await getDoc(ref);
@@ -58,42 +58,17 @@ export default function FamilyCodeScreen() {
             if (!approved) {
                 await requestDeviceApproval(
                     firebaseUser.uid,
-                    familyCode,
-                    username
+                    normalizedFamilyCode,
+                    normalizedUsername
                 );
             }
 
             saveDeviceLogin(
-                familyCode,
-                username,
+                normalizedFamilyCode,
+                normalizedUsername,
                 role,
                 firebaseUser.uid
             );
-
-            if (approved) try {
-
-                const token =
-                    await requestNotificationPermission();
-
-                if (token) {
-
-                    await saveNotificationToken(
-                        familyCode,
-                        username,
-                        token
-                    );
-
-                }
-
-            }
-            catch (error) {
-
-                console.log(
-                    "Notification setup skipped",
-                    error
-                );
-
-            }
 
             window.location.reload();
 

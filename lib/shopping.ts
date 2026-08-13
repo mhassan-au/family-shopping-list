@@ -55,8 +55,6 @@ export async function addItem(
 
       createdBy: device?.username ?? "",
 
-      createdByRole: device?.role ?? "",
-
       createdAt: serverTimestamp(),
     });
   }

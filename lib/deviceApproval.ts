@@ -15,10 +15,8 @@ export async function requestDeviceApproval(
   await setDoc(
     doc(db, "pending_devices", uid),
     {
-      uid,
       familyCode,
       username: username.toLowerCase(),
-      approved: false,
       requestedAt: serverTimestamp(),
     },
     { merge: true },
