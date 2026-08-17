@@ -5,6 +5,7 @@ import { updateItemDetails } from "@/lib/shopping";
 import { ShoppingItem } from "@/lib/types";
 import { SHOPS, CATEGORIES, PRIORITIES } from "@/lib/config";
 import { UI_TEXT } from "@/lib/uiText";
+import { getDropdownOptionClass } from "@/lib/dropdownStyle";
 
 interface Props {
   item: ShoppingItem;
@@ -74,11 +75,12 @@ export default function ItemEditor({ item, close }: Props) {
         "
       >
 
-        {PRIORITIES.map(priority => (
+        {PRIORITIES.map((priority, index) => (
 
           <option
             key={priority.label}
             value={priority.label}
+            className={getDropdownOptionClass(index)}
           >
             {priority.label || UI_TEXT.editor.selectPriority}
           </option>
@@ -101,11 +103,12 @@ export default function ItemEditor({ item, close }: Props) {
         "
       >
 
-        {SHOPS.map(shop => (
+        {SHOPS.map((shop, index) => (
 
           <option
             key={shop.label}
             value={shop.label}
+            className={getDropdownOptionClass(index)}
           >
             {shop.label || UI_TEXT.editor.selectShop}
           </option>
@@ -129,11 +132,12 @@ export default function ItemEditor({ item, close }: Props) {
         "
       >
 
-        {CATEGORIES.map(category => (
+        {CATEGORIES.map((category, index) => (
 
           <option
             key={category.label}
             value={category.label}
+            className={getDropdownOptionClass(index)}
           >
             {category.label || UI_TEXT.editor.selectCategory}
           </option>

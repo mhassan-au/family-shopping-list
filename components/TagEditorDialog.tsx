@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { SHOPS, CATEGORIES, PRIORITIES } from "@/lib/config";
 import { UI_TEXT } from "@/lib/uiText";
+import { getDropdownOptionClass } from "@/lib/dropdownStyle";
 
 interface Props {
 
@@ -100,13 +101,14 @@ export default function TagEditorDialog({
 
                 >
 
-                    {options.map(option => (
+                    {options.map((option, index) => (
 
                         <option
 
                             key={option.label}
 
                             value={option.label}
+                            className={getDropdownOptionClass(index)}
 
                         >
 

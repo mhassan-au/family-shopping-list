@@ -128,3 +128,46 @@ export const HIDDEN_PRIORITIES = [
     order: 99,
   },
 ];
+export const EXPENSE_CATEGORIES = [
+  "Dinner",
+  "Kids Dinner",
+  "Kids Toy",
+  "Grocery",
+  "Kmart",
+  "Gift",
+  "Other",
+  "B'Day",
+] as const;
+
+export const EXPENSE_CATEGORY_SHORT_LABELS: Partial<
+  Record<(typeof EXPENSE_CATEGORIES)[number], string>
+> = {
+  "Kids Dinner": "KDinner",
+  "Kids Toy": "Toy",
+};
+
+export const EXPENSE_UNUSUAL_THRESHOLDS: Record<
+  (typeof EXPENSE_CATEGORIES)[number],
+  number | null
+> = {
+  Dinner: 200,
+  "Kids Dinner": 100,
+  "Kids Toy": 100,
+  Grocery: 300,
+  Kmart: 300,
+  Gift: 100,
+  Other: null,
+  "B'Day": null,
+};
+
+export const EXPENSE_UNUSUAL_STYLE = {
+  row: "bg-amber-50 ring-1 ring-inset ring-amber-200 dark:bg-amber-950/55 dark:ring-amber-800",
+  badge: "bg-amber-200 text-amber-900 dark:bg-amber-800 dark:text-amber-100",
+} as const;
+
+export function isExpenseAmountUnusual(category: string, amount: number) {
+  const threshold = EXPENSE_UNUSUAL_THRESHOLDS[
+    category as keyof typeof EXPENSE_UNUSUAL_THRESHOLDS
+  ];
+  return typeof threshold === "number" && amount > threshold;
+}

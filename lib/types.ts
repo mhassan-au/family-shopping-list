@@ -32,3 +32,16 @@ export interface DeviceLogin {
   role: string;
   authUid: string;
 }
+
+export interface Expense {
+  id: string;
+  description: string;
+  category: string;
+  amount: number;
+  createdAt: { toDate: () => Date } | null;
+  createdAtMs: number;
+  createdBy: string;
+  transactionType: "expense" | "amendment";
+  amendsExpenseId?: string;
+  unusual?: boolean;
+}

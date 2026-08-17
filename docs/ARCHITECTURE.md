@@ -6,16 +6,21 @@
 2. `FamilyCodeScreen` validates household credentials.
 3. Unknown UIDs create a `pending_devices` request.
 4. `DeviceApprovalScreen` waits for manual approval.
-5. Approved devices render `ShoppingList`.
-6. `useShoppingList` maintains the Firestore listener, local-first updates, rollback, and reconnect behavior.
+5. Approved devices render `HouseholdApp`.
+6. The bottom menu switches between `ShoppingList` and `Expenses` without a page reload.
+7. The shopping and expense hooks maintain their real-time Firestore listeners.
 
 ## Key files
 
 | File | Responsibility |
 |---|---|
 | `components/ShoppingList.tsx` | Main UI composition and action notifications |
+| `components/HouseholdApp.tsx` | Bottom navigation and section switching |
+| `components/Expenses.tsx` | Expense form and weekly expense list |
 | `hooks/useShoppingList.ts` | Real-time state, optimistic updates, reconnects |
+| `hooks/useExpenses.ts` | Real-time expense state |
 | `lib/shopping.ts` | Firestore shopping-item operations |
+| `lib/expenses.ts` | Expense validation and Firestore writes |
 | `lib/firebase.ts` | Firebase, persistent cache, long polling |
 | `lib/deviceApproval.ts` | Pending and approved-device lookup |
 | `lib/config.ts` | Shops, categories, priorities, member colors |
@@ -51,4 +56,4 @@ The current default is selected in `components/ShoppingList.tsx` from the locall
 
 ## Data ownership
 
-The current shopping list uses one household-wide top-level `shopping_items` collection. Approved devices share the same list. If multi-household support is ever required, move items under `families/{familyCode}/shopping_items` and update queries and Rules together.
+The current shopping list uses one household-wide top-level `shopping_items` collection. Approved devices share the same list. Expenses use a top-level `expenses` collection and keep unaggregated records so future weekly and monthly reports can reuse them. Expense records cannot be updated or deleted; corrections are separate amendment transactions linked to the original. If multi-household support is ever required, move both collections under `families/{familyCode}` and update queries and Rules together.

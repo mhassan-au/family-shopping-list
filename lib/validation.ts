@@ -7,6 +7,8 @@ export const INPUT_LIMITS = {
   itemInput: 500,
   quantity: 999,
   unitPrice: 99999.99,
+  expenseDescription: 80,
+  expenseAmount: 99999.99,
 } as const;
 
 const LOGIN_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
@@ -71,4 +73,34 @@ export function isValidQuantityInput(value: string) {
 
 export function isValidPriceInput(value: string) {
   return /^\d{0,5}(?:\.\d{0,2})?$/.test(value);
+}
+
+export function isValidExpenseDescription(value: string) {
+  return (
+    value.trim().length >= 1 &&
+    value.trim().length <= INPUT_LIMITS.expenseDescription &&
+    ITEM_NAME_PATTERN.test(value.trim())
+  );
+}
+
+export function isValidExpenseAmount(value: number) {
+  return (
+    Number.isFinite(value) &&
+    value > 0 &&
+    value <= INPUT_LIMITS.expenseAmount &&
+    Math.round(value * 100) === value * 100
+  );
+}
+
+export function isValidAmendmentAmount(value: number) {
+  return (
+    Number.isFinite(value) &&
+    value !== 0 &&
+    Math.abs(value) <= INPUT_LIMITS.expenseAmount &&
+    Math.round(value * 100) === value * 100
+  );
+}
+
+export function isValidAmendmentInput(value: string) {
+  return /^-?\d{0,5}(?:\.\d{0,2})?$/.test(value);
 }

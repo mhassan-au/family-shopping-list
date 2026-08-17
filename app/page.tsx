@@ -1,8 +1,8 @@
 
 "use client";
 
-import ShoppingList from "@/components/ShoppingList";
 import AuthGate from "@/components/AuthGate";
+import HouseholdApp from "@/components/HouseholdApp";
 
 export default function Home() {
 
@@ -10,7 +10,7 @@ export default function Home() {
 
     <AuthGate>
 
-      <ShoppingList />
+      <HouseholdApp />
 
     </AuthGate>
 

@@ -64,6 +64,20 @@ Created by the app. Important fields include:
 
 The supplied Security Rules limit fields, text lengths, quantities, and prices.
 
+### `expenses/{expenseId}`
+
+Created by the app for approved devices. Each record contains:
+
+- `description`, `category`, `amount`, `transactionType`, and `unusual`
+- `createdBy`, `createdAt`, and `createdAtMs`
+- `amendsExpenseId` for an amendment transaction
+
+The allowed categories are currently `Dinner`, `Kids Dinner`, `Kids Toy`, `Grocery`, `Kmart`, `Gift`, `Other`, and `B'Day`. If categories change in `lib/config.ts`, update the matching category allow-list in `firestore.rules` before publishing.
+
+Expense documents are append-only: Firestore Rules deny updates and deletes. A correction creates a new `amendment` document linked to the original expense. Negative amendments reduce the total and positive amendments increase it.
+
+The app sets `unusual` when a new expense exceeds its category threshold in `lib/config.ts`. This stored boolean supports future unusual-expense reports without changing immutable historical transactions.
+
 ## Approving a device
 
 1. User enters home code, username, and password.
@@ -90,7 +104,7 @@ To publish manually:
 1. Firebase Console → Firestore Database → Rules
 2. Replace the editor contents with `firestore.rules`
 3. Publish
-4. Immediately test read, add, complete, undo, and delete from an approved device
+4. Immediately test shopping read/write actions and adding an expense from an approved device
 5. Confirm an unapproved browser remains on the approval screen
 
 Vercel does not deploy Firestore Rules.

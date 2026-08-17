@@ -267,7 +267,7 @@ export default function ShoppingList() {
   }
 
   return (
-    <main className="w-full max-w-md mx-auto p-4 sm:p-5">
+    <main className="w-full max-w-md mx-auto p-4 pb-24 sm:p-5 sm:pb-24">
       <div
         className="
     flex
@@ -465,7 +465,7 @@ export default function ShoppingList() {
         </p>
       )}
 
-      <footer className="sticky bottom-2 z-10 mt-6 rounded-xl border border-blue-200 bg-blue-100/95 p-2 text-center text-blue-900 shadow-sm backdrop-blur dark:border-blue-800 dark:bg-blue-950/95 dark:text-blue-100">
+      <footer className="sticky bottom-20 z-10 mt-6 rounded-xl border border-blue-200 bg-blue-100/95 p-2 text-center text-blue-900 shadow-sm backdrop-blur dark:border-blue-800 dark:bg-blue-950/95 dark:text-blue-100">
         <div className="px-2 py-1 text-sm font-medium">
           <time dateTime={todayDateTime} suppressHydrationWarning>
             {todayLabel}

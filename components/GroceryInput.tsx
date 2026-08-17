@@ -3,6 +3,7 @@
 import { SHOPS, CATEGORIES, PRIORITIES } from "@/lib/config";
 import { UI_TEXT } from "@/lib/uiText";
 import { INPUT_LIMITS } from "@/lib/validation";
+import { getDropdownOptionClass } from "@/lib/dropdownStyle";
 
 
 interface Props {
@@ -163,13 +164,14 @@ export default function GroceryInput({
 
                 >
 
-                    {PRIORITIES.map(priority => (
+                    {PRIORITIES.map((priority, index) => (
 
                         <option
 
                             key={priority.label}
 
                             value={priority.label}
+                            className={getDropdownOptionClass(index)}
 
                         >
 
@@ -204,13 +206,14 @@ export default function GroceryInput({
 
                 >
 
-                    {SHOPS.map(shop => (
+                    {SHOPS.map((shop, index) => (
 
                         <option
 
                             key={shop.label}
 
                             value={shop.label}
+                            className={getDropdownOptionClass(index)}
 
                         >
 
@@ -246,13 +249,14 @@ export default function GroceryInput({
 
                 >
 
-                    {CATEGORIES.map(category => (
+                    {CATEGORIES.map((category, index) => (
 
                         <option
 
                             key={category.label}
 
                             value={category.label}
+                            className={getDropdownOptionClass(index)}
 
                         >
 

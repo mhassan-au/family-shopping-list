@@ -1,6 +1,6 @@
 # MyGrocery
 
-MyGrocery is a private, real-time household shopping list built with Next.js, Firebase Authentication, Cloud Firestore, and Tailwind CSS. It is designed for a small set of manually approved family devices rather than public registration.
+MyGrocery is a private, real-time household shopping and expense tracker built with Next.js, Firebase Authentication, Cloud Firestore, and Tailwind CSS. It is designed for a small set of manually approved family devices rather than public registration.
 
 ## Features
 
@@ -10,6 +10,8 @@ MyGrocery is a private, real-time household shopping list built with Next.js, Fi
 - Shop, category, and priority grouping/filtering
 - Duplicate prevention, including comma-separated submissions
 - Quantity, price, and completed-shopping total
+- Simple expense entry grouped into Monday-to-Sunday weeks
+- Expense categories ready for future weekly and monthly reporting
 - Manual device approval through Firebase Console
 - Creator color indicators and user display names
 - Centralized UI copy in `lib/uiText.ts`

@@ -58,6 +58,41 @@ service cloud.firestore {
       allow delete: if approvedDevice();
     }
 
+    function validExpense() {
+      let data = request.resource.data;
+      return data.keys().hasOnly([
+          'description', 'category', 'amount', 'createdAt', 'createdAtMs',
+          'createdBy', 'transactionType', 'amendsExpenseId', 'unusual'
+        ])
+        && data.keys().hasAll([
+          'description', 'category', 'amount', 'createdAt', 'createdAtMs',
+          'createdBy', 'transactionType', 'unusual'
+        ])
+        && validText(data.description, 80)
+        && data.category in [
+          'Dinner', 'Kids Dinner', 'Kids Toy', 'Grocery', 'Kmart', 'Gift',
+          'Other', "B'Day"
+        ]
+        && data.amount is number
+        && data.amount != 0
+        && data.amount <= 99999.99
+        && data.amount >= -99999.99
+        && data.createdAt is timestamp
+        && data.createdAtMs is number
+        && validText(data.createdBy, 40)
+        && data.unusual is bool
+        && data.transactionType in ['expense', 'amendment']
+        && (data.transactionType == 'expense'
+          ? data.amount > 0 && !('amendsExpenseId' in data)
+          : validText(data.amendsExpenseId, 128));
+    }
+
+    match /expenses/{expenseId} {
+      allow read: if approvedDevice();
+      allow create: if approvedDevice() && validExpense();
+      allow update, delete: if false;
+    }
+
     // Login needs to read the selected household user after anonymous auth.
     // User profiles cannot be changed from the app.
     match /families/{familyId}/users/{userId} {
