@@ -21,6 +21,7 @@ import {
 } from "@/lib/validation";
 import { useExpenses } from "@/hooks/useExpenses";
 import { getDropdownOptionClass } from "@/lib/dropdownStyle";
+import { getDeviceLogin } from "@/lib/device";
 
 type Toast = { id: number; message: string; type: "success" | "error" };
 
@@ -68,6 +69,7 @@ const expenseCategoryFilters = EXPENSE_CATEGORIES.map((category) => ({
 }));
 
 export default function Expenses() {
+  const canAddExpenses = getDeviceLogin()?.role !== "contributor";
   const { expenses, loading, error } = useExpenses();
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
@@ -284,10 +286,11 @@ export default function Expenses() {
         </p>
       </header>
 
-      <form
-        onSubmit={handleSubmit}
-        className="mb-5 space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
-      >
+      {canAddExpenses ? (
+        <form
+          onSubmit={handleSubmit}
+          className="mb-5 space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+        >
         <div className="grid grid-cols-2 gap-3">
           <select
             value={category}
@@ -344,7 +347,12 @@ export default function Expenses() {
             <FiPlus size={24} aria-hidden="true" />
           </button>
         </div>
-      </form>
+        </form>
+      ) : (
+        <p className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200">
+          {UI_TEXT.expenses.readOnly}
+        </p>
+      )}
 
       {loading && <p>{UI_TEXT.loading}</p>}
       {error && <p className="my-2 text-sm text-red-600" role="alert">{error}</p>}
@@ -540,7 +548,7 @@ export default function Expenses() {
                       <span className={`font-semibold ${expense.amount < 0 ? "text-emerald-700 dark:text-emerald-400" : ""}`}>
                         {formatCurrency(expense.amount)}
                       </span>
-                      {expense.transactionType !== "amendment" && (
+                      {canAddExpenses && expense.transactionType !== "amendment" && (
                         <button
                           type="button"
                           onClick={() => setAmending(expense)}

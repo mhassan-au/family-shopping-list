@@ -51,8 +51,9 @@ Recommended fields:
 |---|---|---|
 | `approved` | boolean | `true` |
 | `name` | string | `Family phone` |
+| `canAddExpenses` | boolean | `true` for adults; `false` for contributors |
 
-Only documents with `approved: true` can access the shopping list.
+Only documents with `approved: true` can access household data. Expense creation additionally requires `canAddExpenses: true`; use `false` for Izhaar or any contributor device.
 
 ### `shopping_items/{itemId}`
 

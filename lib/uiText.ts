@@ -34,6 +34,7 @@ export const UI_TEXT = {
     unusualTitle: "Unusual price",
     unusualConfirm: "This price looks unusual. Do you want to add it anyway?",
     proceed: "Proceed",
+    readOnly: "You can view expenses, but only approved household members can add them.",
     weekTotal: (amount: number) => `$${amount.toFixed(2)}`,
     added: "Expense added",
     addFailed: "Expense could not be added",
