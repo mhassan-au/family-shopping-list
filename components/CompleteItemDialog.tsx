@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { FiChevronsLeft } from "react-icons/fi";
 import { UI_TEXT } from "@/lib/uiText";
 import {
     INPUT_LIMITS,
@@ -8,9 +9,8 @@ import {
     isValidQuantity,
     isValidQuantityInput,
     isValidUnitPrice,
-    formatFlexibleMoneyInput,
-    parseFlexibleMoneyInput,
 } from "@/lib/validation";
+import { useSmartMoneyInput } from "@/hooks/useSmartMoneyInput";
 
 interface Props {
 
@@ -44,7 +44,14 @@ export default function CompleteItemDialog({
     const [qty, setQty] = useState(String(defaultQty));
 
     // Unit Price State
-    const [unitPrice, setUnitPrice] = useState(
+    const {
+        value: unitPrice,
+        setValue: setUnitPrice,
+        formatOnBlur: formatPriceOnBlur,
+        shiftDecimal,
+        canShift,
+        parsedValue: parsedPrice,
+    } = useSmartMoneyInput(
         defaultUnitPrice > 0 ? defaultUnitPrice.toFixed(2) : "",
     );
     const priceInputRef = useRef<HTMLInputElement>(null);
@@ -115,6 +122,7 @@ space-y-4
 
     {/* Quantity */}
 
+    <div className="relative w-24">
     <input
 
       type="text"
@@ -187,18 +195,30 @@ space-y-4
         if (isValidPriceInput(e.target.value)) setUnitPrice(e.target.value);
       }}
 
-      onBlur={() => setUnitPrice((value) => formatFlexibleMoneyInput(value))}
+      onBlur={formatPriceOnBlur}
 
       className="
       border
       rounded-lg
       h-12
-      w-24
+      w-full
+      pr-8
       text-center
       text-lg
       "
 
     />
+    <button
+      type="button"
+      onClick={shiftDecimal}
+      disabled={!canShift}
+      className="absolute inset-y-1 right-1 flex w-7 items-center justify-center rounded-md text-blue-700 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-30 dark:text-blue-300 dark:hover:bg-blue-900"
+      aria-label={UI_TEXT.expenses.shiftDecimal}
+      title={UI_TEXT.expenses.shiftDecimal}
+    >
+      <FiChevronsLeft size={16} aria-hidden="true" />
+    </button>
+    </div>
 
 
   </div>
@@ -210,7 +230,7 @@ space-y-4
                 <div className="font-bold text-lg">
 
                     {UI_TEXT.items.total(
-                        Number(qty || 0) * parseFlexibleMoneyInput(unitPrice)
+                        Number(qty || 0) * parsedPrice
                     )}
 
                 </div>
@@ -235,8 +255,6 @@ space-y-4
 
                         onClick={() => {
                             const parsedQty = Number(qty);
-                            const parsedPrice = parseFlexibleMoneyInput(unitPrice);
-
                             if (
                                 isValidQuantity(parsedQty) &&
                                 isValidUnitPrice(parsedPrice)

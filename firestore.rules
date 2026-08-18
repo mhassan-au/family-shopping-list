@@ -75,8 +75,8 @@ service cloud.firestore {
         ])
         && validText(data.description, 80)
         && data.category in [
-          'Dinner', 'Kids Dinner', 'Kids Toy', 'Grocery', 'Kmart', 'Gift',
-          'Other', "B'Day"
+          'Dinner', 'Kids Dinner', 'Kids Toy', 'Petrol', 'Grocery', 'Kmart',
+          'Gift', 'Other', "B'Day"
         ]
         && data.amount is number
         && data.amount != 0

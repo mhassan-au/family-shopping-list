@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { FiDollarSign, FiPlus, FiSliders } from "react-icons/fi";
+import { FiChevronsLeft, FiDollarSign, FiPlus, FiSliders } from "react-icons/fi";
 import {
   EXPENSE_CATEGORIES,
   EXPENSE_CATEGORY_SHORT_LABELS,
@@ -19,12 +19,11 @@ import {
   isValidAmendmentAmount,
   isValidAmendmentInput,
   isValidPriceInput,
-  formatFlexibleMoneyInput,
-  parseFlexibleMoneyInput,
 } from "@/lib/validation";
 import { useExpenses } from "@/hooks/useExpenses";
 import { getDropdownOptionClass } from "@/lib/dropdownStyle";
 import { getDeviceLogin } from "@/lib/device";
+import { useSmartMoneyInput } from "@/hooks/useSmartMoneyInput";
 
 type Toast = { id: number; message: string; type: "success" | "error" };
 
@@ -76,7 +75,14 @@ export default function Expenses() {
   const { expenses, loading, error } = useExpenses();
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
-  const [amount, setAmount] = useState("");
+  const {
+    value: amount,
+    setValue: setAmount,
+    formatOnBlur: formatAmountOnBlur,
+    shiftDecimal: shiftAmountDecimal,
+    canShift: canShiftAmount,
+    parsedValue: parsedAmount,
+  } = useSmartMoneyInput();
   const [adding, setAdding] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [visibleCategoryValues, setVisibleCategoryValues] = useState<string[]>(
@@ -95,7 +101,14 @@ export default function Expenses() {
   } | null>(null);
   const [amending, setAmending] = useState<Expense | null>(null);
   const [amendmentDescription, setAmendmentDescription] = useState("");
-  const [amendmentAmount, setAmendmentAmount] = useState("");
+  const {
+    value: amendmentAmount,
+    setValue: setAmendmentAmount,
+    formatOnBlur: formatAmendmentOnBlur,
+    shiftDecimal: shiftAmendmentDecimal,
+    canShift: canShiftAmendment,
+    parsedValue: parsedAmendmentAmount,
+  } = useSmartMoneyInput();
   const [toast, setToast] = useState<Toast | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const visibleExpenseFilters = visibleCategoryValues
@@ -180,7 +193,7 @@ export default function Expenses() {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const numericAmount = parseFlexibleMoneyInput(amount);
+    const numericAmount = parsedAmount;
 
     if (!isValidExpenseDescription(description)) {
       showToast(UI_TEXT.expenses.invalidDescription, "error");
@@ -250,7 +263,7 @@ export default function Expenses() {
       return;
     }
 
-    const numericAmount = parseFlexibleMoneyInput(amendmentAmount);
+    const numericAmount = parsedAmendmentAmount;
     if (!isValidAmendmentAmount(numericAmount)) {
       showToast(UI_TEXT.expenses.invalidAmendment, "error");
       return;
@@ -322,12 +335,22 @@ export default function Expenses() {
               onChange={(event) => {
                 if (isValidPriceInput(event.target.value)) setAmount(event.target.value);
               }}
-              onBlur={() => setAmount((value) => formatFlexibleMoneyInput(value))}
+              onBlur={formatAmountOnBlur}
               inputMode="decimal"
               placeholder="0.00"
-              className="input w-full py-2 pl-7 pr-3"
+              className="input w-full py-2 pl-7 pr-10"
               aria-label={UI_TEXT.expenses.amount}
             />
+            <button
+              type="button"
+              onClick={shiftAmountDecimal}
+              disabled={!canShiftAmount}
+              className="absolute inset-y-1 right-1 flex w-8 items-center justify-center rounded-md text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-30 dark:text-rose-300 dark:hover:bg-rose-900"
+              aria-label={UI_TEXT.expenses.shiftDecimal}
+              title={UI_TEXT.expenses.shiftDecimal}
+            >
+              <FiChevronsLeft size={17} aria-hidden="true" />
+            </button>
           </div>
         </div>
 
@@ -612,20 +635,30 @@ export default function Expenses() {
 
             <label className="block text-sm font-semibold">
               {UI_TEXT.expenses.adjustmentAmount}
-              <input
-                value={amendmentAmount}
-                onChange={(event) => {
-                  if (isValidAmendmentInput(event.target.value)) {
-                    setAmendmentAmount(event.target.value);
-                  }
-                }}
-                onBlur={() =>
-                  setAmendmentAmount((value) => formatFlexibleMoneyInput(value))
-                }
-                inputMode="decimal"
-                placeholder="-5.00"
-                className="input mt-1 w-full px-3 py-2"
-              />
+              <div className="relative mt-1">
+                <input
+                  value={amendmentAmount}
+                  onChange={(event) => {
+                    if (isValidAmendmentInput(event.target.value)) {
+                      setAmendmentAmount(event.target.value);
+                    }
+                  }}
+                  onBlur={formatAmendmentOnBlur}
+                  inputMode="decimal"
+                  placeholder="-5.00"
+                  className="input w-full py-2 pl-3 pr-11"
+                />
+                <button
+                  type="button"
+                  onClick={shiftAmendmentDecimal}
+                  disabled={!canShiftAmendment}
+                  className="absolute inset-y-1 right-1 flex w-8 items-center justify-center rounded-md text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-30 dark:text-rose-300 dark:hover:bg-rose-900"
+                  aria-label={UI_TEXT.expenses.shiftDecimal}
+                  title={UI_TEXT.expenses.shiftDecimal}
+                >
+                  <FiChevronsLeft size={17} aria-hidden="true" />
+                </button>
+              </div>
               <span className="mt-1 block text-xs font-normal text-slate-500 dark:text-slate-400">
                 {UI_TEXT.expenses.adjustmentHelp}
               </span>

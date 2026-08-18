@@ -73,7 +73,7 @@ Created by the app for approved devices. Each record contains:
 - `createdBy`, `createdAt`, and `createdAtMs`
 - `amendsExpenseId` for an amendment transaction
 
-The allowed categories are currently `Dinner`, `Kids Dinner`, `Kids Toy`, `Grocery`, `Kmart`, `Gift`, `Other`, and `B'Day`. If categories change in `lib/config.ts`, update the matching category allow-list in `firestore.rules` before publishing.
+The allowed categories are currently `Dinner`, `Kids Dinner`, `Kids Toy`, `Petrol`, `Grocery`, `Kmart`, `Gift`, `Other`, and `B'Day`. If categories change in `lib/config.ts`, update the matching category allow-list in `firestore.rules` before publishing.
 
 Expense documents are append-only: Firestore Rules deny updates and deletes. A correction creates a new `amendment` document linked to the original expense. Negative amendments reduce the total and positive amendments increase it.
 
