@@ -5,6 +5,7 @@ import { FiDollarSign, FiPlus, FiSliders } from "react-icons/fi";
 import {
   EXPENSE_CATEGORIES,
   EXPENSE_CATEGORY_SHORT_LABELS,
+  EXPENSE_DEFAULT_VISIBLE_CATEGORIES,
   EXPENSE_UNUSUAL_STYLE,
   isExpenseAmountUnusual,
 } from "@/lib/config";
@@ -18,6 +19,8 @@ import {
   isValidAmendmentAmount,
   isValidAmendmentInput,
   isValidPriceInput,
+  formatFlexibleMoneyInput,
+  parseFlexibleMoneyInput,
 } from "@/lib/validation";
 import { useExpenses } from "@/hooks/useExpenses";
 import { getDropdownOptionClass } from "@/lib/dropdownStyle";
@@ -77,7 +80,7 @@ export default function Expenses() {
   const [adding, setAdding] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [visibleCategoryValues, setVisibleCategoryValues] = useState<string[]>(
-    () => expenseCategoryFilters.slice(-3).map((option) => option.value),
+    () => [...EXPENSE_DEFAULT_VISIBLE_CATEGORIES],
   );
   const [sortMode, setSortMode] = useState<
     "date-desc" | "date-asc" | "price-desc" | "price-asc"
@@ -177,7 +180,7 @@ export default function Expenses() {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const numericAmount = Number(amount);
+    const numericAmount = parseFlexibleMoneyInput(amount);
 
     if (!isValidExpenseDescription(description)) {
       showToast(UI_TEXT.expenses.invalidDescription, "error");
@@ -247,7 +250,7 @@ export default function Expenses() {
       return;
     }
 
-    const numericAmount = Number(amendmentAmount);
+    const numericAmount = parseFlexibleMoneyInput(amendmentAmount);
     if (!isValidAmendmentAmount(numericAmount)) {
       showToast(UI_TEXT.expenses.invalidAmendment, "error");
       return;
@@ -319,6 +322,7 @@ export default function Expenses() {
               onChange={(event) => {
                 if (isValidPriceInput(event.target.value)) setAmount(event.target.value);
               }}
+              onBlur={() => setAmount((value) => formatFlexibleMoneyInput(value))}
               inputMode="decimal"
               placeholder="0.00"
               className="input w-full py-2 pl-7 pr-3"
@@ -615,6 +619,9 @@ export default function Expenses() {
                     setAmendmentAmount(event.target.value);
                   }
                 }}
+                onBlur={() =>
+                  setAmendmentAmount((value) => formatFlexibleMoneyInput(value))
+                }
                 inputMode="decimal"
                 placeholder="-5.00"
                 className="input mt-1 w-full px-3 py-2"

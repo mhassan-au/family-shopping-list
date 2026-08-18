@@ -8,6 +8,8 @@ import {
     isValidQuantity,
     isValidQuantityInput,
     isValidUnitPrice,
+    formatFlexibleMoneyInput,
+    parseFlexibleMoneyInput,
 } from "@/lib/validation";
 
 interface Props {
@@ -185,6 +187,8 @@ space-y-4
         if (isValidPriceInput(e.target.value)) setUnitPrice(e.target.value);
       }}
 
+      onBlur={() => setUnitPrice((value) => formatFlexibleMoneyInput(value))}
+
       className="
       border
       rounded-lg
@@ -205,7 +209,9 @@ space-y-4
 
                 <div className="font-bold text-lg">
 
-                    {UI_TEXT.items.total(Number(qty || 0) * Number(unitPrice || 0))}
+                    {UI_TEXT.items.total(
+                        Number(qty || 0) * parseFlexibleMoneyInput(unitPrice)
+                    )}
 
                 </div>
 
@@ -229,7 +235,7 @@ space-y-4
 
                         onClick={() => {
                             const parsedQty = Number(qty);
-                            const parsedPrice = Number(unitPrice || 0);
+                            const parsedPrice = parseFlexibleMoneyInput(unitPrice);
 
                             if (
                                 isValidQuantity(parsedQty) &&

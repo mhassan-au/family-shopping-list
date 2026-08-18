@@ -147,6 +147,10 @@ export const EXPENSE_CATEGORY_SHORT_LABELS: Partial<
   "Kids Toy": "Toy",
 };
 
+export const EXPENSE_DEFAULT_VISIBLE_CATEGORIES: Array<
+  (typeof EXPENSE_CATEGORIES)[number]
+> = ["Dinner", "Kids Dinner", "Kids Toy"];
+
 export const EXPENSE_UNUSUAL_THRESHOLDS: Record<
   (typeof EXPENSE_CATEGORIES)[number],
   number | null

@@ -63,7 +63,7 @@ export function isValidUnitPrice(value: number) {
     Number.isFinite(value) &&
     value >= 0 &&
     value <= INPUT_LIMITS.unitPrice &&
-    Math.round(value * 100) === value * 100
+    Math.abs(Math.round(value * 100) - value * 100) < 1e-8
   );
 }
 
@@ -72,7 +72,7 @@ export function isValidQuantityInput(value: string) {
 }
 
 export function isValidPriceInput(value: string) {
-  return /^\d{0,5}(?:\.\d{0,2})?$/.test(value);
+  return /^(?:\d{0,7}|\d{0,5}\.\d{0,2})$/.test(value);
 }
 
 export function isValidExpenseDescription(value: string) {
@@ -88,7 +88,7 @@ export function isValidExpenseAmount(value: number) {
     Number.isFinite(value) &&
     value > 0 &&
     value <= INPUT_LIMITS.expenseAmount &&
-    Math.round(value * 100) === value * 100
+    Math.abs(Math.round(value * 100) - value * 100) < 1e-8
   );
 }
 
@@ -97,10 +97,29 @@ export function isValidAmendmentAmount(value: number) {
     Number.isFinite(value) &&
     value !== 0 &&
     Math.abs(value) <= INPUT_LIMITS.expenseAmount &&
-    Math.round(value * 100) === value * 100
+    Math.abs(Math.round(value * 100) - value * 100) < 1e-8
   );
 }
 
 export function isValidAmendmentInput(value: string) {
-  return /^-?\d{0,5}(?:\.\d{0,2})?$/.test(value);
+  return /^-?(?:\d{0,7}|\d{0,5}\.\d{0,2})$/.test(value);
+}
+
+export function parseFlexibleMoneyInput(value: string) {
+  const cleanValue = value.trim();
+  if (!cleanValue || cleanValue === "-") return 0;
+
+  const parsedValue = Number(cleanValue);
+  if (!Number.isFinite(parsedValue)) return Number.NaN;
+
+  if (cleanValue.includes(".")) return parsedValue;
+
+  const digitCount = cleanValue.replace("-", "").length;
+  return digitCount <= 3 ? parsedValue : parsedValue / 100;
+}
+
+export function formatFlexibleMoneyInput(value: string) {
+  if (!value.trim() || value.trim() === "-") return value;
+  const parsedValue = parseFlexibleMoneyInput(value);
+  return Number.isFinite(parsedValue) ? parsedValue.toFixed(2) : value;
 }
