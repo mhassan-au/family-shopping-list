@@ -73,12 +73,7 @@ justify-center
 z-50
 ">
 
-            <div className="card
-rounded-xl
-p-5
-w-80
-space-y-4
-">
+            <div className="card w-[calc(100%-2rem)] max-w-xs space-y-4 rounded-xl p-4">
 
                 {/* Title */}
 
@@ -97,7 +92,7 @@ space-y-4
   </label>
 
 
-  <div className="flex items-center gap-2 mt-1">
+  <div className="mt-1 grid grid-cols-[2.5rem_3rem_2.5rem_minmax(0,1fr)] items-center gap-1.5">
 
 
     {/* Minus Button */}
@@ -106,13 +101,7 @@ space-y-4
 
       onClick={() => setQty(String(Math.max(1, Number(qty || 1) - 1)))}
 
-      className="btn-primary
-      w-12
-      h-12
-      rounded-lg
-      font-bold
-      text-2xl
-      "
+      className="flex size-10 items-center justify-center rounded-lg border border-blue-700 bg-blue-600 text-xl font-bold text-white transition hover:bg-blue-700 active:scale-95 dark:border-blue-400 dark:bg-blue-700"
 
     >
       −
@@ -122,7 +111,6 @@ space-y-4
 
     {/* Quantity */}
 
-    <div className="relative w-24">
     <input
 
       type="text"
@@ -143,8 +131,8 @@ space-y-4
       border
       rounded-lg
       text-center
-      w-14
-      h-12
+      w-12
+      h-10
       text-lg
       "
 
@@ -159,13 +147,7 @@ space-y-4
         setQty(String(Math.min(INPUT_LIMITS.quantity, Number(qty || 0) + 1)))
       }
 
-      className="btn-primary
-      w-12
-      h-12
-      rounded-lg
-      font-bold
-      text-2xl
-      "
+      className="flex size-10 items-center justify-center rounded-lg border border-blue-700 bg-blue-600 text-xl font-bold text-white transition hover:bg-blue-700 active:scale-95 dark:border-blue-400 dark:bg-blue-700"
 
     >
       +
@@ -175,6 +157,7 @@ space-y-4
 
     {/* Price */}
 
+    <div className="relative min-w-0">
     <input
 
       ref={priceInputRef}
@@ -200,7 +183,7 @@ space-y-4
       className="
       border
       rounded-lg
-      h-12
+      h-10
       w-full
       pr-8
       text-center

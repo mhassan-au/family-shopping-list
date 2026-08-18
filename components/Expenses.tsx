@@ -39,6 +39,35 @@ function expenseDate(expense: Expense) {
   return expense.createdAt?.toDate() ?? new Date(expense.createdAtMs);
 }
 
+function groupExpenseTransactions(expenses: Expense[]) {
+  const originalIds = new Set(
+    expenses
+      .filter((expense) => expense.transactionType !== "amendment")
+      .map((expense) => expense.id),
+  );
+  const amendments = new Map<string, Expense[]>();
+
+  expenses.forEach((expense) => {
+    if (expense.transactionType !== "amendment" || !expense.amendsExpenseId) return;
+    const linkedAmendments = amendments.get(expense.amendsExpenseId) ?? [];
+    linkedAmendments.push(expense);
+    amendments.set(expense.amendsExpenseId, linkedAmendments);
+  });
+
+  return [
+    ...expenses
+      .filter((expense) => expense.transactionType !== "amendment")
+      .map((expense) => [expense, ...(amendments.get(expense.id) ?? [])]),
+    ...expenses
+      .filter(
+        (expense) =>
+          expense.transactionType === "amendment" &&
+          (!expense.amendsExpenseId || !originalIds.has(expense.amendsExpenseId)),
+      )
+      .map((expense) => [expense]),
+  ];
+}
+
 function isUnusualExpense(expense: Expense) {
   if (expense.transactionType === "amendment") return false;
   return expense.unusual ?? isExpenseAmountUnusual(expense.category, expense.amount);
@@ -134,9 +163,17 @@ export default function Expenses() {
 
   const weeklyExpenses = useMemo(() => {
     const groups = new Map<string, { start: Date; expenses: Expense[] }>();
+    const originalsById = new Map(
+      filteredExpenses
+        .filter((expense) => expense.transactionType !== "amendment")
+        .map((expense) => [expense.id, expense]),
+    );
 
     filteredExpenses.forEach((expense) => {
-      const weekStart = startOfWeek(expenseDate(expense));
+      const originalExpense = expense.amendsExpenseId
+        ? originalsById.get(expense.amendsExpenseId)
+        : undefined;
+      const weekStart = startOfWeek(expenseDate(originalExpense ?? expense));
       const key = weekStart.toISOString().slice(0, 10);
       const group = groups.get(key) ?? { start: weekStart, expenses: [] };
       group.expenses.push(expense);
@@ -529,6 +566,7 @@ export default function Expenses() {
         {visibleWeeks.map((week) => {
           const weekKey = week.start.toISOString().slice(0, 10);
           const total = week.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+          const transactionGroups = groupExpenseTransactions(week.expenses);
 
           return (
             <section
@@ -545,14 +583,24 @@ export default function Expenses() {
                   {formatCurrency(total)}
                 </span>
               </div>
-              <ul className="divide-y divide-slate-100 dark:divide-slate-800">
-                {week.expenses.map((expense) => (
+              <ul className="space-y-1.5 bg-slate-50/70 p-1.5 dark:bg-slate-950/30">
+                {transactionGroups.map((transactionGroup) => (
                   <li
-                    key={expense.id}
-                    className={`flex items-center justify-between gap-3 px-4 py-3 ${
-                      isUnusualExpense(expense) ? EXPENSE_UNUSUAL_STYLE.row : ""
+                    key={transactionGroup[0].id}
+                    className={`overflow-hidden rounded-lg ${
+                      transactionGroup.length > 1
+                        ? "border border-rose-200 bg-rose-50/70 shadow-sm dark:border-rose-900 dark:bg-rose-950/35"
+                        : "bg-white dark:bg-slate-900"
                     }`}
                   >
+                    <div className="divide-y divide-rose-100 dark:divide-rose-900/60">
+                    {transactionGroup.map((expense) => (
+                    <div
+                      key={expense.id}
+                      className={`flex items-center justify-between gap-3 px-3 py-3 ${
+                        isUnusualExpense(expense) ? EXPENSE_UNUSUAL_STYLE.row : ""
+                      }`}
+                    >
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="truncate font-medium">{expense.description}</p>
@@ -584,6 +632,9 @@ export default function Expenses() {
                           {UI_TEXT.expenses.amend}
                         </button>
                       )}
+                    </div>
+                    </div>
+                    ))}
                     </div>
                   </li>
                 ))}
