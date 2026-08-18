@@ -1,32 +1,22 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
       return request.auth != null;
     }
-
     function approvedDevice() {
       return signedIn()
         && exists(/databases/$(database)/documents/approved_devices/$(request.auth.uid))
         && get(/databases/$(database)/documents/approved_devices/$(request.auth.uid)).data.approved == true;
     }
-
-    function canAddExpenses() {
-      return approvedDevice()
-        && get(/databases/$(database)/documents/approved_devices/$(request.auth.uid)).data.canAddExpenses == true;
-    }
-
     function validText(value, maximum) {
       return value is string
         && value.size() > 0
         && value.size() <= maximum;
     }
-
     function validOptionalText(value, maximum) {
       return value is string && value.size() <= maximum;
     }
-
     function validShoppingItem() {
       let data = request.resource.data;
       return data.keys().hasOnly([
@@ -50,7 +40,6 @@ service cloud.firestore {
         && (!('lastQty' in data) || (data.lastQty is number && data.lastQty >= 1 && data.lastQty <= 999))
         && (!('lastUnitPrice' in data) || (data.lastUnitPrice is number && data.lastUnitPrice >= 0 && data.lastUnitPrice <= 99999.99));
     }
-
     match /shopping_items/{itemId} {
       allow read: if approvedDevice();
       allow create: if approvedDevice() && validShoppingItem();
@@ -62,7 +51,6 @@ service cloud.firestore {
         && validShoppingItem();
       allow delete: if approvedDevice();
     }
-
     function validExpense() {
       let data = request.resource.data;
       return data.keys().hasOnly([
@@ -75,8 +63,8 @@ service cloud.firestore {
         ])
         && validText(data.description, 80)
         && data.category in [
-          'Dinner', 'Kids Dinner', 'Kids Toy', 'Petrol', 'Grocery', 'Kmart',
-          'Gift', 'Other', "B'Day"
+          'Dinner', 'Kids Dinner', 'Kids Toy', 'Petrol', 'Grocery', 'Kmart', 'Gift',
+          'Other'
         ]
         && data.amount is number
         && data.amount != 0
@@ -91,20 +79,17 @@ service cloud.firestore {
           ? data.amount > 0 && !('amendsExpenseId' in data)
           : validText(data.amendsExpenseId, 128));
     }
-
     match /expenses/{expenseId} {
       allow read: if approvedDevice();
-      allow create: if canAddExpenses() && validExpense();
+      allow create: if approvedDevice() && validExpense();
       allow update, delete: if false;
     }
-
     // Login needs to read the selected household user after anonymous auth.
     // User profiles cannot be changed from the app.
     match /families/{familyId}/users/{userId} {
       allow get: if signedIn();
       allow list, create, update, delete: if false;
     }
-
     match /pending_devices/{uid} {
       allow get: if signedIn() && request.auth.uid == uid;
       allow list: if false;
@@ -118,17 +103,14 @@ service cloud.firestore {
         && request.resource.data.requestedAt is timestamp;
       allow update, delete: if false;
     }
-
     match /approved_devices/{uid} {
       allow get: if signedIn() && request.auth.uid == uid;
       allow list, create, update, delete: if false;
     }
-
     // The removed notification feature cannot consume Firestore quota.
     match /notification_requests/{requestId} {
       allow read, write: if false;
     }
-
     match /{document=**} {
       allow read, write: if false;
     }
