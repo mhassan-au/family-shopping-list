@@ -132,11 +132,12 @@ export const EXPENSE_CATEGORIES = [
   "Dinner",
   "Kids Dinner",
   "Kids Toy",
+  "Petrol",
   "Grocery",
   "Kmart",
   "Gift",
-  "Other",
   "B'Day",
+  "Other",
 ] as const;
 
 export const EXPENSE_CATEGORY_SHORT_LABELS: Partial<
@@ -156,8 +157,9 @@ export const EXPENSE_UNUSUAL_THRESHOLDS: Record<
   Grocery: 300,
   Kmart: 300,
   Gift: 100,
-  Other: null,
   "B'Day": null,
+  Petrol: null,
+  Other: null,
 };
 
 export const EXPENSE_UNUSUAL_STYLE = {
