@@ -112,10 +112,7 @@ export function parseFlexibleMoneyInput(value: string) {
   const parsedValue = Number(cleanValue);
   if (!Number.isFinite(parsedValue)) return Number.NaN;
 
-  if (cleanValue.includes(".")) return parsedValue;
-
-  const digitCount = cleanValue.replace("-", "").length;
-  return digitCount <= 3 ? parsedValue : parsedValue / 100;
+  return cleanValue.includes(".") ? parsedValue : parsedValue / 100;
 }
 
 export function formatFlexibleMoneyInput(value: string) {

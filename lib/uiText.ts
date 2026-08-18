@@ -41,7 +41,7 @@ export const UI_TEXT = {
     loadFailed: "Could not refresh expenses. Check your connection and try again.",
     invalidDescription: "Enter a short description using valid characters.",
     invalidAmount: "Enter an amount greater than $0 with up to two decimal places.",
-    shiftDecimal: "Shift decimal two places",
+    shiftDecimal: "Shift decimal two places right",
     amend: "Amend",
     amendmentTitle: "Add amendment",
     amendmentFor: (description: string) => `Amending: ${description}`,

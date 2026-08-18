@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { FiChevronsLeft } from "react-icons/fi";
+import { FiChevronsRight } from "react-icons/fi";
 import { UI_TEXT } from "@/lib/uiText";
 import {
     INPUT_LIMITS,
@@ -199,7 +199,7 @@ z-50
       aria-label={UI_TEXT.expenses.shiftDecimal}
       title={UI_TEXT.expenses.shiftDecimal}
     >
-      <FiChevronsLeft size={16} aria-hidden="true" />
+      <FiChevronsRight size={16} aria-hidden="true" />
     </button>
     </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { FiChevronsLeft, FiDollarSign, FiPlus, FiSliders } from "react-icons/fi";
+import { FiChevronsRight, FiDollarSign, FiPlus, FiSliders } from "react-icons/fi";
 import {
   EXPENSE_CATEGORIES,
   EXPENSE_CATEGORY_SHORT_LABELS,
@@ -386,7 +386,7 @@ export default function Expenses() {
               aria-label={UI_TEXT.expenses.shiftDecimal}
               title={UI_TEXT.expenses.shiftDecimal}
             >
-              <FiChevronsLeft size={17} aria-hidden="true" />
+              <FiChevronsRight size={17} aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -707,7 +707,7 @@ export default function Expenses() {
                   aria-label={UI_TEXT.expenses.shiftDecimal}
                   title={UI_TEXT.expenses.shiftDecimal}
                 >
-                  <FiChevronsLeft size={17} aria-hidden="true" />
+                  <FiChevronsRight size={17} aria-hidden="true" />
                 </button>
               </div>
               <span className="mt-1 block text-xs font-normal text-slate-500 dark:text-slate-400">
