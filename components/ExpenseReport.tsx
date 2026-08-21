@@ -31,6 +31,15 @@ function formatCurrency(amount: number) {
   }).format(amount);
 }
 
+function formatCompactCurrency(amount: number) {
+  return new Intl.NumberFormat("en-AU", {
+    style: "currency",
+    currency: "AUD",
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(amount);
+}
+
 function getPeriodRange(period: ReportPeriod, anchor: Date) {
   const start = new Date(anchor);
   start.setHours(0, 0, 0, 0);
@@ -190,6 +199,13 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
       unusualCount: unusualEntries.length,
       unusualTotal: unusualEntries.reduce((sum, expense) => sum + expense.amount, 0),
       categories: categoryDetails,
+      comparisonCategories: categoryComparisons
+        .filter((category) => category.amount > 0 || category.previousAmount > 0)
+        .sort(
+          (left, right) =>
+            Math.max(right.amount, right.previousAmount) -
+            Math.max(left.amount, left.previousAmount),
+        ),
       biggestIncrease: biggestIncrease?.change > 0 ? biggestIncrease : undefined,
       biggestDecrease,
       mostFrequent,
@@ -488,6 +504,99 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
                       );
                     })}
                   </div>
+                </div>
+              </section>
+
+              <section className="mb-4 rounded-xl border border-rose-200 bg-white p-4 shadow-sm dark:border-rose-900 dark:bg-slate-900">
+                <h2 className="mb-1 font-bold">{UI_TEXT.expenseReport.periodBars}</h2>
+                <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
+                  {isCurrentPeriod
+                    ? UI_TEXT.expenseReport.periodBarsToDate
+                    : UI_TEXT.expenseReport.periodBarsComplete}
+                </p>
+                <div className="mb-4 flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50/70 px-2 py-2 dark:border-rose-900 dark:bg-rose-950/50">
+                  <button
+                    type="button"
+                    onClick={() => setAnchor((current) => shiftPeriod(current, period, -1))}
+                    className="flex size-9 items-center justify-center rounded-lg text-rose-700 hover:bg-white dark:text-rose-300 dark:hover:bg-slate-900"
+                    aria-label={UI_TEXT.expenseReport.previous}
+                  >
+                    <FiChevronLeft size={20} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAnchor(new Date())}
+                    className="min-w-0 px-2 text-center text-sm font-semibold"
+                    title={UI_TEXT.expenseReport.today}
+                  >
+                    {formatPeriodLabel(period, start, end)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAnchor((current) => shiftPeriod(current, period, 1))}
+                    className="flex size-9 items-center justify-center rounded-lg text-rose-700 hover:bg-white dark:text-rose-300 dark:hover:bg-slate-900"
+                    aria-label={UI_TEXT.expenseReport.next}
+                  >
+                    <FiChevronRight size={20} />
+                  </button>
+                </div>
+                <div className="flex gap-3 overflow-x-auto pb-2">
+                  {report.comparisonCategories.map((category) => {
+                    const color = getExpenseCategoryColor(category.name);
+                    const maximum = Math.max(category.amount, category.previousAmount, 1);
+                    const bars = [
+                      {
+                        label: UI_TEXT.expenseReport.previousShort,
+                        amount: category.previousAmount,
+                        background: `linear-gradient(135deg, ${color}99 0%, ${color}3d 100%)`,
+                        shadow: `inset 0 1px 0 rgba(255,255,255,0.7), inset 0 0 0 1px ${color}80, 0 3px 8px ${color}2e`,
+                        backdropFilter: "blur(4px)",
+                      },
+                      {
+                        label: UI_TEXT.expenseReport.currentShort,
+                        amount: category.amount,
+                        background: color,
+                        shadow: "0 3px 8px rgba(15,23,42,0.18)",
+                        backdropFilter: "none",
+                      },
+                    ];
+
+                    return (
+                      <div key={category.name} className="w-28 shrink-0 rounded-xl bg-slate-50 px-2 py-3 dark:bg-slate-950/50">
+                        <div className="flex h-32 items-end justify-center gap-2">
+                          {bars.map((bar) => {
+                            const height = bar.amount > 0
+                              ? Math.max(8, (bar.amount / maximum) * 100)
+                              : 2;
+                            return (
+                              <div key={bar.label} className="flex h-full w-10 flex-col items-center justify-end">
+                                <span className="mb-1 text-[0.62rem] font-bold" title={formatCurrency(bar.amount)}>
+                                  {formatCompactCurrency(bar.amount)}
+                                </span>
+                                <div className="flex h-24 w-full items-end overflow-hidden rounded-t-md bg-white dark:bg-slate-900">
+                                  <div
+                                    className="w-full rounded-t-md transition-[height] duration-500"
+                                    style={{
+                                      height: `${height}%`,
+                                      background: bar.background,
+                                      boxShadow: bar.shadow,
+                                      backdropFilter: bar.backdropFilter,
+                                    }}
+                                  />
+                                </div>
+                                <span className="mt-1 text-[0.6rem] text-slate-500 dark:text-slate-400">
+                                  {bar.label}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <p className="mt-2 truncate text-center text-xs font-semibold" title={category.name}>
+                          {category.name}
+                        </p>
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             </>
