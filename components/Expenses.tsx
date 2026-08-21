@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { FiChevronsRight, FiDollarSign, FiPlus, FiSliders } from "react-icons/fi";
+import { FiBarChart2, FiChevronsRight, FiDollarSign, FiPlus, FiSliders } from "react-icons/fi";
 import {
   EXPENSE_CATEGORIES,
   EXPENSE_UNUSUAL_STYLE,
@@ -98,7 +98,7 @@ const expenseCategoryFilters = EXPENSE_CATEGORIES.map((category) => ({
   value: category,
 }));
 
-export default function Expenses() {
+export default function Expenses({ onOpenReport }: { onOpenReport: () => void }) {
   const canAddExpenses = getDeviceLogin()?.role !== "contributor";
   const { expenses, loading, error } = useExpenses();
   const [description, setDescription] = useState("");
@@ -321,9 +321,20 @@ export default function Expenses() {
   return (
     <main className="mx-auto w-full max-w-md p-4 pb-24 sm:p-5 sm:pb-24">
       <header className="mb-4 rounded-xl border border-rose-200 bg-gradient-to-r from-rose-100 via-pink-50 to-orange-50 px-4 py-3 shadow-sm dark:border-rose-900 dark:from-rose-950 dark:via-pink-950 dark:to-slate-900">
-        <div className="flex items-center gap-2">
-          <FiDollarSign className="text-rose-700 dark:text-rose-300" size={24} />
-          <h1 className="text-xl font-bold">{UI_TEXT.expenses.title}</h1>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <FiDollarSign className="text-rose-700 dark:text-rose-300" size={24} />
+            <h1 className="text-xl font-bold">{UI_TEXT.expenses.title}</h1>
+          </div>
+          <button
+            type="button"
+            onClick={onOpenReport}
+            className="flex size-10 items-center justify-center rounded-xl border border-rose-200 bg-white/70 text-rose-700 shadow-sm transition hover:bg-white active:scale-95 dark:border-rose-800 dark:bg-slate-900/60 dark:text-rose-200"
+            aria-label={UI_TEXT.expenseReport.open}
+            title={UI_TEXT.expenseReport.open}
+          >
+            <FiBarChart2 size={20} aria-hidden="true" />
+          </button>
         </div>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
           {UI_TEXT.expenses.subtitle}
@@ -412,12 +423,24 @@ export default function Expenses() {
       {loading && <p>{UI_TEXT.loading}</p>}
       {error && <p className="my-2 text-sm text-red-600" role="alert">{error}</p>}
       {!loading && expenses.length > 0 && (
-        <div className="mb-3 grid grid-cols-[minmax(0,1fr)_2.5rem] gap-1.5">
+        <div className="mb-3 grid grid-cols-[auto_minmax(0,1fr)_2.5rem] gap-1.5">
+          <button
+            type="button"
+            onClick={() => {
+              setCategoryFilter("");
+              setVisibleWeekCount(1);
+              setShowSort(false);
+            }}
+            className={`shrink-0 rounded-full border px-3 py-2 text-xs font-semibold leading-tight transition ${
+              categoryFilter === ""
+                ? "border-rose-600 bg-rose-600 text-white shadow-sm"
+                : "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-100"
+            }`}
+          >
+            {UI_TEXT.expenses.all}
+          </button>
           <div className="flex min-w-0 gap-1.5 overflow-x-auto pb-1">
-            {[
-              { label: UI_TEXT.expenses.all, value: "" },
-              ...expenseCategoryFilters,
-            ].map((option) => (
+            {expenseCategoryFilters.map((option) => (
               <button
                 key={option.label}
                 type="button"

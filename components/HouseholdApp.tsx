@@ -4,16 +4,23 @@ import { useState } from "react";
 import { FiDollarSign, FiShoppingCart } from "react-icons/fi";
 import ShoppingList from "./ShoppingList";
 import Expenses from "./Expenses";
+import ExpenseReport from "./ExpenseReport";
 import { UI_TEXT } from "@/lib/uiText";
 
-type AppSection = "shopping" | "expenses";
+type AppSection = "shopping" | "expenses" | "expense-report";
 
 export default function HouseholdApp() {
   const [section, setSection] = useState<AppSection>("shopping");
 
   return (
     <>
-      {section === "shopping" ? <ShoppingList /> : <Expenses />}
+      {section === "shopping" && <ShoppingList />}
+      {section === "expenses" && (
+        <Expenses onOpenReport={() => setSection("expense-report")} />
+      )}
+      {section === "expense-report" && (
+        <ExpenseReport onClose={() => setSection("expenses")} />
+      )}
 
       <nav
         className="fixed inset-x-0 bottom-0 z-40 border-t border-blue-200 bg-white/95 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-4px_18px_rgba(15,23,42,0.08)] backdrop-blur dark:border-blue-900 dark:bg-slate-950/95"
@@ -28,7 +35,7 @@ export default function HouseholdApp() {
             onClick={() => setSection("shopping")}
           />
           <NavButton
-            active={section === "expenses"}
+            active={section === "expenses" || section === "expense-report"}
             activeTheme="rose"
             label={UI_TEXT.navigation.expenses}
             icon={<FiDollarSign size={20} />}
