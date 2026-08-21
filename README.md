@@ -10,8 +10,11 @@ MyGrocery is a private, real-time household shopping and expense tracker built w
 - Shop, category, and priority grouping/filtering
 - Duplicate prevention, including comma-separated submissions
 - Quantity, price, and completed-shopping total
-- Simple expense entry grouped into Monday-to-Sunday weeks
-- Expense categories ready for future weekly and monthly reporting
+- Shared household expense entry grouped into Monday-to-Sunday weeks
+- Day, week, month, and year expense reports with trends and period comparisons
+- Category pie charts, previous/current category bars, and unusual-spend insights
+- Family-color indicators showing who added shopping items and expenses
+- Same-day duplicate expense warning with an explicit save-anyway option
 - Manual device approval through Firebase Console
 - Creator color indicators and user display names
 - Centralized UI copy in `lib/uiText.ts`

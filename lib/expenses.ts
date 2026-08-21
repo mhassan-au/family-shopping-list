@@ -8,7 +8,6 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { getCurrentUsername } from "./currentUser";
-import { getDeviceLogin } from "./device";
 import {
   EXPENSE_CATEGORIES,
   isExpenseAmountUnusual,
@@ -26,18 +25,11 @@ export const expensesQuery = query(
   orderBy("createdAtMs", "desc"),
 );
 
-function assertExpensePermission() {
-  if (getDeviceLogin()?.role === "contributor") {
-    throw new Error("Contributors cannot add expenses");
-  }
-}
-
 export function createExpense(
   description: string,
   category: string,
   amount: number,
 ) {
-  assertExpensePermission();
   const cleanDescription = description.trim();
   const cleanCategory = normalizeExpenseCategory(category);
 
@@ -79,7 +71,6 @@ export function createExpenseAmendment(
   category: string,
   amount: number,
 ) {
-  assertExpensePermission();
   const cleanDescription = description.trim();
   const cleanCategory = normalizeExpenseCategory(category);
 

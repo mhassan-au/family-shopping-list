@@ -57,6 +57,10 @@ Run `npm run dev` and open `http://localhost:3000`.
 - Check the Vercel deployment status.
 - Fully close/reopen an installed PWA or clear its site cache if it retains an old build.
 
+### Duplicate expense warning
+
+The warning appears only when description, category, and amount match another expense from the same local calendar day. Choose **Save anyway** for a legitimate repeated expense, or **Cancel** to review the entry. This warning does not delete or modify existing transactions.
+
 ## Firestore housekeeping
 
 Periodically remove:

@@ -5,6 +5,7 @@ import { FiBarChart2, FiChevronsRight, FiDollarSign, FiPlus, FiSliders } from "r
 import {
   EXPENSE_CATEGORIES,
   EXPENSE_UNUSUAL_STYLE,
+  FAMILY_MEMBER_COLORS,
   getExpenseCategoryColor,
   isExpenseAmountUnusual,
   normalizeExpenseCategory,
@@ -22,10 +23,10 @@ import {
 } from "@/lib/validation";
 import { useExpenses } from "@/hooks/useExpenses";
 import { getDropdownOptionClass } from "@/lib/dropdownStyle";
-import { getDeviceLogin } from "@/lib/device";
 import { useSmartMoneyInput } from "@/hooks/useSmartMoneyInput";
 
 type Toast = { id: number; message: string; type: "success" | "error" };
+type PendingExpense = { description: string; category: string; amount: number };
 
 function startOfWeek(date: Date) {
   const result = new Date(date);
@@ -100,7 +101,6 @@ const expenseCategoryFilters = EXPENSE_CATEGORIES.map((category) => ({
 }));
 
 export default function Expenses({ onOpenReport }: { onOpenReport: () => void }) {
-  const canAddExpenses = getDeviceLogin()?.role !== "contributor";
   const { expenses, loading, error } = useExpenses();
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
@@ -119,11 +119,8 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
   >("date-desc");
   const [showSort, setShowSort] = useState(false);
   const [visibleWeekCount, setVisibleWeekCount] = useState(1);
-  const [pendingUnusualExpense, setPendingUnusualExpense] = useState<{
-    description: string;
-    category: string;
-    amount: number;
-  } | null>(null);
+  const [pendingUnusualExpense, setPendingUnusualExpense] = useState<PendingExpense | null>(null);
+  const [pendingDuplicateExpense, setPendingDuplicateExpense] = useState<PendingExpense | null>(null);
   const [amending, setAmending] = useState<Expense | null>(null);
   const [amendmentDescription, setAmendmentDescription] = useState("");
   const {
@@ -234,16 +231,40 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
       return;
     }
 
-    if (isExpenseAmountUnusual(category, numericAmount)) {
-      setPendingUnusualExpense({
-        description: description.trim(),
-        category,
-        amount: numericAmount,
-      });
+    const candidate = {
+      description: description.trim(),
+      category,
+      amount: numericAmount,
+    };
+
+    const today = new Date();
+    const likelyDuplicate = expenses.some((expense) => {
+      const addedAt = expenseDate(expense);
+      return expense.transactionType !== "amendment"
+        && expense.description.trim().toLocaleLowerCase() === candidate.description.toLocaleLowerCase()
+        && normalizeExpenseCategory(expense.category) === normalizeExpenseCategory(candidate.category)
+        && Math.round(expense.amount * 100) === Math.round(candidate.amount * 100)
+        && addedAt.getFullYear() === today.getFullYear()
+        && addedAt.getMonth() === today.getMonth()
+        && addedAt.getDate() === today.getDate();
+    });
+
+    if (likelyDuplicate) {
+      setPendingDuplicateExpense(candidate);
       return;
     }
 
-    saveExpense(description, category, numericAmount);
+    continueExpenseSave(candidate);
+  }
+
+  function continueExpenseSave(candidate: PendingExpense) {
+    setPendingDuplicateExpense(null);
+    if (isExpenseAmountUnusual(candidate.category, candidate.amount)) {
+      setPendingUnusualExpense(candidate);
+      return;
+    }
+
+    saveExpense(candidate.description, candidate.category, candidate.amount);
   }
 
   function saveExpense(
@@ -263,6 +284,7 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
       setCategory("");
       setAmount("");
       setPendingUnusualExpense(null);
+      setPendingDuplicateExpense(null);
       setAdding(false);
       showToast(UI_TEXT.expenses.added, "success");
 
@@ -342,8 +364,7 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
         </p>
       </header>
 
-      {canAddExpenses ? (
-        <form
+      <form
           onSubmit={handleSubmit}
           className="mb-5 space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
         >
@@ -414,12 +435,7 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
             <FiPlus size={24} aria-hidden="true" />
           </button>
         </div>
-        </form>
-      ) : (
-        <p className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200">
-          {UI_TEXT.expenses.readOnly}
-        </p>
-      )}
+      </form>
 
       {loading && <p>{UI_TEXT.loading}</p>}
       {error && <p className="my-2 text-sm text-red-600" role="alert">{error}</p>}
@@ -567,7 +583,15 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
                         isUnusualExpense(expense) ? EXPENSE_UNUSUAL_STYLE.row : ""
                       }`}
                     >
-                    <div className="min-w-0">
+                    <div className="flex min-w-0 items-start gap-2">
+                      {expense.createdBy && FAMILY_MEMBER_COLORS[expense.createdBy.toLowerCase()] && (
+                        <span
+                          className={`mt-1.5 size-2.5 shrink-0 rounded-full ${FAMILY_MEMBER_COLORS[expense.createdBy.toLowerCase()]}`}
+                          title={UI_TEXT.expenses.addedBy(expense.createdBy)}
+                          aria-label={UI_TEXT.expenses.addedBy(expense.createdBy)}
+                        />
+                      )}
+                      <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="truncate font-medium">{expense.description}</p>
                         {expense.transactionType === "amendment" && (
@@ -597,12 +621,13 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
                         </span>
                         <span>· {dateFormatter.format(expenseDate(expense))}</span>
                       </p>
+                      </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                       <span className={`font-semibold ${expense.amount < 0 ? "text-emerald-700 dark:text-emerald-400" : ""}`}>
                         {formatCurrency(expense.amount)}
                       </span>
-                      {canAddExpenses && expense.transactionType !== "amendment" && (
+                      {expense.transactionType !== "amendment" && (
                         <button
                           type="button"
                           onClick={() => setAmending(expense)}
@@ -748,6 +773,46 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
                 }
               >
                 {UI_TEXT.expenses.proceed}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pendingDuplicateExpense && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
+          <div
+            className="w-full max-w-sm rounded-2xl border border-rose-300 bg-white p-5 shadow-xl dark:border-rose-800 dark:bg-slate-900"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="duplicate-expense-title"
+          >
+            <h2 id="duplicate-expense-title" className="text-lg font-bold">
+              {UI_TEXT.expenses.duplicateTitle}
+            </h2>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+              {UI_TEXT.expenses.duplicateConfirm}
+            </p>
+            <div className="mt-3 rounded-lg bg-rose-50 px-3 py-2 dark:bg-rose-950">
+              <p className="font-semibold">{pendingDuplicateExpense.description}</p>
+              <p className="text-sm text-rose-800 dark:text-rose-200">
+                {normalizeExpenseCategory(pendingDuplicateExpense.category)} · {formatCurrency(pendingDuplicateExpense.amount)}
+              </p>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setPendingDuplicateExpense(null)}
+              >
+                {UI_TEXT.common.cancel}
+              </button>
+              <button
+                type="button"
+                className="rounded-lg bg-rose-600 px-4 py-2 font-semibold text-white transition hover:bg-rose-700 active:scale-95"
+                onClick={() => continueExpenseSave(pendingDuplicateExpense)}
+              >
+                {UI_TEXT.expenses.saveAnyway}
               </button>
             </div>
           </div>

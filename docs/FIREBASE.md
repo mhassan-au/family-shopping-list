@@ -51,9 +51,8 @@ Recommended fields:
 |---|---|---|
 | `approved` | boolean | `true` |
 | `name` | string | `Family phone` |
-| `canAddExpenses` | boolean | `true` for adults; `false` for contributors |
 
-Only documents with `approved: true` can access household data. Expense creation additionally requires `canAddExpenses: true`; use `false` for Izhaar or any contributor device.
+Only documents with `approved: true` can access household data. All approved household devices can view reports and add expenses. The household `role` remains available for shopping-list UI permissions, but it is not an expense permission field.
 
 ### `shopping_items/{itemId}`
 
@@ -78,6 +77,8 @@ The allowed categories are currently `Dinner`, `Kids Meal`, `Kids Toy`, `Grocery
 Expense documents are append-only: Firestore Rules deny updates and deletes. A correction creates a new `amendment` document linked to the original expense. Negative amendments reduce the total and positive amendments increase it.
 
 The app sets `unusual` when a new expense exceeds its category threshold in `lib/config.ts`. This stored boolean supports future unusual-expense reports without changing immutable historical transactions.
+
+The expense screen displays `createdBy` using the family colors in `lib/config.ts`. Before creating an expense, the client warns when an existing expense from the same local calendar day has the same normalized category, case-insensitive description, and amount. This is an advisory check rather than a backend uniqueness constraint, so a legitimate repeat expense can be saved.
 
 ## Approving a device
 

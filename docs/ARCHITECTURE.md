@@ -8,7 +8,8 @@
 4. `DeviceApprovalScreen` waits for manual approval.
 5. Approved devices render `HouseholdApp`.
 6. The bottom menu switches between `ShoppingList` and `Expenses` without a page reload.
-7. The shopping and expense hooks maintain their real-time Firestore listeners.
+7. The expense banner opens `ExpenseReport`, while the Expenses navigation tab stays active.
+8. The shopping and expense hooks maintain their real-time Firestore listeners.
 
 ## Key files
 
@@ -17,6 +18,7 @@
 | `components/ShoppingList.tsx` | Main UI composition and action notifications |
 | `components/HouseholdApp.tsx` | Bottom navigation and section switching |
 | `components/Expenses.tsx` | Expense form and weekly expense list |
+| `components/ExpenseReport.tsx` | Day/week/month/year insights and category comparisons |
 | `hooks/useShoppingList.ts` | Real-time state, optimistic updates, reconnects |
 | `hooks/useExpenses.ts` | Real-time expense state |
 | `lib/shopping.ts` | Firestore shopping-item operations |
@@ -56,4 +58,4 @@ The current default is selected in `components/ShoppingList.tsx` from the locall
 
 ## Data ownership
 
-The current shopping list uses one household-wide top-level `shopping_items` collection. Approved devices share the same list. Expenses use a top-level `expenses` collection and keep unaggregated records so future weekly and monthly reports can reuse them. Expense records cannot be updated or deleted; corrections are separate amendment transactions linked to the original. If multi-household support is ever required, move both collections under `families/{familyCode}` and update queries and Rules together.
+The current shopping list uses one household-wide top-level `shopping_items` collection. Approved devices share the same list. Expenses use a top-level `expenses` collection and keep unaggregated records so reports can calculate day, week, month, and year totals directly. Expense records cannot be updated or deleted; corrections are separate amendment transactions linked to the original. The expense form warns when description, category, and amount match another transaction from the same local calendar day, but the user may deliberately save it. If multi-household support is ever required, move both collections under `families/{familyCode}` and update queries and Rules together.
