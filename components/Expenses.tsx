@@ -4,10 +4,9 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { FiChevronsRight, FiDollarSign, FiPlus, FiSliders } from "react-icons/fi";
 import {
   EXPENSE_CATEGORIES,
-  EXPENSE_CATEGORY_SHORT_LABELS,
-  EXPENSE_DEFAULT_VISIBLE_CATEGORIES,
   EXPENSE_UNUSUAL_STYLE,
   isExpenseAmountUnusual,
+  normalizeExpenseCategory,
 } from "@/lib/config";
 import { createExpense, createExpenseAmendment } from "@/lib/expenses";
 import { Expense } from "@/lib/types";
@@ -95,7 +94,7 @@ function formatWeekRange(weekStart: Date) {
 }
 
 const expenseCategoryFilters = EXPENSE_CATEGORIES.map((category) => ({
-  label: EXPENSE_CATEGORY_SHORT_LABELS[category] ?? category,
+  label: category,
   value: category,
 }));
 
@@ -114,14 +113,10 @@ export default function Expenses() {
   } = useSmartMoneyInput();
   const [adding, setAdding] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("");
-  const [visibleCategoryValues, setVisibleCategoryValues] = useState<string[]>(
-    () => [...EXPENSE_DEFAULT_VISIBLE_CATEGORIES],
-  );
   const [sortMode, setSortMode] = useState<
     "date-desc" | "date-asc" | "price-desc" | "price-asc"
   >("date-desc");
   const [showSort, setShowSort] = useState(false);
-  const [showMoreCategories, setShowMoreCategories] = useState(false);
   const [visibleWeekCount, setVisibleWeekCount] = useState(1);
   const [pendingUnusualExpense, setPendingUnusualExpense] = useState<{
     description: string;
@@ -140,13 +135,6 @@ export default function Expenses() {
   } = useSmartMoneyInput();
   const [toast, setToast] = useState<Toast | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const visibleExpenseFilters = visibleCategoryValues
-    .map((value) => expenseCategoryFilters.find((option) => option.value === value))
-    .filter((option): option is (typeof expenseCategoryFilters)[number] => Boolean(option));
-  const overflowExpenseFilters = expenseCategoryFilters.filter(
-    (option) => !visibleCategoryValues.includes(option.value),
-  );
-
   useEffect(() => {
     return () => {
       if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -156,7 +144,9 @@ export default function Expenses() {
   const filteredExpenses = useMemo(
     () =>
       categoryFilter
-        ? expenses.filter((expense) => expense.category === categoryFilter)
+        ? expenses.filter(
+            (expense) => normalizeExpenseCategory(expense.category) === categoryFilter,
+          )
         : expenses,
     [categoryFilter, expenses],
   );
@@ -199,9 +189,10 @@ export default function Expenses() {
 
     expenses.forEach((expense) => {
       if (startOfWeek(expenseDate(expense)).getTime() !== currentWeekStart) return;
+      const normalizedCategory = normalizeExpenseCategory(expense.category);
       categoryTotals.set(
-        expense.category,
-        (categoryTotals.get(expense.category) ?? 0) + expense.amount,
+        normalizedCategory,
+        (categoryTotals.get(normalizedCategory) ?? 0) + expense.amount,
       );
     });
 
@@ -421,84 +412,35 @@ export default function Expenses() {
       {loading && <p>{UI_TEXT.loading}</p>}
       {error && <p className="my-2 text-sm text-red-600" role="alert">{error}</p>}
       {!loading && expenses.length > 0 && (
-        <div className="mb-3 grid grid-cols-[repeat(4,minmax(0,1fr))_2.5rem_2.5rem] gap-1.5">
-          {[
-            { label: UI_TEXT.expenses.all, value: "" },
-            ...visibleExpenseFilters,
-          ].map((option) => (
-            <button
-              key={option.label}
-              type="button"
-              onClick={() => {
-                setCategoryFilter(option.value);
-                setVisibleWeekCount(1);
-                setShowMoreCategories(false);
-                setShowSort(false);
-              }}
-              className={`min-w-0 rounded-lg border px-1 py-2 text-[0.72rem] font-semibold leading-tight transition sm:text-xs ${
-                categoryFilter === option.value
-                  ? "border-rose-600 bg-rose-600 text-white shadow-sm"
-                  : "border-slate-300 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
-
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => {
-                setShowMoreCategories((visible) => !visible);
-                setShowSort(false);
-              }}
-              className={`flex size-10 items-center justify-center rounded-lg border text-base font-bold transition ${
-                overflowExpenseFilters.some((option) => option.value === categoryFilter)
-                  ? "border-rose-600 bg-rose-600 text-white shadow-sm"
-                  : "border-slate-300 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              }`}
-              aria-label={UI_TEXT.expenses.moreCategories}
-              title={UI_TEXT.expenses.moreCategories}
-              aria-expanded={showMoreCategories}
-            >
-              …
-            </button>
-
-            {showMoreCategories && (
-              <div className="absolute right-0 top-full z-20 mt-2 w-40 rounded-xl border border-rose-200 bg-white p-2 shadow-lg dark:border-rose-900 dark:bg-slate-900">
-                {overflowExpenseFilters.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => {
-                      setCategoryFilter(option.value);
-                      setVisibleWeekCount(1);
-                      setVisibleCategoryValues((currentValues) => [
-                        ...currentValues.slice(1),
-                        option.value,
-                      ]);
-                      setShowMoreCategories(false);
-                    }}
-                    className={`block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-rose-50 dark:hover:bg-rose-950 ${
-                      categoryFilter === option.value
-                        ? "bg-rose-100 font-semibold dark:bg-rose-900"
-                        : ""
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            )}
+        <div className="mb-3 grid grid-cols-[minmax(0,1fr)_2.5rem] gap-1.5">
+          <div className="flex min-w-0 gap-1.5 overflow-x-auto pb-1">
+            {[
+              { label: UI_TEXT.expenses.all, value: "" },
+              ...expenseCategoryFilters,
+            ].map((option) => (
+              <button
+                key={option.label}
+                type="button"
+                onClick={() => {
+                  setCategoryFilter(option.value);
+                  setVisibleWeekCount(1);
+                  setShowSort(false);
+                }}
+                className={`shrink-0 rounded-full border px-3 py-2 text-xs font-semibold leading-tight transition ${
+                  categoryFilter === option.value
+                    ? "border-rose-600 bg-rose-600 text-white shadow-sm"
+                    : "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-100"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
 
           <div className="relative">
             <button
               type="button"
-              onClick={() => {
-                setShowSort((visible) => !visible);
-                setShowMoreCategories(false);
-              }}
+              onClick={() => setShowSort((visible) => !visible)}
               className={`flex size-10 items-center justify-center rounded-lg border transition ${
                 sortMode.startsWith("price")
                   ? "border-rose-600 bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-100"
@@ -616,7 +558,7 @@ export default function Expenses() {
                         )}
                       </div>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {expense.category} · {dateFormatter.format(expenseDate(expense))}
+                        {normalizeExpenseCategory(expense.category)} · {dateFormatter.format(expenseDate(expense))}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">

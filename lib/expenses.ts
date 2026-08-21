@@ -9,7 +9,11 @@ import {
 import { db } from "./firebase";
 import { getCurrentUsername } from "./currentUser";
 import { getDeviceLogin } from "./device";
-import { EXPENSE_CATEGORIES, isExpenseAmountUnusual } from "./config";
+import {
+  EXPENSE_CATEGORIES,
+  isExpenseAmountUnusual,
+  normalizeExpenseCategory,
+} from "./config";
 import {
   isValidExpenseAmount,
   isValidExpenseDescription,
@@ -35,11 +39,12 @@ export function createExpense(
 ) {
   assertExpensePermission();
   const cleanDescription = description.trim();
+  const cleanCategory = normalizeExpenseCategory(category);
 
   if (
     !isValidExpenseDescription(cleanDescription) ||
     !isValidExpenseAmount(amount) ||
-    !EXPENSE_CATEGORIES.includes(category as (typeof EXPENSE_CATEGORIES)[number])
+    !EXPENSE_CATEGORIES.includes(cleanCategory as (typeof EXPENSE_CATEGORIES)[number])
   ) {
     throw new Error("Invalid expense input");
   }
@@ -47,7 +52,7 @@ export function createExpense(
   const expenseRef = doc(expensesCollection);
   const createdAtMs = Date.now();
   const createdBy = getCurrentUsername();
-  const unusual = isExpenseAmountUnusual(category, amount);
+  const unusual = isExpenseAmountUnusual(cleanCategory, amount);
 
   return {
     id: expenseRef.id,
@@ -57,7 +62,7 @@ export function createExpense(
     unusual,
     save: setDoc(expenseRef, {
       description: cleanDescription,
-      category,
+      category: cleanCategory,
       amount,
       createdAt: serverTimestamp(),
       createdAtMs,
@@ -76,12 +81,13 @@ export function createExpenseAmendment(
 ) {
   assertExpensePermission();
   const cleanDescription = description.trim();
+  const cleanCategory = normalizeExpenseCategory(category);
 
   if (
     !originalExpenseId ||
     !isValidExpenseDescription(cleanDescription) ||
     !isValidAmendmentAmount(amount) ||
-    !EXPENSE_CATEGORIES.includes(category as (typeof EXPENSE_CATEGORIES)[number])
+    !EXPENSE_CATEGORIES.includes(cleanCategory as (typeof EXPENSE_CATEGORIES)[number])
   ) {
     throw new Error("Invalid expense amendment");
   }
@@ -92,7 +98,7 @@ export function createExpenseAmendment(
 
   return setDoc(amendmentRef, {
     description: cleanDescription,
-    category,
+    category: cleanCategory,
     amount,
     createdAt: serverTimestamp(),
     createdAtMs,

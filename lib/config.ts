@@ -130,36 +130,42 @@ export const HIDDEN_PRIORITIES = [
 ];
 export const EXPENSE_CATEGORIES = [
   "Dinner",
-  "Kids Dinner",
+  "Kids Meal",
   "Kids Toy",
-  "Petrol",
   "Grocery",
-  "Kmart",
+  "Meat/Fish",
+  "Veg/Fruit",
+  "Snacks",
+  "Petrol",
+  "House Needs",
   "Gift",
   "B'Day",
   "Other",
 ] as const;
 
-export const EXPENSE_CATEGORY_SHORT_LABELS: Partial<
-  Record<(typeof EXPENSE_CATEGORIES)[number], string>
-> = {
-  "Kids Dinner": "KDinner",
-  "Kids Toy": "Toy",
+export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
+
+const LEGACY_EXPENSE_CATEGORIES: Record<string, ExpenseCategory> = {
+  "Kids Dinner": "Kids Meal",
+  Kmart: "House Needs",
 };
 
-export const EXPENSE_DEFAULT_VISIBLE_CATEGORIES: Array<
-  (typeof EXPENSE_CATEGORIES)[number]
-> = ["Dinner", "Kids Dinner", "Kids Toy"];
+export function normalizeExpenseCategory(category: string): string {
+  return LEGACY_EXPENSE_CATEGORIES[category] ?? category;
+}
 
 export const EXPENSE_UNUSUAL_THRESHOLDS: Record<
   (typeof EXPENSE_CATEGORIES)[number],
   number | null
 > = {
   Dinner: 200,
-  "Kids Dinner": 100,
+  "Kids Meal": 100,
   "Kids Toy": 100,
   Grocery: 300,
-  Kmart: 300,
+  "Meat/Fish": null,
+  "Veg/Fruit": null,
+  Snacks: null,
+  "House Needs": 300,
   Gift: 100,
   "B'Day": null,
   Petrol: null,
@@ -172,8 +178,9 @@ export const EXPENSE_UNUSUAL_STYLE = {
 } as const;
 
 export function isExpenseAmountUnusual(category: string, amount: number) {
+  const normalizedCategory = normalizeExpenseCategory(category);
   const threshold = EXPENSE_UNUSUAL_THRESHOLDS[
-    category as keyof typeof EXPENSE_UNUSUAL_THRESHOLDS
+    normalizedCategory as keyof typeof EXPENSE_UNUSUAL_THRESHOLDS
   ];
   return typeof threshold === "number" && amount > threshold;
 }
