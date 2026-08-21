@@ -154,6 +154,26 @@ export function normalizeExpenseCategory(category: string): string {
   return LEGACY_EXPENSE_CATEGORIES[category] ?? category;
 }
 
+export const EXPENSE_CATEGORY_COLORS: Record<ExpenseCategory, string> = {
+  Dinner: "#e11d48",
+  "Kids Meal": "#f97316",
+  "Kids Toy": "#eab308",
+  Grocery: "#22c55e",
+  "Meat/Fish": "#ef4444",
+  "Veg/Fruit": "#10b981",
+  Snacks: "#f59e0b",
+  Petrol: "#3b82f6",
+  "House Needs": "#8b5cf6",
+  Gift: "#d946ef",
+  "B'Day": "#ec4899",
+  Other: "#64748b",
+};
+
+export function getExpenseCategoryColor(category: string) {
+  const normalizedCategory = normalizeExpenseCategory(category) as ExpenseCategory;
+  return EXPENSE_CATEGORY_COLORS[normalizedCategory] ?? EXPENSE_CATEGORY_COLORS.Other;
+}
+
 export const EXPENSE_UNUSUAL_THRESHOLDS: Record<
   (typeof EXPENSE_CATEGORIES)[number],
   number | null

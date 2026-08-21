@@ -78,9 +78,34 @@ export const UI_TEXT = {
     average: "Average",
     unusual: "Unusual",
     categoryBreakdown: "Category breakdown",
-    recentTransactions: "Transactions in this period",
+    categoryChart: "Expense category pie chart",
+    categoryUp: "Up from previous period",
+    categoryDown: "Down from previous period",
     noExpenses: "No expenses recorded for this period",
     amendment: "Amendment",
+    periodComparison: "Compared with previous period",
+    periodComparisonToDate: "Compared with the same point in the previous period",
+    noPreviousComparison: "No previous-period spending to compare",
+    spendingUp: (amount: string, percentage: number) =>
+      `Spending increased by ${amount} (${percentage}%)`,
+    spendingDown: (amount: string, percentage: number) =>
+      `Spending decreased by ${amount} (${percentage}%)`,
+    spendingUnchanged: "Spending was unchanged",
+    previousSpend: (amount: string) => `Previous period: ${amount}`,
+    spendingTrend: "Spending trend",
+    insights: "What stands out",
+    topCategory: (category: string, amount: string, percentage: number) =>
+      `${category} is the largest category at ${amount} (${percentage}% of spending).`,
+    biggestIncrease: (category: string, amount: string) =>
+      `${category} had the biggest increase: ${amount} more than the previous period.`,
+    biggestDecrease: (category: string, amount: string) =>
+      `${category} improved the most: ${amount} less than the previous period.`,
+    mostFrequent: (category: string, count: number) =>
+      `${category} was purchased most often with ${count} transaction${count === 1 ? "" : "s"}.`,
+    largestTransaction: (description: string, amount: string) =>
+      `Largest transaction: ${description} at ${amount}.`,
+    unusualSummary: (count: number, amount: string) =>
+      `${count} unusual transaction${count === 1 ? "" : "s"} accounted for ${amount}.`,
   },
   login: {
     subtitle: "Sign in to your family shopping list",

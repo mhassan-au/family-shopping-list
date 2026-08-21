@@ -5,6 +5,7 @@ import { FiBarChart2, FiChevronsRight, FiDollarSign, FiPlus, FiSliders } from "r
 import {
   EXPENSE_CATEGORIES,
   EXPENSE_UNUSUAL_STYLE,
+  getExpenseCategoryColor,
   isExpenseAmountUnusual,
   normalizeExpenseCategory,
 } from "@/lib/config";
@@ -580,8 +581,21 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {normalizeExpenseCategory(expense.category)} · {dateFormatter.format(expenseDate(expense))}
+                      <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                        <span
+                          className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold"
+                          style={{
+                            borderColor: getExpenseCategoryColor(expense.category),
+                            backgroundColor: `${getExpenseCategoryColor(expense.category)}1f`,
+                          }}
+                        >
+                          <span
+                            className="size-1.5 rounded-full"
+                            style={{ backgroundColor: getExpenseCategoryColor(expense.category) }}
+                          />
+                          {normalizeExpenseCategory(expense.category)}
+                        </span>
+                        <span>· {dateFormatter.format(expenseDate(expense))}</span>
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
