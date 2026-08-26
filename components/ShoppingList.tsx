@@ -145,6 +145,12 @@ export default function ShoppingList() {
         sum + Number(item.qty || 0) * Number(item.unitPrice || 0),
       0,
     );
+  const expectedTotal = items
+    .filter((item) => !item.completed)
+    .reduce(
+      (sum, item) => sum + Number(item.expectedUnitPrice || 0),
+      0,
+    );
   const syncLabel = !isOnline
     ? UI_TEXT.sync.offline
     : syncing
@@ -202,7 +208,9 @@ export default function ShoppingList() {
     }
 
     const knownNames = new Set(
-      items.map((item) => item.text.trim().toLocaleLowerCase()),
+      items
+        .filter((item) => !item.completed)
+        .map((item) => item.text.trim().toLocaleLowerCase()),
     );
     const duplicateNames: string[] = [];
     const newNames: string[] = [];
@@ -482,6 +490,11 @@ export default function ShoppingList() {
             </div>
           )}
         </div>
+        {expectedTotal > 0 && (
+          <div className="px-2 pb-1 text-xs font-medium text-slate-400 dark:text-slate-500">
+            {UI_TEXT.items.expectedTotal(expectedTotal)}
+          </div>
+        )}
         {completedItems.length > 0 && (
           <button
             type="button"

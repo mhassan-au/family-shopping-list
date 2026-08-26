@@ -16,6 +16,7 @@
 - Approval records can only be managed in Firebase Console.
 - Unknown collections and notification requests are denied.
 - Shopping documents have an allowed-field list and size/range validation.
+- Shopping price-history reads and validated writes require an approved device; app-side deletion is denied.
 - Expense reads and append-only writes require an approved authenticated UID.
 - Expense documents have an allowed-field list, category allow-list, and amount validation.
 - Client inputs are validated again immediately before Firestore writes.

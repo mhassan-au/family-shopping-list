@@ -183,6 +183,8 @@ export const UI_TEXT = {
     clearing: "Clearing...",
     complete: "Complete",
     quantityPrice: "Quantity / Unit Price",
+    expectedPrice: (amount: number) => `Expected $${amount.toFixed(2)}`,
+    expectedTotal: (amount: number) => `Expected total: $${amount.toFixed(2)}`,
     total: (amount: number) => `Total: $${amount.toFixed(2)}`,
     remaining: (count: number) => `${count} ${count === 1 ? "item" : "items"} left`,
   },

@@ -47,6 +47,12 @@ Delete the approved-device document and corresponding anonymous Authentication u
 - Reopen the app to restart the Firestore connection.
 - The app uses persistent local cache and forced long polling for mobile-network reliability.
 
+### Expected price is not shown
+
+- Price history is created only after an item is completed with a price greater than zero.
+- Item-name matching ignores capitalization but otherwise requires the same spelling.
+- A device adding the item while fully offline can show the expected price only if that history record is already in its local Firestore cache.
+
 ### Local server is unavailable
 
 Run `npm run dev` and open `http://localhost:3000`.

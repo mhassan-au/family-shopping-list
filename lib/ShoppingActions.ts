@@ -100,6 +100,8 @@ export async function completeShoppingItem(
 
     item.id,
 
+    item.text,
+
     qty,
 
     unitPrice,

@@ -449,8 +449,8 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
 
               <section className="mb-4 rounded-xl border border-rose-200 bg-white p-4 shadow-sm dark:border-rose-900 dark:bg-slate-900">
                 <h2 className="mb-3 font-bold">{UI_TEXT.expenseReport.categoryBreakdown}</h2>
-                <div className="grid grid-cols-[10.5rem_minmax(0,1fr)] items-center gap-3">
-                  <div className="relative aspect-square w-full">
+                <div>
+                  <div className="relative mx-auto aspect-square w-48">
                     <div
                       className="absolute inset-0 rounded-full shadow-inner ring-4 ring-white dark:ring-slate-800"
                       style={{ background: `conic-gradient(${pieChart.segments.join(", ")})` }}
@@ -472,16 +472,16 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
                       );
                     })}
                   </div>
-                  <div className="min-w-0 space-y-2">
+                  <div className="mt-5 space-y-2 border-t border-rose-100 pt-3 dark:border-rose-950">
                     {report.categories.map((category) => {
                       return (
-                        <div key={category.name} className="flex items-start justify-between gap-2 text-xs">
-                          <div className="flex min-w-0 items-center gap-1.5">
+                        <div key={category.name} className="flex items-center justify-between gap-3 text-sm">
+                          <div className="flex min-w-0 items-center gap-2">
                             <span
                               className="size-2.5 shrink-0 rounded-full"
                               style={{ backgroundColor: getExpenseCategoryColor(category.name) }}
                             />
-                            <span className="truncate">{category.name}</span>
+                            <span>{category.name}</span>
                           </div>
                           <span className="flex shrink-0 items-center gap-1 font-semibold">
                             {formatCurrency(category.amount)}

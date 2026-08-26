@@ -8,8 +8,9 @@ MyGrocery is a private, real-time household shopping and expense tracker built w
 - Offline-first Firestore cache and automatic reconnection
 - Add, edit, complete, undo, and delete shopping items
 - Shop, category, and priority grouping/filtering
-- Duplicate prevention, including comma-separated submissions
+- Active-item duplicate prevention, including comma-separated submissions; completed items may be added again
 - Quantity, price, and completed-shopping total
+- Last paid unit-price history shown as an expected price when an item is added again
 - Shared household expense entry grouped into Monday-to-Sunday weeks
 - Day, week, month, and year expense reports with trends and period comparisons
 - Category pie charts, previous/current category bars, and unusual-spend insights

@@ -61,8 +61,21 @@ Created by the app. Important fields include:
 - `text`, `completed`, `shop`, `category`, `priority`
 - `createdBy`, `createdAt`
 - `qty`, `unitPrice`, `lastQty`, `lastUnitPrice` when completed
+- `expectedUnitPrice` when a previous paid price was found for the item name
 
 The supplied Security Rules limit fields, text lengths, quantities, and prices.
+
+### `shopping_price_history/{normalizedItemName}`
+
+Created or updated when an approved household member completes an item with a unit price greater than zero. The document ID is an encoded, lowercase item name so capitalization differences reuse the same history.
+
+Fields:
+
+- `itemName` and `normalizedName`
+- `lastUnitPrice`
+- `updatedBy`, `updatedAt`, and `updatedAtMs`
+
+When the same item is added again, the app reads this record and stores `expectedUnitPrice` on the new shopping item. Clearing completed shopping items does not delete price history. History records cannot be deleted from the app.
 
 ### `expenses/{expenseId}`
 
@@ -72,7 +85,7 @@ Created by the app for approved devices. Each record contains:
 - `createdBy`, `createdAt`, and `createdAtMs`
 - `amendsExpenseId` for an amendment transaction
 
-The allowed categories are currently `Dinner`, `Kids Meal`, `Kids Toy`, `Grocery`, `Meat/Fish`, `Veg/Fruit`, `Snacks`, `Petrol`, `House Needs`, `Gift`, `B'Day`, and `Other`. The rules also retain the legacy `Kids Dinner` and `Kmart` values for existing records. If categories change in `lib/config.ts`, update the matching category allow-list in `firestore.rules` before publishing.
+The allowed categories are currently `Restaurant`, `Kids Meal`, `Toy`, `Grocery`, `Meat/Fish`, `Veg/Fruit`, `Snacks`, `Petrol`, `Transport`, `House Needs`, `Home Decor`, `Gift`, `B'Day`, and `Other`. The rules also retain the legacy `Dinner`, `Kids Dinner`, `Kids Toy`, and `Kmart` values for existing records. If categories change in `lib/config.ts`, update the matching category allow-list in `firestore.rules` before publishing.
 
 Expense documents are append-only: Firestore Rules deny updates and deletes. A correction creates a new `amendment` document linked to the original expense. Negative amendments reduce the total and positive amendments increase it.
 

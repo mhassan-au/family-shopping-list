@@ -21,7 +21,7 @@
 | `components/ExpenseReport.tsx` | Day/week/month/year insights and category comparisons |
 | `hooks/useShoppingList.ts` | Real-time state, optimistic updates, reconnects |
 | `hooks/useExpenses.ts` | Real-time expense state |
-| `lib/shopping.ts` | Firestore shopping-item operations |
+| `lib/shopping.ts` | Firestore shopping-item and price-history operations |
 | `lib/expenses.ts` | Expense validation and Firestore writes |
 | `lib/firebase.ts` | Firebase, persistent cache, long polling |
 | `lib/deviceApproval.ts` | Pending and approved-device lookup |
@@ -59,3 +59,7 @@ The current default is selected in `components/ShoppingList.tsx` from the locall
 ## Data ownership
 
 The current shopping list uses one household-wide top-level `shopping_items` collection. Approved devices share the same list. Expenses use a top-level `expenses` collection and keep unaggregated records so reports can calculate day, week, month, and year totals directly. Expense records cannot be updated or deleted; corrections are separate amendment transactions linked to the original. The expense form warns when description, category, and amount match another transaction from the same local calendar day, but the user may deliberately save it. If multi-household support is ever required, move both collections under `families/{familyCode}` and update queries and Rules together.
+
+The `shopping_price_history` collection keeps the latest non-zero unit price under an encoded, case-insensitive item-name key. Adding a matching item copies that value to `expectedUnitPrice` for display only; the value is not treated as an actual purchase price or included in totals.
+
+Shopping duplicate detection checks active items only. A completed item may be added again while it remains in the completed list, but another active item with the same case-insensitive name is still blocked.

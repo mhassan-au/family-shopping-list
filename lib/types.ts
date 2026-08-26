@@ -24,6 +24,8 @@ export interface ShoppingItem {
 
   lastUnitPrice?: number;
 
+  expectedUnitPrice?: number;
+
 }
 
 export interface DeviceLogin {

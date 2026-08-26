@@ -21,7 +21,8 @@ service cloud.firestore {
       let data = request.resource.data;
       return data.keys().hasOnly([
           'text', 'completed', 'shop', 'category', 'priority', 'createdBy',
-          'createdAt', 'createdByRole', 'qty', 'unitPrice', 'lastQty', 'lastUnitPrice'
+          'createdAt', 'createdByRole', 'qty', 'unitPrice', 'lastQty', 'lastUnitPrice',
+          'expectedUnitPrice'
         ])
         && data.keys().hasAll([
           'text', 'completed', 'shop', 'category', 'priority', 'createdBy',
@@ -38,7 +39,8 @@ service cloud.firestore {
         && (!('qty' in data) || (data.qty is number && data.qty >= 1 && data.qty <= 999))
         && (!('unitPrice' in data) || (data.unitPrice is number && data.unitPrice >= 0 && data.unitPrice <= 99999.99))
         && (!('lastQty' in data) || (data.lastQty is number && data.lastQty >= 1 && data.lastQty <= 999))
-        && (!('lastUnitPrice' in data) || (data.lastUnitPrice is number && data.lastUnitPrice >= 0 && data.lastUnitPrice <= 99999.99));
+        && (!('lastUnitPrice' in data) || (data.lastUnitPrice is number && data.lastUnitPrice >= 0 && data.lastUnitPrice <= 99999.99))
+        && (!('expectedUnitPrice' in data) || (data.expectedUnitPrice is number && data.expectedUnitPrice > 0 && data.expectedUnitPrice <= 99999.99));
     }
     match /shopping_items/{itemId} {
       allow read: if approvedDevice();
@@ -50,6 +52,30 @@ service cloud.firestore {
         ])
         && validShoppingItem();
       allow delete: if approvedDevice();
+    }
+    function validShoppingPriceHistory() {
+      let data = request.resource.data;
+      return data.keys().hasOnly([
+          'itemName', 'normalizedName', 'lastUnitPrice', 'updatedAt',
+          'updatedAtMs', 'updatedBy'
+        ])
+        && data.keys().hasAll([
+          'itemName', 'normalizedName', 'lastUnitPrice', 'updatedAt',
+          'updatedAtMs', 'updatedBy'
+        ])
+        && validText(data.itemName, 80)
+        && validText(data.normalizedName, 80)
+        && data.lastUnitPrice is number
+        && data.lastUnitPrice > 0
+        && data.lastUnitPrice <= 99999.99
+        && data.updatedAt is timestamp
+        && data.updatedAtMs is number
+        && validText(data.updatedBy, 40);
+    }
+    match /shopping_price_history/{historyId} {
+      allow read: if approvedDevice();
+      allow create, update: if approvedDevice() && validShoppingPriceHistory();
+      allow delete: if false;
     }
     function validExpense() {
       let data = request.resource.data;
@@ -63,9 +89,9 @@ service cloud.firestore {
         ])
         && validText(data.description, 80)
         && data.category in [
-          'Dinner', 'Kids Meal', 'Kids Toy', 'Grocery', 'Meat/Fish', 'Veg/Fruit',
-          'Snacks', 'Petrol', 'House Needs', 'Gift', "B'Day", 'Other',
-          'Kids Dinner', 'Kmart'
+          'Restaurant', 'Kids Meal', 'Toy', 'Grocery', 'Meat/Fish', 'Veg/Fruit',
+          'Snacks', 'Petrol', 'Transport', 'House Needs', 'Home Decor', 'Gift',
+          "B'Day", 'Other', 'Dinner', 'Kids Dinner', 'Kids Toy', 'Kmart'
         ]
         && data.amount is number
         && data.amount != 0

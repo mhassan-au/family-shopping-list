@@ -8,6 +8,7 @@ import { FiTrash2, FiEdit3 } from "react-icons/fi";
 import { ShoppingItem } from "@/lib/types";
 import { getTagColor } from "@/lib/tagColor";
 import { FAMILY_MEMBER_COLORS } from "@/lib/config";
+import { UI_TEXT } from "@/lib/uiText";
 
 
 interface Props {
@@ -152,6 +153,12 @@ export default function GroceryItem({
                         {item.text}
 
                     </span>
+
+                    {!item.completed && Number(item.expectedUnitPrice || 0) > 0 && (
+                        <span className="ml-1 text-xs font-medium text-slate-400 dark:text-slate-500">
+                            {UI_TEXT.items.expectedPrice(Number(item.expectedUnitPrice))}
+                        </span>
+                    )}
 
 
                     {/* Completed price */}

@@ -8,7 +8,9 @@ import {
   orderBy,
   where,
   getDocs,
+  getDoc,
   writeBatch,
+  setDoc,
 } from "firebase/firestore";
 
 import { db } from "./firebase";
@@ -20,6 +22,15 @@ import {
 } from "./validation";
 
 export const shoppingCollection = collection(db, "shopping_items");
+export const shoppingPriceHistoryCollection = collection(db, "shopping_price_history");
+
+function normalizePriceHistoryName(text: string) {
+  return text.trim().toLocaleLowerCase();
+}
+
+function priceHistoryRef(text: string) {
+  return doc(shoppingPriceHistoryCollection, encodeURIComponent(normalizePriceHistoryName(text)));
+}
 
 export const shoppingQuery = query(
   shoppingCollection,
@@ -48,7 +59,19 @@ export async function addItem(
 
   const batch = writeBatch(db);
 
-  for (const item of items) {
+  const expectedPrices = await Promise.all(
+    items.map(async (item) => {
+      try {
+        const history = await getDoc(priceHistoryRef(item));
+        const price = history.data()?.lastUnitPrice;
+        return typeof price === "number" && price > 0 ? price : undefined;
+      } catch {
+        return undefined;
+      }
+    }),
+  );
+
+  items.forEach((item, index) => {
     const itemRef = doc(shoppingCollection);
 
     batch.set(itemRef, {
@@ -65,8 +88,12 @@ export async function addItem(
       createdBy: device?.username ?? "",
 
       createdAt: serverTimestamp(),
+
+      ...(expectedPrices[index]
+        ? { expectedUnitPrice: expectedPrices[index] }
+        : {}),
     });
-  }
+  });
 
   await batch.commit();
 }
@@ -86,12 +113,14 @@ export async function updateItemDetails(
 
 export async function completeItem(
   id: string,
+  text: string,
   qty: number,
   unitPrice: number,
   lastQty: number,
   lastUnitPrice: number,
 ) {
   const ref = doc(db, "shopping_items", id);
+  const device = getDeviceLogin();
 
   await updateDoc(ref, {
     completed: true,
@@ -104,6 +133,21 @@ export async function completeItem(
 
     lastUnitPrice,
   });
+
+  if (unitPrice > 0) {
+    try {
+      await setDoc(priceHistoryRef(text), {
+        itemName: text.trim(),
+        normalizedName: normalizePriceHistoryName(text),
+        lastUnitPrice: unitPrice,
+        updatedAt: serverTimestamp(),
+        updatedAtMs: Date.now(),
+        updatedBy: device?.username ?? "",
+      });
+    } catch (historyError) {
+      console.error("Saving shopping price history failed", historyError);
+    }
+  }
 }
 
 export async function toggleItem(id: string, completed: boolean) {

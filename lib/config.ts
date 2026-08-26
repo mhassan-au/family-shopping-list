@@ -129,15 +129,17 @@ export const HIDDEN_PRIORITIES = [
   },
 ];
 export const EXPENSE_CATEGORIES = [
-  "Dinner",
+  "Restaurant",
   "Kids Meal",
-  "Kids Toy",
+  "Toy",
   "Grocery",
   "Meat/Fish",
   "Veg/Fruit",
   "Snacks",
   "Petrol",
+  "Transport",
   "House Needs",
+  "Home Decor",
   "Gift",
   "B'Day",
   "Other",
@@ -146,7 +148,9 @@ export const EXPENSE_CATEGORIES = [
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
 
 const LEGACY_EXPENSE_CATEGORIES: Record<string, ExpenseCategory> = {
+  Dinner: "Restaurant",
   "Kids Dinner": "Kids Meal",
+  "Kids Toy": "Toy",
   Kmart: "House Needs",
 };
 
@@ -155,15 +159,17 @@ export function normalizeExpenseCategory(category: string): string {
 }
 
 export const EXPENSE_CATEGORY_COLORS: Record<ExpenseCategory, string> = {
-  Dinner: "#e11d48",
+  Restaurant: "#e11d48",
   "Kids Meal": "#f97316",
-  "Kids Toy": "#eab308",
+  Toy: "#eab308",
   Grocery: "#22c55e",
   "Meat/Fish": "#ef4444",
   "Veg/Fruit": "#10b981",
   Snacks: "#f59e0b",
   Petrol: "#3b82f6",
+  Transport: "#06b6d4",
   "House Needs": "#8b5cf6",
+  "Home Decor": "#a855f7",
   Gift: "#d946ef",
   "B'Day": "#ec4899",
   Other: "#64748b",
@@ -178,17 +184,19 @@ export const EXPENSE_UNUSUAL_THRESHOLDS: Record<
   (typeof EXPENSE_CATEGORIES)[number],
   number | null
 > = {
-  Dinner: 200,
+  Restaurant: 200,
   "Kids Meal": 100,
-  "Kids Toy": 100,
+  Toy: 100,
   Grocery: 300,
   "Meat/Fish": null,
   "Veg/Fruit": null,
   Snacks: null,
   "House Needs": 300,
+  "Home Decor": null,
   Gift: 100,
   "B'Day": null,
   Petrol: null,
+  Transport: null,
   Other: null,
 };
 
