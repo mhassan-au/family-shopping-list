@@ -67,6 +67,10 @@ Run `npm run dev` and open `http://localhost:3000`.
 
 The warning appears only when description, category, and amount match another expense from the same local calendar day. Choose **Save anyway** for a legitimate repeated expense, or **Cancel** to review the entry. This warning does not delete or modify existing transactions.
 
+### Shopping total transfer
+
+Use **Transfer to Expenses & Clear** in the completed-items popup to add its final total as one `Grocery` expense and clear the completed list. The Auto added tag identifies the resulting transaction. Use **Clear completed** when no expense should be created.
+
 ## Firestore housekeeping
 
 Periodically remove:

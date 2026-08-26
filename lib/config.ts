@@ -205,6 +205,9 @@ export const EXPENSE_UNUSUAL_STYLE = {
   badge: "bg-amber-200 text-amber-900 dark:bg-amber-800 dark:text-amber-100",
 } as const;
 
+export const EXPENSE_AUTO_TRANSFER_STYLE =
+  "bg-cyan-100 text-cyan-900 dark:bg-cyan-900 dark:text-cyan-100";
+
 export function isExpenseAmountUnusual(category: string, amount: number) {
   const normalizedCategory = normalizeExpenseCategory(category);
   const threshold = EXPENSE_UNUSUAL_THRESHOLDS[

@@ -84,6 +84,7 @@ Created by the app for approved devices. Each record contains:
 - `description`, `category`, `amount`, `transactionType`, and `unusual`
 - `createdBy`, `createdAt`, and `createdAtMs`
 - `amendsExpenseId` for an amendment transaction
+- `source: shopping-transfer` for totals transferred from the completed-shopping popup
 
 The allowed categories are currently `Restaurant`, `Kids Meal`, `Toy`, `Grocery`, `Meat/Fish`, `Veg/Fruit`, `Snacks`, `Petrol`, `Transport`, `House Needs`, `Home Decor`, `Gift`, `B'Day`, and `Other`. The rules also retain the legacy `Dinner`, `Kids Dinner`, `Kids Toy`, and `Kmart` values for existing records. If categories change in `lib/config.ts`, update the matching category allow-list in `firestore.rules` before publishing.
 
@@ -92,6 +93,8 @@ Expense documents are append-only: Firestore Rules deny updates and deletes. A c
 The app sets `unusual` when a new expense exceeds its category threshold in `lib/config.ts`. This stored boolean supports future unusual-expense reports without changing immutable historical transactions.
 
 The expense screen displays `createdBy` using the family colors in `lib/config.ts`. Before creating an expense, the client warns when an existing expense from the same local calendar day has the same normalized category, case-insensitive description, and amount. This is an advisory check rather than a backend uniqueness constraint, so a legitimate repeat expense can be saved.
+
+A completed-shopping transfer creates one `Grocery` expense and deletes the completed shopping documents in the same Firestore batch. If any operation is rejected, none of the batch is committed. The ordinary clear action never creates an expense.
 
 ## Approving a device
 

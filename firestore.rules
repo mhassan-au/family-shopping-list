@@ -81,7 +81,7 @@ service cloud.firestore {
       let data = request.resource.data;
       return data.keys().hasOnly([
           'description', 'category', 'amount', 'createdAt', 'createdAtMs',
-          'createdBy', 'transactionType', 'amendsExpenseId', 'unusual'
+          'createdBy', 'transactionType', 'amendsExpenseId', 'unusual', 'source'
         ])
         && data.keys().hasAll([
           'description', 'category', 'amount', 'createdAt', 'createdAtMs',
@@ -101,6 +101,7 @@ service cloud.firestore {
         && data.createdAtMs is number
         && validText(data.createdBy, 40)
         && data.unusual is bool
+        && (!('source' in data) || data.source == 'shopping-transfer')
         && data.transactionType in ['expense', 'amendment']
         && (data.transactionType == 'expense'
           ? data.amount > 0 && !('amendsExpenseId' in data)

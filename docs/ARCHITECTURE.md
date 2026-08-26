@@ -63,3 +63,5 @@ The current shopping list uses one household-wide top-level `shopping_items` col
 The `shopping_price_history` collection keeps the latest non-zero unit price under an encoded, case-insensitive item-name key. Adding a matching item copies that value to `expectedUnitPrice` for display only; the value is not treated as an actual purchase price or included in totals.
 
 Shopping duplicate detection checks active items only. A completed item may be added again while it remains in the completed list, but another active item with the same case-insensitive name is still blocked.
+
+The completed-items popup has two separate flows. **Clear completed** deletes only shopping items. **Transfer to Expenses & Clear** uses one Firestore batch to create a `Grocery` expense with `source: shopping-transfer` and delete the completed items atomically. The expense list displays this source with an Auto added tag.

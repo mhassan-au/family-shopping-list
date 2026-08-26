@@ -11,6 +11,7 @@ MyGrocery is a private, real-time household shopping and expense tracker built w
 - Active-item duplicate prevention, including comma-separated submissions; completed items may be added again
 - Quantity, price, and completed-shopping total
 - Last paid unit-price history shown as an expected price when an item is added again
+- Optional completed-shopping transfer to one auto-tagged Grocery expense, with atomic clearing
 - Shared household expense entry grouped into Monday-to-Sunday weeks
 - Day, week, month, and year expense reports with trends and period comparisons
 - Category pie charts, previous/current category bars, and unusual-spend insights

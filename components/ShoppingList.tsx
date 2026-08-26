@@ -15,6 +15,7 @@ import CompletedItemsDialog from "./CompletedItemsDialog";
 import { FiLogOut } from "react-icons/fi";
 import { clearDeviceLogin, getDeviceLogin } from "@/lib/device";
 import { UI_TEXT } from "@/lib/uiText";
+import { transferCompletedShoppingToExpense } from "@/lib/expenses";
 import {
   INPUT_LIMITS,
   isValidItemName,
@@ -43,6 +44,7 @@ export default function ShoppingList() {
   const [selectedShop, setSelectedShop] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(defaultCategory);
   const [clearing, setClearing] = useState(false);
+  const [transferringExpense, setTransferringExpense] = useState(false);
   const [selectedPriority, setSelectedPriority] = useState("");
   const [viewMode, setViewMode] = useState<"flat" | "shop" | "category">("flat");
   const [priorityFilter, setPriorityFilter] = useState("");
@@ -549,7 +551,36 @@ export default function ShoppingList() {
           items={completedItems}
           total={completedTotal}
           clearing={clearing}
+          transferring={transferringExpense}
           onClose={() => setShowClearConfirm(false)}
+          onTransfer={() => {
+            setTransferringExpense(true);
+
+            try {
+              const transfer = transferCompletedShoppingToExpense(
+                completedItems,
+                UI_TEXT.items.shoppingTransferDescription,
+              );
+
+              void transfer.save
+                .then(() => {
+                  setShowClearConfirm(false);
+                  showToast(
+                    UI_TEXT.toast.transferredToExpenses(transfer.amount),
+                    "success",
+                  );
+                })
+                .catch((transferError) => {
+                  console.error("Transferring shopping total failed", transferError);
+                  showToast(UI_TEXT.toast.transferFailed, "error");
+                })
+                .finally(() => setTransferringExpense(false));
+            } catch (transferError) {
+              console.error("Invalid shopping transfer", transferError);
+              setTransferringExpense(false);
+              showToast(UI_TEXT.toast.transferFailed, "error");
+            }
+          }}
           onClear={() => {
             setClearing(true);
 

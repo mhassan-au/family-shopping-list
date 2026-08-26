@@ -57,6 +57,7 @@ export const UI_TEXT = {
     amendmentAdded: "Amendment added",
     invalidAmendment: "Enter a non-zero adjustment with up to two decimal places.",
     amendmentLabel: "Amendment",
+    autoAdded: "Auto added",
     thisWeekBreakdown: "This week",
     sort: "Sort expenses",
     moreCategories: "More categories",
@@ -185,6 +186,11 @@ export const UI_TEXT = {
     quantityPrice: "Quantity / Unit Price",
     expectedPrice: (amount: number) => `Expected $${amount.toFixed(2)}`,
     expectedTotal: (amount: number) => `Expected total: $${amount.toFixed(2)}`,
+    transferToExpenses: (amount: number) =>
+      `Transfer $${amount.toFixed(2)} to Expenses & Clear`,
+    transferringExpense: "Transferring...",
+    transferHelp: "Transfers the final total as Grocery. Clear completed does not transfer anything.",
+    shoppingTransferDescription: "Completed shopping total",
     total: (amount: number) => `Total: $${amount.toFixed(2)}`,
     remaining: (count: number) => `${count} ${count === 1 ? "item" : "items"} left`,
   },
@@ -206,6 +212,9 @@ export const UI_TEXT = {
     completeFailed: "Item could not be completed",
     cleared: "Completed list cleared",
     clearFailed: "Completed list could not be cleared",
+    transferredToExpenses: (amount: number) =>
+      `$${amount.toFixed(2)} transferred to Expenses`,
+    transferFailed: "Shopping total could not be transferred",
   },
   errors: {
     update: "The item could not be updated. Check your connection and try again.",

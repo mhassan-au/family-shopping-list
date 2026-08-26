@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { FiBarChart2, FiChevronsRight, FiDollarSign, FiPlus, FiSliders } from "react-icons/fi";
 import {
   EXPENSE_CATEGORIES,
+  EXPENSE_AUTO_TRANSFER_STYLE,
   EXPENSE_UNUSUAL_STYLE,
   FAMILY_MEMBER_COLORS,
   getExpenseCategoryColor,
@@ -597,6 +598,11 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
                         {expense.transactionType === "amendment" && (
                           <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide text-amber-800 dark:bg-amber-900 dark:text-amber-100">
                             {UI_TEXT.expenses.amendmentLabel}
+                          </span>
+                        )}
+                        {expense.source === "shopping-transfer" && (
+                          <span className={`rounded-full px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide ${EXPENSE_AUTO_TRANSFER_STYLE}`}>
+                            {UI_TEXT.expenses.autoAdded}
                           </span>
                         )}
                         {isUnusualExpense(expense) && (

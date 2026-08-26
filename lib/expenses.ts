@@ -5,9 +5,11 @@ import {
   query,
   serverTimestamp,
   setDoc,
+  writeBatch,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { getCurrentUsername } from "./currentUser";
+import { ShoppingItem } from "./types";
 import {
   EXPENSE_CATEGORIES,
   isExpenseAmountUnusual,
@@ -98,4 +100,48 @@ export function createExpenseAmendment(
     amendsExpenseId: originalExpenseId,
     unusual: false,
   });
+}
+
+export function transferCompletedShoppingToExpense(
+  items: ShoppingItem[],
+  description: string,
+) {
+  const completedItems = items.filter((item) => item.completed);
+  const amount = completedItems.reduce(
+    (sum, item) =>
+      sum + Number(item.qty || 0) * Number(item.unitPrice || 0),
+    0,
+  );
+  const cleanDescription = description.trim();
+
+  if (
+    completedItems.length === 0 ||
+    !isValidExpenseDescription(cleanDescription) ||
+    !isValidExpenseAmount(amount)
+  ) {
+    throw new Error("No completed shopping total to transfer");
+  }
+
+  const expenseRef = doc(expensesCollection);
+  const createdAtMs = Date.now();
+  const createdBy = getCurrentUsername();
+  const batch = writeBatch(db);
+
+  batch.set(expenseRef, {
+    description: cleanDescription,
+    category: "Grocery",
+    amount,
+    createdAt: serverTimestamp(),
+    createdAtMs,
+    createdBy,
+    transactionType: "expense",
+    unusual: isExpenseAmountUnusual("Grocery", amount),
+    source: "shopping-transfer",
+  });
+
+  completedItems.forEach((item) => {
+    batch.delete(doc(db, "shopping_items", item.id));
+  });
+
+  return { amount, save: batch.commit() };
 }

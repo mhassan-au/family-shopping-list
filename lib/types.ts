@@ -46,4 +46,5 @@ export interface Expense {
   transactionType: "expense" | "amendment";
   amendsExpenseId?: string;
   unusual?: boolean;
+  source?: "shopping-transfer";
 }

@@ -19,6 +19,7 @@
 - Shopping price-history reads and validated writes require an approved device; app-side deletion is denied.
 - Expense reads and append-only writes require an approved authenticated UID.
 - Expense documents have an allowed-field list, category allow-list, and amount validation.
+- Shopping transfers create the validated expense and delete completed items atomically in one approved-device batch.
 - Client inputs are validated again immediately before Firestore writes.
 - Price input accepts digits, one decimal point, and at most two decimals.
 
