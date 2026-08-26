@@ -82,6 +82,10 @@ export const UI_TEXT = {
     transactions: "Transactions",
     average: "Average",
     unusual: "Unusual",
+    viewUnusual: "View unusual transactions",
+    unusualTransactionsTitle: "Unusual transactions",
+    unusualTransactionsSummary: (count: number, amount: string) =>
+      `${count} transaction${count === 1 ? "" : "s"} · ${amount} total`,
     categoryBreakdown: "Category breakdown",
     categoryChart: "Expense category pie chart",
     categoryUp: "Up from previous period",

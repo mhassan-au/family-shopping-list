@@ -8,6 +8,7 @@ import {
   FiBarChart2,
   FiChevronLeft,
   FiChevronRight,
+  FiX,
 } from "react-icons/fi";
 import { useExpenses } from "@/hooks/useExpenses";
 import {
@@ -111,6 +112,7 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
   const { expenses, loading, error } = useExpenses();
   const [period, setPeriod] = useState<ReportPeriod>("week");
   const [anchor, setAnchor] = useState(() => new Date());
+  const [showUnusualTransactions, setShowUnusualTransactions] = useState(false);
   const [reportOpenedAt] = useState(() => Date.now());
   const { start, end } = getPeriodRange(period, anchor);
   const previousRange = getPeriodRange(period, shiftPeriod(anchor, period, -1));
@@ -196,6 +198,7 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
       changePercent:
         previousTotal > 0 ? ((total - previousTotal) / previousTotal) * 100 : null,
       average: entries.length ? total / entries.length : 0,
+      unusualEntries,
       unusualCount: unusualEntries.length,
       unusualTotal: unusualEntries.reduce((sum, expense) => sum + expense.amount, 0),
       categories: categoryDetails,
@@ -325,16 +328,25 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
         <>
           <section className="mb-4 grid grid-cols-2 gap-2">
             {[
-              [UI_TEXT.expenseReport.total, formatCurrency(report.total)],
-              [UI_TEXT.expenseReport.transactions, String(report.entries.length)],
-              [UI_TEXT.expenseReport.average, formatCurrency(report.average)],
-              [UI_TEXT.expenseReport.unusual, String(report.unusualCount)],
-            ].map(([label, value]) => (
+              { label: UI_TEXT.expenseReport.total, value: formatCurrency(report.total) },
+              { label: UI_TEXT.expenseReport.transactions, value: String(report.entries.length) },
+              { label: UI_TEXT.expenseReport.average, value: formatCurrency(report.average) },
+            ].map(({ label, value }) => (
               <div key={label} className="rounded-xl border border-rose-200 bg-white p-3 shadow-sm dark:border-rose-900 dark:bg-slate-900">
                 <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
                 <p className="mt-1 text-lg font-bold text-rose-700 dark:text-rose-300">{value}</p>
               </div>
             ))}
+            <button
+              type="button"
+              onClick={() => setShowUnusualTransactions(true)}
+              disabled={report.unusualCount === 0}
+              className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-left shadow-sm transition enabled:hover:bg-amber-100 enabled:active:scale-[0.99] disabled:cursor-default dark:border-amber-900 dark:bg-amber-950 dark:enabled:hover:bg-amber-900"
+              aria-label={UI_TEXT.expenseReport.viewUnusual}
+            >
+              <p className="text-xs text-amber-800 dark:text-amber-200">{UI_TEXT.expenseReport.unusual}</p>
+              <p className="mt-1 text-lg font-bold text-amber-700 dark:text-amber-300">{report.unusualCount}</p>
+            </button>
           </section>
 
           <section className={`mb-4 rounded-xl border p-4 shadow-sm ${
@@ -472,10 +484,10 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
                       );
                     })}
                   </div>
-                  <div className="mt-5 space-y-2 border-t border-rose-100 pt-3 dark:border-rose-950">
+                  <div className="mt-5 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-rose-100 pt-3 dark:border-rose-950">
                     {report.categories.map((category) => {
                       return (
-                        <div key={category.name} className="flex items-center justify-between gap-3 text-sm">
+                        <div key={category.name} className="flex min-w-0 items-center justify-between gap-2 text-xs sm:text-sm">
                           <div className="flex min-w-0 items-center gap-2">
                             <span
                               className="size-2.5 shrink-0 rounded-full"
@@ -602,6 +614,69 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
             </>
           )}
         </>
+      )}
+
+      {showUnusualTransactions && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/45 p-3 backdrop-blur-sm sm:items-center"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setShowUnusualTransactions(false);
+          }}
+        >
+          <section
+            className="max-h-[80vh] w-full max-w-md overflow-hidden rounded-2xl border border-amber-200 bg-white shadow-2xl dark:border-amber-900 dark:bg-slate-900"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="unusual-transactions-title"
+          >
+            <header className="flex items-center justify-between gap-3 border-b border-amber-100 bg-amber-50 px-4 py-3 dark:border-amber-950 dark:bg-amber-950">
+              <div>
+                <h2 id="unusual-transactions-title" className="font-bold">
+                  {UI_TEXT.expenseReport.unusualTransactionsTitle}
+                </h2>
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  {UI_TEXT.expenseReport.unusualTransactionsSummary(
+                    report.unusualCount,
+                    formatCurrency(report.unusualTotal),
+                  )}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowUnusualTransactions(false)}
+                className="flex size-9 shrink-0 items-center justify-center rounded-lg text-amber-800 hover:bg-amber-100 dark:text-amber-200 dark:hover:bg-amber-900"
+                aria-label={UI_TEXT.common.close}
+              >
+                <FiX size={20} aria-hidden="true" />
+              </button>
+            </header>
+            <div className="max-h-[65vh] space-y-2 overflow-y-auto p-3">
+              {report.unusualEntries.map((expense) => (
+                <article
+                  key={expense.id}
+                  className="rounded-xl border border-amber-100 bg-amber-50/60 p-3 dark:border-amber-950 dark:bg-amber-950/40"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold">{expense.description}</p>
+                      <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
+                        {normalizeExpenseCategory(expense.category)} · {new Intl.DateTimeFormat("en-AU", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        }).format(expenseDate(expense))}
+                      </p>
+                    </div>
+                    <span className="shrink-0 font-bold text-amber-700 dark:text-amber-300">
+                      {formatCurrency(expense.amount)}
+                    </span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        </div>
       )}
     </main>
   );
