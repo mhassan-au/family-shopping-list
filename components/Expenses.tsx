@@ -587,7 +587,8 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
                     <div className="flex min-w-0 items-start gap-2">
                       {expense.createdBy && FAMILY_MEMBER_COLORS[expense.createdBy.toLowerCase()] && (
                         <span
-                          className={`mt-1.5 size-2.5 shrink-0 rounded-full ${FAMILY_MEMBER_COLORS[expense.createdBy.toLowerCase()]}`}
+                          className="mt-1.5 size-2.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: FAMILY_MEMBER_COLORS[expense.createdBy.toLowerCase()] }}
                           title={UI_TEXT.expenses.addedBy(expense.createdBy)}
                           aria-label={UI_TEXT.expenses.addedBy(expense.createdBy)}
                         />

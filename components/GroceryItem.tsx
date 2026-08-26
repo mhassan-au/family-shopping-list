@@ -109,7 +109,8 @@ export default function GroceryItem({
 
                 {item.createdBy && FAMILY_MEMBER_COLORS[item.createdBy.toLowerCase()] && (
                     <span
-                        className={`h-2.5 w-2.5 shrink-0 rounded-full ${FAMILY_MEMBER_COLORS[item.createdBy.toLowerCase()]}`}
+                        className="h-2.5 w-2.5 shrink-0 rounded-full"
+                        style={{ backgroundColor: FAMILY_MEMBER_COLORS[item.createdBy.toLowerCase()] }}
                         title={`Added by ${item.createdBy}`}
                         aria-label={`Added by ${item.createdBy}`}
                     />

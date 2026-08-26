@@ -4,9 +4,9 @@ export interface TagOption {
 }
 
 export const FAMILY_MEMBER_COLORS: Record<string, string> = {
-  shamir: "bg-blue-500",
-  peu: "bg-purple-500",
-  izhaar: "bg-orange-500",
+  shamir: "#3b82f6",
+  peu: "#a855f7",
+  izhaar: "#f97316",
 };
 
 export const SHOPS: TagOption[] = [
