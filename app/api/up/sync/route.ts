@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   const syncedAtMs = Date.now();
   const sinceMs = requestedSince && requestedSince > 0 && requestedSince < syncedAtMs
     ? requestedSince
-    : syncedAtMs - 24 * 60 * 60 * 1000;
+    : syncedAtMs - 72 * 60 * 60 * 1000;
 
   try {
     const transactions = await fetchTransactions(upToken, sinceMs, syncedAtMs);

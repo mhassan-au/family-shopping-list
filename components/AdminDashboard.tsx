@@ -212,13 +212,6 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
                   ? UI_TEXT.admin.lastSync(new Intl.DateTimeFormat("en-AU", { dateStyle: "medium", timeStyle: "short" }).format(new Date(bankSync.status.lastSyncedAtMs)))
                   : UI_TEXT.admin.lastSyncNever}
               </p>
-              {login.authUid && (
-                <div className="mt-3 rounded-lg border border-violet-200 bg-white/70 p-2 dark:border-violet-800 dark:bg-slate-900/60">
-                  <p className="text-xs font-bold text-violet-800 dark:text-violet-200">{UI_TEXT.admin.bankAdminUid}</p>
-                  <code className="mt-1 block break-all text-xs text-slate-800 dark:text-slate-100">{login.authUid}</code>
-                  <p className="mt-1 text-[0.7rem] leading-snug text-slate-500 dark:text-slate-400">{UI_TEXT.admin.bankAdminUidHelp}</p>
-                </div>
-              )}
               {bankSync.error && <p className="mt-1 text-xs text-red-700 dark:text-red-300">{UI_TEXT.admin.bankSyncFailed}</p>}
             </div>
           </div>

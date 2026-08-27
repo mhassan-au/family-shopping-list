@@ -11,7 +11,7 @@ No Firebase Storage, Cloud Functions, or Cloud Messaging service is required by 
 
 ## Manual UP Bank sync
 
-The Admin screen triggers sync only when the owner presses **Sync now**. The first sync requests the last 24 hours; later syncs request transactions since the recorded last-sync time. Transactions enter a pending queue and are never added to expenses until accepted. Rejecting a transaction records that decision so it is not imported again.
+The Admin screen triggers sync only when the owner presses **Sync now**. The first sync requests the last 72 hours; later syncs request transactions since the recorded last-sync time. Transactions enter a pending queue and are never added to expenses until accepted. Rejecting a transaction records that decision so it is not imported again.
 
 Create this document manually for the owner's approved browser/device:
 
