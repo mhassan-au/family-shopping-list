@@ -9,6 +9,7 @@ import { ShoppingItem } from "@/lib/types";
 import { getTagColor } from "@/lib/tagColor";
 import { FAMILY_MEMBER_COLORS } from "@/lib/config";
 import { UI_TEXT } from "@/lib/uiText";
+import { normalizeConfiguredCategory, useCategoryConfig } from "@/hooks/useCategoryConfig";
 
 
 interface Props {
@@ -47,6 +48,11 @@ export default function GroceryItem({
     currentRole
 
 }: Props) {
+
+    const { shoppingAliases } = useCategoryConfig();
+    const displayedCategory = item.category
+        ? normalizeConfiguredCategory(item.category, shoppingAliases)
+        : "";
 
     // Tag editor state
 
@@ -231,7 +237,7 @@ export default function GroceryItem({
                             onClick={() =>
                                 setEditingTag({
                                     type: "category",
-                                    value: item.category ?? "",
+                                    value: displayedCategory,
                                 })
                             }
 
@@ -247,12 +253,12 @@ export default function GroceryItem({
                                     ? "opacity-40 grayscale"
                                     : "cursor-pointer active:scale-95"
                                 }
-            ${getTagColor(item.category)}
+            ${getTagColor(displayedCategory)}
             `}
 
                         >
 
-                            {item.category}
+                            {displayedCategory}
 
                         </span>
 

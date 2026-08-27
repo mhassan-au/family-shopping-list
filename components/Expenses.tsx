@@ -1,9 +1,8 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiBarChart2, FiChevronsRight, FiDollarSign, FiPlus, FiSliders } from "react-icons/fi";
 import {
-  EXPENSE_CATEGORIES,
   EXPENSE_AUTO_TRANSFER_STYLE,
   EXPENSE_UNUSUAL_STYLE,
   FAMILY_MEMBER_COLORS,
@@ -25,6 +24,7 @@ import {
 import { useExpenses } from "@/hooks/useExpenses";
 import { getDropdownOptionClass } from "@/lib/dropdownStyle";
 import { useSmartMoneyInput } from "@/hooks/useSmartMoneyInput";
+import { normalizeConfiguredCategory, useCategoryConfig } from "@/hooks/useCategoryConfig";
 
 type Toast = { id: number; message: string; type: "success" | "error" };
 type PendingExpense = { description: string; category: string; amount: number };
@@ -96,13 +96,17 @@ function formatWeekRange(weekStart: Date) {
     : `${startDay} ${startMonth}–${endDay} ${endMonth}`;
 }
 
-const expenseCategoryFilters = EXPENSE_CATEGORIES.map((category) => ({
-  label: category,
-  value: category,
-}));
-
 export default function Expenses({ onOpenReport }: { onOpenReport: () => void }) {
   const { expenses, loading, error } = useExpenses();
+  const { expenses: expenseCategories, expenseAliases } = useCategoryConfig();
+  const normalizeCategory = useCallback(
+    (value: string) => normalizeConfiguredCategory(normalizeExpenseCategory(value), expenseAliases),
+    [expenseAliases],
+  );
+  const expenseCategoryFilters = useMemo(
+    () => expenseCategories.map((categoryName) => ({ label: categoryName, value: categoryName })),
+    [expenseCategories],
+  );
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const {
@@ -144,10 +148,10 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
     () =>
       categoryFilter
         ? expenses.filter(
-            (expense) => normalizeExpenseCategory(expense.category) === categoryFilter,
+            (expense) => normalizeCategory(expense.category) === categoryFilter,
           )
         : expenses,
-    [categoryFilter, expenses],
+    [categoryFilter, expenses, normalizeCategory],
   );
 
   const weeklyExpenses = useMemo(() => {
@@ -188,7 +192,7 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
 
     expenses.forEach((expense) => {
       if (startOfWeek(expenseDate(expense)).getTime() !== currentWeekStart) return;
-      const normalizedCategory = normalizeExpenseCategory(expense.category);
+      const normalizedCategory = normalizeCategory(expense.category);
       categoryTotals.set(
         normalizedCategory,
         (categoryTotals.get(normalizedCategory) ?? 0) + expense.amount,
@@ -205,7 +209,7 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
         name,
         percentage: Math.round((value / total) * 100),
       }));
-  }, [expenses]);
+  }, [expenses, normalizeCategory]);
 
   const visibleCurrentWeekStats = categoryFilter
     ? currentWeekStats.filter((stat) => stat.name === categoryFilter)
@@ -243,7 +247,7 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
       const addedAt = expenseDate(expense);
       return expense.transactionType !== "amendment"
         && expense.description.trim().toLocaleLowerCase() === candidate.description.toLocaleLowerCase()
-        && normalizeExpenseCategory(expense.category) === normalizeExpenseCategory(candidate.category)
+        && normalizeCategory(expense.category) === normalizeCategory(candidate.category)
         && Math.round(expense.amount * 100) === Math.round(candidate.amount * 100)
         && addedAt.getFullYear() === today.getFullYear()
         && addedAt.getMonth() === today.getMonth()
@@ -380,7 +384,7 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
             <option value="" disabled className={getDropdownOptionClass(0)}>
               {UI_TEXT.expenses.category}
             </option>
-            {EXPENSE_CATEGORIES.map((expenseCategory, index) => (
+            {expenseCategories.map((expenseCategory, index) => (
               <option
                 key={expenseCategory}
                 className={getDropdownOptionClass(index + 1)}
@@ -616,15 +620,15 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
                         <span
                           className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold"
                           style={{
-                            borderColor: getExpenseCategoryColor(expense.category),
-                            backgroundColor: `${getExpenseCategoryColor(expense.category)}1f`,
+                            borderColor: getExpenseCategoryColor(normalizeCategory(expense.category)),
+                            backgroundColor: `${getExpenseCategoryColor(normalizeCategory(expense.category))}1f`,
                           }}
                         >
                           <span
                             className="size-1.5 rounded-full"
-                            style={{ backgroundColor: getExpenseCategoryColor(expense.category) }}
+                            style={{ backgroundColor: getExpenseCategoryColor(normalizeCategory(expense.category)) }}
                           />
-                          {normalizeExpenseCategory(expense.category)}
+                          {normalizeCategory(expense.category)}
                         </span>
                         <span>· {dateFormatter.format(expenseDate(expense))}</span>
                       </p>
@@ -803,7 +807,7 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
             <div className="mt-3 rounded-lg bg-rose-50 px-3 py-2 dark:bg-rose-950">
               <p className="font-semibold">{pendingDuplicateExpense.description}</p>
               <p className="text-sm text-rose-800 dark:text-rose-200">
-                {normalizeExpenseCategory(pendingDuplicateExpense.category)} · {formatCurrency(pendingDuplicateExpense.amount)}
+                {normalizeCategory(pendingDuplicateExpense.category)} · {formatCurrency(pendingDuplicateExpense.amount)}
               </p>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3">

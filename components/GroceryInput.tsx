@@ -1,6 +1,7 @@
 "use client";
 
-import { SHOPS, CATEGORIES, PRIORITIES } from "@/lib/config";
+import { SHOPS, PRIORITIES, getShoppingCategoryOptions } from "@/lib/config";
+import { useCategoryConfig } from "@/hooks/useCategoryConfig";
 import { UI_TEXT } from "@/lib/uiText";
 import { INPUT_LIMITS } from "@/lib/validation";
 import { getDropdownOptionClass } from "@/lib/dropdownStyle";
@@ -50,6 +51,9 @@ export default function GroceryInput({
     onAdd
 
 }: Props) {
+
+    const { shopping } = useCategoryConfig();
+    const categoryOptions = getShoppingCategoryOptions(shopping);
 
 
     {/* Handle Enter Key */ }
@@ -249,7 +253,7 @@ export default function GroceryInput({
 
                 >
 
-                    {CATEGORIES.map((category, index) => (
+                    {categoryOptions.map((category, index) => (
 
                         <option
 

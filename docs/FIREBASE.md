@@ -86,7 +86,7 @@ Created by the app for approved devices. Each record contains:
 - `amendsExpenseId` for an amendment transaction
 - `source: shopping-transfer` for totals transferred from the completed-shopping popup
 
-The allowed categories are currently `Restaurant`, `Kids Meal`, `Toy`, `Grocery`, `Meat/Fish`, `Veg/Fruit`, `Snacks`, `Petrol`, `Transport`, `House Needs`, `Home Decor`, `Gift`, `B'Day`, and `Other`. The rules also retain the legacy `Dinner`, `Kids Dinner`, `Kids Toy`, and `Kmart` values for existing records. If categories change in `lib/config.ts`, update the matching category allow-list in `firestore.rules` before publishing.
+Expense categories are loaded from `app_config/categories`. The defaults remain in `lib/config.ts` and are used automatically until the shared configuration document is created. Rules validate category text rather than maintaining a hard-coded allow-list.
 
 Expense documents are append-only: Firestore Rules deny updates and deletes. A correction creates a new `amendment` document linked to the original expense. Negative amendments reduce the total and positive amendments increase it.
 
@@ -95,6 +95,16 @@ The app sets `unusual` when a new expense exceeds its category threshold in `lib
 The expense screen displays `createdBy` using the family colors in `lib/config.ts`. Before creating an expense, the client warns when an existing expense from the same local calendar day has the same normalized category, case-insensitive description, and amount. This is an advisory check rather than a backend uniqueness constraint, so a legitimate repeat expense can be saved.
 
 A completed-shopping transfer creates one `Grocery` expense and deletes the completed shopping documents in the same Firestore batch. If any operation is rejected, none of the batch is committed. The ordinary clear action never creates an expense.
+
+### `app_config/categories`
+
+Created when the owner first adds or renames a category in the Admin dashboard. It contains:
+
+- `shopping` and `expenses`: the category-name arrays shared by all approved devices
+- `shoppingAliases` and `expenseAliases`: rename mappings so existing records appear under their replacement category
+- `updatedBy`, `updatedAt`, and `updatedAtMs`: audit metadata
+
+The Admin tab is shown only when the locally saved household role is `owner`. In this first phase, Rules allow any approved device to read the configuration and submit a structurally valid update; backend owner enforcement requires trusted role metadata and will be added with the bank-sync security work. This limitation must be resolved before treating the Admin role as a hard security boundary.
 
 ## Approving a device
 

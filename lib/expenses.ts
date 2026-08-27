@@ -10,11 +10,7 @@ import {
 import { db } from "./firebase";
 import { getCurrentUsername } from "./currentUser";
 import { ShoppingItem } from "./types";
-import {
-  EXPENSE_CATEGORIES,
-  isExpenseAmountUnusual,
-  normalizeExpenseCategory,
-} from "./config";
+import { isExpenseAmountUnusual, normalizeExpenseCategory } from "./config";
 import {
   isValidExpenseAmount,
   isValidExpenseDescription,
@@ -38,7 +34,8 @@ export function createExpense(
   if (
     !isValidExpenseDescription(cleanDescription) ||
     !isValidExpenseAmount(amount) ||
-    !EXPENSE_CATEGORIES.includes(cleanCategory as (typeof EXPENSE_CATEGORIES)[number])
+    cleanCategory.length === 0 ||
+    cleanCategory.length > 40
   ) {
     throw new Error("Invalid expense input");
   }
@@ -80,7 +77,8 @@ export function createExpenseAmendment(
     !originalExpenseId ||
     !isValidExpenseDescription(cleanDescription) ||
     !isValidAmendmentAmount(amount) ||
-    !EXPENSE_CATEGORIES.includes(cleanCategory as (typeof EXPENSE_CATEGORIES)[number])
+    cleanCategory.length === 0 ||
+    cleanCategory.length > 40
   ) {
     throw new Error("Invalid expense amendment");
   }

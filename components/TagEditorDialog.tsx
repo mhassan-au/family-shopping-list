@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { SHOPS, CATEGORIES, PRIORITIES } from "@/lib/config";
+import { SHOPS, PRIORITIES, getShoppingCategoryOptions } from "@/lib/config";
+import { normalizeConfiguredCategory, useCategoryConfig } from "@/hooks/useCategoryConfig";
 import { UI_TEXT } from "@/lib/uiText";
 import { getDropdownOptionClass } from "@/lib/dropdownStyle";
 
@@ -34,8 +35,15 @@ export default function TagEditorDialog({
 
 }: Props) {
 
+    const { shopping, shoppingAliases } = useCategoryConfig();
+    const categoryOptions = getShoppingCategoryOptions(shopping);
 
-    const [value, setValue] = useState(currentValue);
+
+    const [value, setValue] = useState(
+        type === "category"
+            ? normalizeConfiguredCategory(currentValue, shoppingAliases)
+            : currentValue,
+    );
 
 
     // Get dropdown options
@@ -44,7 +52,7 @@ export default function TagEditorDialog({
         type === "shop"
             ? SHOPS
             : type === "category"
-                ? CATEGORIES
+                ? categoryOptions
                 : PRIORITIES;
 
     const title =

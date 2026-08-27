@@ -1,19 +1,32 @@
 "use client";
 
-import { useState } from "react";
-import { FiDollarSign, FiShoppingCart } from "react-icons/fi";
+import { useState, useSyncExternalStore } from "react";
+import { FiDollarSign, FiSettings, FiShoppingCart } from "react-icons/fi";
 import ShoppingList from "./ShoppingList";
 import Expenses from "./Expenses";
 import ExpenseReport from "./ExpenseReport";
+import AdminDashboard from "./AdminDashboard";
 import { UI_TEXT } from "@/lib/uiText";
+import { getDeviceLogin } from "@/lib/device";
+import { CategoryConfigProvider } from "@/hooks/useCategoryConfig";
 
-type AppSection = "shopping" | "expenses" | "expense-report";
+type AppSection = "shopping" | "expenses" | "expense-report" | "admin";
+
+function subscribeToLogin(callback: () => void) {
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+}
+
+function getOwnerSnapshot() {
+  return getDeviceLogin()?.role === "owner";
+}
 
 export default function HouseholdApp() {
   const [section, setSection] = useState<AppSection>("shopping");
+  const isOwner = useSyncExternalStore(subscribeToLogin, getOwnerSnapshot, () => false);
 
   return (
-    <>
+    <CategoryConfigProvider>
       {section === "shopping" && <ShoppingList />}
       {section === "expenses" && (
         <Expenses onOpenReport={() => setSection("expense-report")} />
@@ -21,12 +34,13 @@ export default function HouseholdApp() {
       {section === "expense-report" && (
         <ExpenseReport onClose={() => setSection("expenses")} />
       )}
+      {section === "admin" && isOwner && <AdminDashboard />}
 
       <nav
         className="fixed inset-x-0 bottom-0 z-40 border-t border-blue-200 bg-white/95 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-4px_18px_rgba(15,23,42,0.08)] backdrop-blur dark:border-blue-900 dark:bg-slate-950/95"
         aria-label="Main navigation"
       >
-        <div className="mx-auto grid max-w-md grid-cols-2 gap-2">
+        <div className={`mx-auto grid max-w-md gap-2 ${isOwner ? "grid-cols-3" : "grid-cols-2"}`}>
           <NavButton
             active={section === "shopping"}
             activeTheme="blue"
@@ -41,9 +55,18 @@ export default function HouseholdApp() {
             icon={<FiDollarSign size={20} />}
             onClick={() => setSection("expenses")}
           />
+          {isOwner && (
+            <NavButton
+              active={section === "admin"}
+              activeTheme="violet"
+              label={UI_TEXT.navigation.admin}
+              icon={<FiSettings size={20} />}
+              onClick={() => setSection("admin")}
+            />
+          )}
         </div>
       </nav>
-    </>
+    </CategoryConfigProvider>
   );
 }
 
@@ -55,7 +78,7 @@ function NavButton({
   onClick,
 }: {
   active: boolean;
-  activeTheme: "blue" | "rose";
+  activeTheme: "blue" | "rose" | "violet";
   label: string;
   icon: React.ReactNode;
   onClick: () => void;
@@ -68,6 +91,8 @@ function NavButton({
         active
           ? activeTheme === "rose"
             ? "bg-rose-100 text-rose-900 dark:bg-rose-900 dark:text-rose-50"
+            : activeTheme === "violet"
+              ? "bg-violet-100 text-violet-900 dark:bg-violet-900 dark:text-violet-50"
             : "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-50"
           : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
       }`}

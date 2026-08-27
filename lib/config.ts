@@ -177,7 +177,27 @@ export const EXPENSE_CATEGORY_COLORS: Record<ExpenseCategory, string> = {
 
 export function getExpenseCategoryColor(category: string) {
   const normalizedCategory = normalizeExpenseCategory(category) as ExpenseCategory;
-  return EXPENSE_CATEGORY_COLORS[normalizedCategory] ?? EXPENSE_CATEGORY_COLORS.Other;
+  if (EXPENSE_CATEGORY_COLORS[normalizedCategory]) {
+    return EXPENSE_CATEGORY_COLORS[normalizedCategory];
+  }
+  const palette = ["#0ea5e9", "#14b8a6", "#84cc16", "#f59e0b", "#f43f5e", "#8b5cf6"];
+  const hash = [...normalizedCategory].reduce(
+    (total, character) => total + character.charCodeAt(0),
+    0,
+  );
+  return palette[hash % palette.length];
+}
+
+export function getShoppingCategoryOptions(names: string[]): TagOption[] {
+  return [
+    { label: "", color: "" },
+    ...names.map((name) =>
+      CATEGORIES.find((category) => category.label === name) ?? {
+        label: name,
+        color: "bg-indigo-100 text-indigo-800",
+      },
+    ),
+  ];
 }
 
 export const EXPENSE_UNUSUAL_THRESHOLDS: Record<

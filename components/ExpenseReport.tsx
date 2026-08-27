@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   FiArrowLeft,
   FiArrowDown,
@@ -18,6 +18,7 @@ import {
 } from "@/lib/config";
 import { Expense } from "@/lib/types";
 import { UI_TEXT } from "@/lib/uiText";
+import { normalizeConfiguredCategory, useCategoryConfig } from "@/hooks/useCategoryConfig";
 
 type ReportPeriod = "day" | "week" | "month" | "year";
 
@@ -110,6 +111,11 @@ function getTrendBucket(period: ReportPeriod, date: Date) {
 
 export default function ExpenseReport({ onClose }: { onClose: () => void }) {
   const { expenses, loading, error } = useExpenses();
+  const { expenseAliases } = useCategoryConfig();
+  const normalizeCategory = useCallback(
+    (value: string) => normalizeConfiguredCategory(normalizeExpenseCategory(value), expenseAliases),
+    [expenseAliases],
+  );
   const [period, setPeriod] = useState<ReportPeriod>("week");
   const [anchor, setAnchor] = useState(() => new Date());
   const [showUnusualTransactions, setShowUnusualTransactions] = useState(false);
@@ -139,7 +145,7 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
     const previousCategories = new Map<string, number>();
 
     entries.forEach((expense) => {
-      const name = normalizeExpenseCategory(expense.category);
+      const name = normalizeCategory(expense.category);
       const current = categories.get(name) ?? { amount: 0, count: 0 };
       categories.set(name, {
         amount: current.amount + expense.amount,
@@ -148,7 +154,7 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
     });
 
     previousEntries.forEach((expense) => {
-      const name = normalizeExpenseCategory(expense.category);
+      const name = normalizeCategory(expense.category);
       previousCategories.set(name, (previousCategories.get(name) ?? 0) + expense.amount);
     });
 
@@ -661,7 +667,7 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
                     <div className="min-w-0">
                       <p className="truncate font-semibold">{expense.description}</p>
                       <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
-                        {normalizeExpenseCategory(expense.category)} · {new Intl.DateTimeFormat("en-AU", {
+                        {normalizeCategory(expense.category)} · {new Intl.DateTimeFormat("en-AU", {
                           day: "numeric",
                           month: "short",
                           year: "numeric",

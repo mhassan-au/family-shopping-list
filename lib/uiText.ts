@@ -13,6 +13,27 @@ export const UI_TEXT = {
   navigation: {
     shopping: "Shopping",
     expenses: "Expenses",
+    admin: "Admin",
+  },
+  admin: {
+    title: "Admin",
+    subtitle: "Manage household settings and integrations",
+    shoppingCategories: "Shopping categories",
+    expenseCategories: "Expense categories",
+    categoryHelp: "Changes are shared with every approved household device.",
+    newCategory: "New category",
+    addCategory: "Add category",
+    renameCategory: (category: string) => `Rename ${category}`,
+    renameTitle: "Rename category",
+    invalidCategory: "Use a unique category name with valid letters or numbers.",
+    categoryAdded: (category: string) => `${category} added`,
+    categoryRenamed: (oldName: string, newName: string) =>
+      `${oldName} renamed to ${newName}`,
+    saveFailed: "Could not save the category change.",
+    loadFailed: "Could not load shared categories.",
+    bankSync: "Manual bank sync",
+    bankSyncComingSoon: "UP Bank connection and transaction review will be added next.",
+    lastSyncNever: "Last sync: Never",
   },
   expenses: {
     title: "Household Expenses",

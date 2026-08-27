@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { ShoppingItem } from "@/lib/types";
 import { UI_TEXT } from "@/lib/uiText";
 import { PRIORITIES, HIDDEN_PRIORITIES } from "@/lib/config";
+import { normalizeConfiguredCategory, useCategoryConfig } from "./useCategoryConfig";
 
 const priorityOrder = Object.fromEntries(
   [...PRIORITIES, ...HIDDEN_PRIORITIES].map((priority) => [
@@ -17,6 +18,7 @@ export function useShoppingFilters(
   viewMode: "flat" | "shop" | "category",
   priorityFilter: string,
 ) {
+  const { shoppingAliases } = useCategoryConfig();
   const groupedItems = useMemo(() => {
     // Filter by priority
 
@@ -60,7 +62,9 @@ export function useShoppingFilters(
       const key =
         viewMode === "shop"
           ? item.shop || UI_TEXT.views.noShop
-          : item.category || UI_TEXT.views.noCategory;
+          : item.category
+            ? normalizeConfiguredCategory(item.category, shoppingAliases)
+            : UI_TEXT.views.noCategory;
 
       if (!groups[key]) {
         groups[key] = [];
@@ -110,7 +114,7 @@ export function useShoppingFilters(
         return a.localeCompare(b);
       }),
     );
-  }, [items, viewMode, priorityFilter]);
+  }, [items, viewMode, priorityFilter, shoppingAliases]);
 
   return {
     groupedItems,
