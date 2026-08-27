@@ -26,16 +26,19 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const upToken = process.env.UP_API_TOKEN;
-  const ownerUid = process.env.UP_SYNC_OWNER_UID;
   const firebaseApiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
-  if (!upToken || !ownerUid || !firebaseApiKey) {
+  const firebaseProjectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  if (!upToken || !firebaseApiKey || !firebaseProjectId) {
     return Response.json({ error: "Bank sync is not configured" }, { status: 503 });
   }
 
   const bearer = request.headers.get("authorization");
   const idToken = bearer?.startsWith("Bearer ") ? bearer.slice(7) : "";
   const authenticatedUid = await verifyFirebaseToken(idToken, firebaseApiKey);
-  if (!authenticatedUid || authenticatedUid !== ownerUid) {
+  if (
+    !authenticatedUid ||
+    !(await isApprovedBankAdmin(idToken, authenticatedUid, firebaseProjectId))
+  ) {
     return Response.json({ error: "Not authorized" }, { status: 403 });
   }
 
@@ -61,6 +64,21 @@ export async function POST(request: Request) {
     console.error("UP transaction sync failed", error);
     return Response.json({ error: "UP Bank sync failed" }, { status: 502 });
   }
+}
+
+async function isApprovedBankAdmin(idToken: string, uid: string, projectId: string) {
+  const documentUrl =
+    `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}` +
+    `/databases/(default)/documents/bank_admin_devices/${encodeURIComponent(uid)}`;
+  const response = await fetch(documentUrl, {
+    headers: { Authorization: `Bearer ${idToken}` },
+    cache: "no-store",
+  });
+  if (!response.ok) return false;
+  const result = await response.json() as {
+    fields?: { approved?: { booleanValue?: boolean } };
+  };
+  return result.fields?.approved?.booleanValue === true;
 }
 
 async function verifyFirebaseToken(idToken: string, apiKey: string) {

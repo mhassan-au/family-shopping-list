@@ -20,7 +20,7 @@ bank_admin_devices/{ownerFirebaseAnonymousUid}
   approved: true
 ```
 
-Use the same UID for the server-only `UP_SYNC_OWNER_UID` environment variable. Add `UP_API_TOKEN` and `UP_SYNC_OWNER_UID` to `.env.local` for local testing and to Vercel for production. Do not put the UP token in Firestore or in any `NEXT_PUBLIC_` variable.
+Create one `bank_admin_devices/{uid}` document for each of the owner's devices. The server verifies this document using the signed-in device's Firebase ID token, so no separate UID environment variable is required. Add only `UP_API_TOKEN` to `.env.local` for local testing and to Vercel for production. Do not put the UP token in Firestore or in any `NEXT_PUBLIC_` variable.
 
 Publish the repository's updated `firestore.rules` before using sync. The app then manages:
 
