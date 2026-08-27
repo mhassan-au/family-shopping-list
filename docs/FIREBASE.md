@@ -9,6 +9,25 @@ Enable these Firebase services:
 
 No Firebase Storage, Cloud Functions, or Cloud Messaging service is required by the current app.
 
+## Manual UP Bank sync
+
+The Admin screen triggers sync only when the owner presses **Sync now**. The first sync requests the last 24 hours; later syncs request transactions since the recorded last-sync time. Transactions enter a pending queue and are never added to expenses until accepted. Rejecting a transaction records that decision so it is not imported again.
+
+Create this document manually for the owner's approved browser/device:
+
+```text
+bank_admin_devices/{ownerFirebaseAnonymousUid}
+  approved: true
+```
+
+Use the same UID for the server-only `UP_SYNC_OWNER_UID` environment variable. Add `UP_API_TOKEN` and `UP_SYNC_OWNER_UID` to `.env.local` for local testing and to Vercel for production. Do not put the UP token in Firestore or in any `NEXT_PUBLIC_` variable.
+
+Publish the repository's updated `firestore.rules` before using sync. The app then manages:
+
+- `pending_bank_transactions`: awaiting owner Accept/Reject review
+- `processed_bank_transactions`: permanent deduplication decisions
+- `bank_sync/status`: last successful sync time
+
 ## Collections
 
 ### `families/{familyCode}/users/{username}`

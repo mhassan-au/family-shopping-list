@@ -67,9 +67,13 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_APP_ID=
+
+# Server-only. Never prefix these with NEXT_PUBLIC_.
+UP_API_TOKEN=
+UP_SYNC_OWNER_UID=
 ```
 
-Firebase web configuration is public by design; authorization is enforced by Authentication and Firestore Rules. Never add service-account JSON, private keys, household passwords, device UIDs, or tokens to the repository.
+Firebase web configuration is public by design; authorization is enforced by Authentication and Firestore Rules. `UP_API_TOKEN` and `UP_SYNC_OWNER_UID` are server-only Vercel variables. Never add service-account JSON, private keys, household passwords, device UIDs, or tokens to the repository.
 
 ## Firebase setup
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FiBarChart2, FiChevronsRight, FiDollarSign, FiPlus, FiSliders } from "react-icons/fi";
+import { FiBarChart2, FiCheck, FiChevronsRight, FiDollarSign, FiPlus, FiSliders, FiX } from "react-icons/fi";
 import {
   EXPENSE_AUTO_TRANSFER_STYLE,
   EXPENSE_UNUSUAL_STYLE,
@@ -11,7 +11,7 @@ import {
   normalizeExpenseCategory,
 } from "@/lib/config";
 import { createExpense, createExpenseAmendment } from "@/lib/expenses";
-import { Expense } from "@/lib/types";
+import { Expense, PendingBankTransaction } from "@/lib/types";
 import { UI_TEXT } from "@/lib/uiText";
 import {
   INPUT_LIMITS,
@@ -25,6 +25,9 @@ import { useExpenses } from "@/hooks/useExpenses";
 import { getDropdownOptionClass } from "@/lib/dropdownStyle";
 import { useSmartMoneyInput } from "@/hooks/useSmartMoneyInput";
 import { normalizeConfiguredCategory, useCategoryConfig } from "@/hooks/useCategoryConfig";
+import { getDeviceLogin } from "@/lib/device";
+import { useBankSync } from "@/hooks/useBankSync";
+import { acceptPendingBankTransaction, rejectPendingBankTransaction } from "@/lib/bankSync";
 
 type Toast = { id: number; message: string; type: "success" | "error" };
 type PendingExpense = { description: string; category: string; amount: number };
@@ -98,6 +101,8 @@ function formatWeekRange(weekStart: Date) {
 
 export default function Expenses({ onOpenReport }: { onOpenReport: () => void }) {
   const { expenses, loading, error } = useExpenses();
+  const isOwner = getDeviceLogin()?.role === "owner";
+  const bankSync = useBankSync(isOwner);
   const { expenses: expenseCategories, expenseAliases } = useCategoryConfig();
   const normalizeCategory = useCallback(
     (value: string) => normalizeConfiguredCategory(normalizeExpenseCategory(value), expenseAliases),
@@ -137,6 +142,10 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
     parsedValue: parsedAmendmentAmount,
   } = useSmartMoneyInput();
   const [toast, setToast] = useState<Toast | null>(null);
+  const [reviewingBankTransaction, setReviewingBankTransaction] = useState<PendingBankTransaction | null>(null);
+  const [bankDescription, setBankDescription] = useState("");
+  const [bankCategory, setBankCategory] = useState("");
+  const [bankDecisionId, setBankDecisionId] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     return () => {
@@ -220,6 +229,45 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
     if (toastTimer.current) clearTimeout(toastTimer.current);
     setToast({ id: Date.now(), message, type });
     toastTimer.current = setTimeout(() => setToast(null), 2800);
+  }
+
+  function openBankReview(transaction: PendingBankTransaction) {
+    setReviewingBankTransaction(transaction);
+    setBankDescription(transaction.description);
+    setBankCategory(expenseCategories[0] ?? "");
+  }
+
+  async function handleBankReject(transaction: PendingBankTransaction) {
+    setBankDecisionId(transaction.id);
+    try {
+      await rejectPendingBankTransaction(transaction);
+      showToast(UI_TEXT.expenses.bankRejected, "success");
+    } catch (decisionError) {
+      console.error("Rejecting UP transaction failed", decisionError);
+      showToast(UI_TEXT.expenses.bankDecisionFailed, "error");
+    } finally {
+      setBankDecisionId(null);
+    }
+  }
+
+  async function handleBankAccept(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!reviewingBankTransaction) return;
+    if (!isValidExpenseDescription(bankDescription) || !expenseCategories.includes(bankCategory)) {
+      showToast(UI_TEXT.expenses.invalidDescription, "error");
+      return;
+    }
+    setBankDecisionId(reviewingBankTransaction.id);
+    try {
+      await acceptPendingBankTransaction(reviewingBankTransaction, bankDescription, bankCategory);
+      setReviewingBankTransaction(null);
+      showToast(UI_TEXT.expenses.bankAccepted, "success");
+    } catch (decisionError) {
+      console.error("Accepting UP transaction failed", decisionError);
+      showToast(UI_TEXT.expenses.bankDecisionFailed, "error");
+    } finally {
+      setBankDecisionId(null);
+    }
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -442,6 +490,32 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
         </div>
       </form>
 
+      {isOwner && bankSync.pending.length > 0 && (
+        <section className="mb-4 overflow-hidden rounded-xl border border-fuchsia-200 bg-white shadow-sm dark:border-fuchsia-900 dark:bg-slate-900">
+          <div className="flex items-center justify-between bg-gradient-to-r from-fuchsia-50 to-rose-50 px-4 py-2.5 dark:from-fuchsia-950 dark:to-rose-950">
+            <h2 className="font-bold text-fuchsia-950 dark:text-fuchsia-100">{UI_TEXT.expenses.bankPendingTitle}</h2>
+            <span className="rounded-full bg-fuchsia-100 px-2 py-1 text-xs font-bold text-fuchsia-800 dark:bg-fuchsia-900 dark:text-fuchsia-100">{UI_TEXT.expenses.bankPendingCount(bankSync.pending.length)}</span>
+          </div>
+          <ul className="divide-y divide-fuchsia-100 dark:divide-fuchsia-950">
+            {bankSync.pending.map((transaction) => (
+              <li key={transaction.id} className="px-4 py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">{transaction.description}</p>
+                    <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{UI_TEXT.expenses.bankImportedAt(new Intl.DateTimeFormat("en-AU", { dateStyle: "medium", timeStyle: "short" }).format(new Date(transaction.occurredAtMs)))}</p>
+                  </div>
+                  <span className="shrink-0 font-bold text-fuchsia-800 dark:text-fuchsia-200">{formatCurrency(transaction.amount)}</span>
+                </div>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => void handleBankReject(transaction)} disabled={bankDecisionId === transaction.id} className="flex items-center justify-center gap-1 rounded-lg border border-rose-200 px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-900 dark:text-rose-300 dark:hover:bg-rose-950"><FiX size={16} aria-hidden="true" />{UI_TEXT.expenses.bankReject}</button>
+                  <button type="button" onClick={() => openBankReview(transaction)} disabled={bankDecisionId === transaction.id} className="flex items-center justify-center gap-1 rounded-lg bg-fuchsia-600 px-3 py-2 text-sm font-semibold text-white hover:bg-fuchsia-700 disabled:opacity-50"><FiCheck size={16} aria-hidden="true" />{UI_TEXT.expenses.bankAccept}</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {loading && <p>{UI_TEXT.loading}</p>}
       {error && <p className="my-2 text-sm text-red-600" role="alert">{error}</p>}
       {!loading && expenses.length > 0 && (
@@ -610,6 +684,11 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
                             {UI_TEXT.expenses.autoAdded}
                           </span>
                         )}
+                        {expense.source === "up-bank" && (
+                          <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide text-cyan-800 dark:bg-cyan-900 dark:text-cyan-100">
+                            {UI_TEXT.expenses.bankSource}
+                          </span>
+                        )}
                         {isUnusualExpense(expense) && (
                           <span className={`rounded-full px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide ${EXPENSE_UNUSUAL_STYLE.badge}`}>
                             {UI_TEXT.expenses.unusual}
@@ -667,6 +746,36 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
         >
           {UI_TEXT.expenses.more}
         </button>
+      )}
+
+      {reviewingBankTransaction && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/45 p-3 backdrop-blur-sm sm:items-center" onMouseDown={(event) => { if (event.target === event.currentTarget && !bankDecisionId) setReviewingBankTransaction(null); }}>
+          <form onSubmit={(event) => void handleBankAccept(event)} className="w-full max-w-sm space-y-4 rounded-2xl border border-fuchsia-200 bg-white p-5 shadow-2xl dark:border-fuchsia-900 dark:bg-slate-900" role="dialog" aria-modal="true" aria-labelledby="bank-review-title">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 id="bank-review-title" className="text-lg font-bold">{UI_TEXT.expenses.bankReviewTitle}</h2>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{UI_TEXT.expenses.bankReviewHelp}</p>
+              </div>
+              <button type="button" onClick={() => setReviewingBankTransaction(null)} disabled={Boolean(bankDecisionId)} className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 disabled:opacity-50 dark:hover:bg-slate-800" aria-label={UI_TEXT.common.close}><FiX size={18} aria-hidden="true" /></button>
+            </div>
+            <div className="rounded-xl bg-fuchsia-50 px-3 py-2 dark:bg-fuchsia-950">
+              <p className="text-xl font-bold text-fuchsia-900 dark:text-fuchsia-100">{formatCurrency(reviewingBankTransaction.amount)}</p>
+              <p className="text-xs text-fuchsia-700 dark:text-fuchsia-300">{UI_TEXT.expenses.bankImportedAt(new Intl.DateTimeFormat("en-AU", { dateStyle: "medium", timeStyle: "short" }).format(new Date(reviewingBankTransaction.occurredAtMs)))}</p>
+            </div>
+            <label className="block text-sm font-semibold">{UI_TEXT.expenses.description}
+              <input value={bankDescription} onChange={(event) => setBankDescription(event.target.value)} maxLength={INPUT_LIMITS.expenseDescription} className="input mt-1 w-full px-3 py-2" autoFocus disabled={Boolean(bankDecisionId)} />
+            </label>
+            <label className="block text-sm font-semibold">{UI_TEXT.expenses.category}
+              <select value={bankCategory} onChange={(event) => setBankCategory(event.target.value)} className="input mt-1 w-full px-3 py-2" disabled={Boolean(bankDecisionId)} required>
+                {expenseCategories.map((option, index) => <option key={option} value={option} className={getDropdownOptionClass(index)}>{option}</option>)}
+              </select>
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button type="button" className="btn-secondary" onClick={() => setReviewingBankTransaction(null)} disabled={Boolean(bankDecisionId)}>{UI_TEXT.common.cancel}</button>
+              <button type="submit" disabled={Boolean(bankDecisionId)} className="rounded-lg bg-fuchsia-600 px-4 py-2 font-semibold text-white transition hover:bg-fuchsia-700 disabled:opacity-50">{bankDecisionId ? UI_TEXT.common.pleaseWait : UI_TEXT.expenses.bankAccept}</button>
+            </div>
+          </form>
+        </div>
       )}
 
       {amending && (

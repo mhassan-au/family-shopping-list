@@ -5,6 +5,8 @@ import { FiArrowLeft, FiEdit3, FiPlus, FiRefreshCw, FiSettings, FiTrash2, FiX } 
 import { getDeviceLogin } from "@/lib/device";
 import { UI_TEXT } from "@/lib/uiText";
 import { CategoryKind, useCategoryConfig } from "@/hooks/useCategoryConfig";
+import { useBankSync } from "@/hooks/useBankSync";
+import { runManualBankSync } from "@/lib/bankSync";
 
 const CATEGORY_PATTERN = /^[\p{L}\p{N}][\p{L}\p{N} &'/.&()-]{0,39}$/u;
 
@@ -37,6 +39,7 @@ const TAB_THEMES: Record<CategoryKind, {
 export default function AdminDashboard({ onBack }: { onBack: () => void }) {
   const login = getDeviceLogin();
   const config = useCategoryConfig();
+  const bankSync = useBankSync(login?.role === "owner");
   const [activeTab, setActiveTab] = useState<CategoryKind>("shops");
   const [dialog, setDialog] = useState<{
     mode: "add" | "edit";
@@ -46,6 +49,7 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
   const [value, setValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
+  const [syncingBank, setSyncingBank] = useState(false);
 
   if (login?.role !== "owner") return null;
 
@@ -125,6 +129,23 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
     }
   }
 
+  async function handleBankSync() {
+    setSyncingBank(true);
+    setMessage(null);
+    try {
+      const result = await runManualBankSync(bankSync.status?.lastSyncedAtMs);
+      setMessage({
+        text: UI_TEXT.admin.bankSyncResult(result.importedCount, result.fetchedCount),
+        error: false,
+      });
+    } catch (syncError) {
+      console.error("Manual UP sync failed", syncError);
+      setMessage({ text: UI_TEXT.admin.bankSyncFailed, error: true });
+    } finally {
+      setSyncingBank(false);
+    }
+  }
+
   return (
     <main className="mx-auto w-full max-w-md p-4 pb-10 sm:p-5">
       <header className="mb-4 rounded-xl border border-violet-200 bg-gradient-to-r from-violet-100 via-indigo-50 to-blue-50 px-4 py-3 shadow-sm dark:border-violet-900 dark:from-violet-950 dark:via-indigo-950 dark:to-slate-900">
@@ -179,14 +200,24 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
         </div>
       </section>
 
-      <section className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900">
-        <div className="flex items-start gap-3">
-          <FiRefreshCw className="mt-0.5 shrink-0 text-slate-500" size={21} />
-          <div>
+      <section className="rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-indigo-50 p-4 shadow-sm dark:border-violet-900 dark:from-violet-950/60 dark:to-indigo-950/60">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <FiRefreshCw className={`mt-0.5 shrink-0 text-violet-600 ${syncingBank ? "animate-spin" : ""}`} size={21} />
+            <div>
             <h2 className="font-bold">{UI_TEXT.admin.bankSync}</h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{UI_TEXT.admin.bankSyncComingSoon}</p>
-            <p className="mt-2 text-xs text-slate-500">{UI_TEXT.admin.lastSyncNever}</p>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{UI_TEXT.admin.bankSyncDescription}</p>
+              <p className="mt-2 text-xs text-slate-500">
+                {bankSync.status?.lastSyncedAtMs
+                  ? UI_TEXT.admin.lastSync(new Intl.DateTimeFormat("en-AU", { dateStyle: "medium", timeStyle: "short" }).format(new Date(bankSync.status.lastSyncedAtMs)))
+                  : UI_TEXT.admin.lastSyncNever}
+              </p>
+              {bankSync.error && <p className="mt-1 text-xs text-red-700 dark:text-red-300">{UI_TEXT.admin.bankSyncFailed}</p>}
+            </div>
           </div>
+          <button type="button" onClick={() => void handleBankSync()} disabled={syncingBank || bankSync.loading} className="shrink-0 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-violet-700 disabled:opacity-50">
+            {syncingBank ? UI_TEXT.admin.syncingBank : UI_TEXT.admin.syncNow}
+          </button>
         </div>
       </section>
 

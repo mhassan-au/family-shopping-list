@@ -24,6 +24,9 @@
 | `lib/shopping.ts` | Firestore shopping-item and price-history operations |
 | `lib/expenses.ts` | Expense validation and Firestore writes |
 | `lib/firebase.ts` | Firebase, persistent cache, long polling |
+| `app/api/up/sync/route.ts` | Owner-authenticated, server-only UP transaction fetch |
+| `lib/bankSync.ts` | Pending transaction import, accept/reject, and deduplication writes |
+| `hooks/useBankSync.ts` | Live pending queue and last-sync status |
 | `lib/deviceApproval.ts` | Pending and approved-device lookup |
 | `lib/config.ts` | Shops, categories, priorities, member colors |
 | `lib/uiText.ts` | Central user-facing text and message formatters |
@@ -67,3 +70,5 @@ Shared shop, shopping-category, and expense-category names are stored in `app_co
 Shopping duplicate detection checks active items only. A completed item may be added again while it remains in the completed list, but another active item with the same case-insensitive name is still blocked.
 
 The completed-items popup has two separate flows. **Clear completed** deletes only shopping items. **Transfer to Expenses & Clear** uses one Firestore batch to create a `Grocery` expense with `source: shopping-transfer` and delete the completed items atomically. The expense list displays this source with an Auto added tag.
+
+UP Bank sync is deliberately manual. The browser sends its Firebase ID token to a server-only route; the route verifies that UID against `UP_SYNC_OWNER_UID` before using the UP token. New outgoing settled AUD transactions are stored in a pending queue. Accepting atomically creates an immutable expense, records the external transaction as processed, and removes it from the queue. Rejecting records the decision and removes it without creating an expense.

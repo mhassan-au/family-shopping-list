@@ -14,6 +14,8 @@
 - Household user records cannot be created, changed, listed, or deleted by the app.
 - A device can create/read only its own pending request.
 - Approval records can only be managed in Firebase Console.
+- The UP Bank token is read only by the Next.js server route and must remain in the server-only `UP_API_TOKEN` environment variable.
+- Manual bank sync requires both the owner's verified Firebase UID and a manually approved `bank_admin_devices/{uid}` document. Imported transactions remain pending until the owner accepts or rejects them.
 - Unknown collections and notification requests are denied.
 - Shopping documents have an allowed-field list and size/range validation.
 - Shopping price-history reads and validated writes require an approved device; app-side deletion is denied.

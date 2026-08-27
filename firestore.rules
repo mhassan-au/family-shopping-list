@@ -9,6 +9,11 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/approved_devices/$(request.auth.uid))
         && get(/databases/$(database)/documents/approved_devices/$(request.auth.uid)).data.approved == true;
     }
+    function bankAdminDevice() {
+      return approvedDevice()
+        && exists(/databases/$(database)/documents/bank_admin_devices/$(request.auth.uid))
+        && get(/databases/$(database)/documents/bank_admin_devices/$(request.auth.uid)).data.approved == true;
+    }
     function validText(value, maximum) {
       return value is string
         && value.size() > 0
@@ -81,7 +86,8 @@ service cloud.firestore {
       let data = request.resource.data;
       return data.keys().hasOnly([
           'description', 'category', 'amount', 'createdAt', 'createdAtMs',
-          'createdBy', 'transactionType', 'amendsExpenseId', 'unusual', 'source'
+          'createdBy', 'transactionType', 'amendsExpenseId', 'unusual', 'source',
+          'sourceTransactionId'
         ])
         && data.keys().hasAll([
           'description', 'category', 'amount', 'createdAt', 'createdAtMs',
@@ -97,7 +103,10 @@ service cloud.firestore {
         && data.createdAtMs is number
         && validText(data.createdBy, 40)
         && data.unusual is bool
-        && (!('source' in data) || data.source == 'shopping-transfer')
+        && (!('source' in data) || data.source in ['shopping-transfer', 'up-bank'])
+        && (('source' in data) && data.source == 'up-bank'
+          ? validText(data.sourceTransactionId, 128)
+          : !('sourceTransactionId' in data))
         && data.transactionType in ['expense', 'amendment']
         && (data.transactionType == 'expense'
           ? data.amount > 0 && !('amendsExpenseId' in data)
@@ -107,6 +116,82 @@ service cloud.firestore {
       allow read: if approvedDevice();
       allow create: if approvedDevice() && validExpense();
       allow update, delete: if false;
+    }
+    function validPendingBankTransaction() {
+      let data = request.resource.data;
+      return data.keys().hasOnly([
+          'externalId', 'description', 'amount', 'occurredAt', 'occurredAtMs',
+          'importedAt', 'importedAtMs', 'importedBy'
+        ])
+        && data.keys().hasAll([
+          'externalId', 'description', 'amount', 'occurredAt', 'occurredAtMs',
+          'importedAt', 'importedAtMs', 'importedBy'
+        ])
+        && validText(data.externalId, 128)
+        && validText(data.description, 80)
+        && data.amount is number
+        && data.amount > 0
+        && data.amount <= 99999.99
+        && validText(data.occurredAt, 40)
+        && data.occurredAtMs is number
+        && data.importedAt is timestamp
+        && data.importedAtMs is number
+        && validText(data.importedBy, 40);
+    }
+    match /pending_bank_transactions/{transactionId} {
+      allow read: if bankAdminDevice();
+      allow create: if bankAdminDevice()
+        && transactionId == request.resource.data.externalId
+        && validPendingBankTransaction();
+      allow update: if false;
+      allow delete: if bankAdminDevice();
+    }
+    function validProcessedBankTransaction() {
+      let data = request.resource.data;
+      return data.keys().hasOnly([
+          'decision', 'processedAt', 'processedAtMs', 'processedBy', 'expenseId'
+        ])
+        && data.keys().hasAll([
+          'decision', 'processedAt', 'processedAtMs', 'processedBy'
+        ])
+        && data.decision in ['accepted', 'rejected']
+        && data.processedAt is timestamp
+        && data.processedAtMs is number
+        && validText(data.processedBy, 40)
+        && (data.decision == 'accepted'
+          ? validText(data.expenseId, 128)
+          : !('expenseId' in data));
+    }
+    match /processed_bank_transactions/{transactionId} {
+      allow get: if bankAdminDevice();
+      allow list: if false;
+      allow create: if bankAdminDevice() && validProcessedBankTransaction();
+      allow update, delete: if false;
+    }
+    function validBankSyncStatus() {
+      let data = request.resource.data;
+      return data.keys().hasOnly([
+          'lastSyncedAt', 'lastSyncedAtMs', 'lastSinceMs', 'importedCount', 'updatedBy'
+        ])
+        && data.keys().hasAll([
+          'lastSyncedAt', 'lastSyncedAtMs', 'lastSinceMs', 'importedCount', 'updatedBy'
+        ])
+        && data.lastSyncedAt is timestamp
+        && data.lastSyncedAtMs is number
+        && (data.lastSinceMs == null || data.lastSinceMs is number)
+        && data.importedCount is int
+        && data.importedCount >= 0
+        && data.importedCount <= 1000
+        && validText(data.updatedBy, 40);
+    }
+    match /bank_sync/status {
+      allow get: if bankAdminDevice();
+      allow list, delete: if false;
+      allow create, update: if bankAdminDevice() && validBankSyncStatus();
+    }
+    match /bank_admin_devices/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, create, update, delete: if false;
     }
     function validOptionList(value) {
       return value is list
