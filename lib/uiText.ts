@@ -39,6 +39,8 @@ export const UI_TEXT = {
     loadFailed: "Could not load shared categories.",
     bankSync: "Manual bank sync",
     bankSyncDescription: "Fetch new UP transactions when you choose. Nothing syncs automatically.",
+    bankAdminUid: "Bank admin UID",
+    bankAdminUidHelp: "Use this as the bank_admin_devices document ID and UP_SYNC_OWNER_UID.",
     syncNow: "Sync now",
     syncingBank: "Syncing...",
     bankSyncResult: (imported: number, fetched: number) =>
