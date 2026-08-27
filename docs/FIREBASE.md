@@ -100,11 +100,11 @@ A completed-shopping transfer creates one `Grocery` expense and deletes the comp
 
 Created when the owner first adds or renames a category in the Admin dashboard. It contains:
 
-- `shopping` and `expenses`: the category-name arrays shared by all approved devices
-- `shoppingAliases` and `expenseAliases`: rename mappings so existing records appear under their replacement category
+- `shops`, `shopping`, and `expenses`: shop and category-name arrays shared by all approved devices
+- `shopAliases`, `shoppingAliases`, and `expenseAliases`: rename mappings so existing records appear under their replacement option
 - `updatedBy`, `updatedAt`, and `updatedAtMs`: audit metadata
 
-The Admin tab is shown only when the locally saved household role is `owner`. In this first phase, Rules allow any approved device to read the configuration and submit a structurally valid update; backend owner enforcement requires trusted role metadata and will be added with the bank-sync security work. This limitation must be resolved before treating the Admin role as a hard security boundary.
+The Admin settings icon is shown only in the shopping header when the locally saved household role is `owner`. In this first phase, Rules allow any approved device to read the configuration and submit a structurally valid update; backend owner enforcement requires trusted role metadata and will be added with the bank-sync security work. This limitation must be resolved before treating the Admin role as a hard security boundary.
 
 ## Approving a device
 

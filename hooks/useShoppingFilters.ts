@@ -18,7 +18,7 @@ export function useShoppingFilters(
   viewMode: "flat" | "shop" | "category",
   priorityFilter: string,
 ) {
-  const { shoppingAliases } = useCategoryConfig();
+  const { shopAliases, shoppingAliases } = useCategoryConfig();
   const groupedItems = useMemo(() => {
     // Filter by priority
 
@@ -61,7 +61,9 @@ export function useShoppingFilters(
     filteredItems.forEach((item) => {
       const key =
         viewMode === "shop"
-          ? item.shop || UI_TEXT.views.noShop
+          ? item.shop
+            ? normalizeConfiguredCategory(item.shop, shopAliases)
+            : UI_TEXT.views.noShop
           : item.category
             ? normalizeConfiguredCategory(item.category, shoppingAliases)
             : UI_TEXT.views.noCategory;
@@ -114,7 +116,7 @@ export function useShoppingFilters(
         return a.localeCompare(b);
       }),
     );
-  }, [items, viewMode, priorityFilter, shoppingAliases]);
+  }, [items, viewMode, priorityFilter, shopAliases, shoppingAliases]);
 
   return {
     groupedItems,

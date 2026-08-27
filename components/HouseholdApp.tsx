@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
-import { FiDollarSign, FiSettings, FiShoppingCart } from "react-icons/fi";
+import { FiDollarSign, FiShoppingCart } from "react-icons/fi";
 import ShoppingList from "./ShoppingList";
 import Expenses from "./Expenses";
 import ExpenseReport from "./ExpenseReport";
@@ -27,20 +27,24 @@ export default function HouseholdApp() {
 
   return (
     <CategoryConfigProvider>
-      {section === "shopping" && <ShoppingList />}
+      {section === "shopping" && (
+        <ShoppingList onOpenAdmin={isOwner ? () => setSection("admin") : undefined} />
+      )}
       {section === "expenses" && (
         <Expenses onOpenReport={() => setSection("expense-report")} />
       )}
       {section === "expense-report" && (
         <ExpenseReport onClose={() => setSection("expenses")} />
       )}
-      {section === "admin" && isOwner && <AdminDashboard />}
+      {section === "admin" && isOwner && (
+        <AdminDashboard onBack={() => setSection("shopping")} />
+      )}
 
-      <nav
+      {section !== "admin" && <nav
         className="fixed inset-x-0 bottom-0 z-40 border-t border-blue-200 bg-white/95 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-4px_18px_rgba(15,23,42,0.08)] backdrop-blur dark:border-blue-900 dark:bg-slate-950/95"
         aria-label="Main navigation"
       >
-        <div className={`mx-auto grid max-w-md gap-2 ${isOwner ? "grid-cols-3" : "grid-cols-2"}`}>
+        <div className="mx-auto grid max-w-md grid-cols-2 gap-2">
           <NavButton
             active={section === "shopping"}
             activeTheme="blue"
@@ -55,17 +59,8 @@ export default function HouseholdApp() {
             icon={<FiDollarSign size={20} />}
             onClick={() => setSection("expenses")}
           />
-          {isOwner && (
-            <NavButton
-              active={section === "admin"}
-              activeTheme="violet"
-              label={UI_TEXT.navigation.admin}
-              icon={<FiSettings size={20} />}
-              onClick={() => setSection("admin")}
-            />
-          )}
         </div>
-      </nav>
+      </nav>}
     </CategoryConfigProvider>
   );
 }
@@ -78,7 +73,7 @@ function NavButton({
   onClick,
 }: {
   active: boolean;
-  activeTheme: "blue" | "rose" | "violet";
+  activeTheme: "blue" | "rose";
   label: string;
   icon: React.ReactNode;
   onClick: () => void;
@@ -91,8 +86,6 @@ function NavButton({
         active
           ? activeTheme === "rose"
             ? "bg-rose-100 text-rose-900 dark:bg-rose-900 dark:text-rose-50"
-            : activeTheme === "violet"
-              ? "bg-violet-100 text-violet-900 dark:bg-violet-900 dark:text-violet-50"
             : "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-50"
           : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
       }`}

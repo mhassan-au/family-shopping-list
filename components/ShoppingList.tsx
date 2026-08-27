@@ -12,7 +12,7 @@ import GroceryInput from "./GroceryInput";
 import GroceryGroup from "./GroceryGroup";
 import ConfirmDialog from "./ConfirmDialog";
 import CompletedItemsDialog from "./CompletedItemsDialog";
-import { FiLogOut } from "react-icons/fi";
+import { FiLogOut, FiSettings } from "react-icons/fi";
 import { clearDeviceLogin, getDeviceLogin } from "@/lib/device";
 import { UI_TEXT } from "@/lib/uiText";
 import { transferCompletedShoppingToExpense } from "@/lib/expenses";
@@ -34,7 +34,11 @@ const todayDateTime = [
   String(today.getDate()).padStart(2, "0"),
 ].join("-");
 
-export default function ShoppingList() {
+interface Props {
+  onOpenAdmin?: () => void;
+}
+
+export default function ShoppingList({ onOpenAdmin }: Props) {
 
   const device = getDeviceLogin();
   const defaultCategory =
@@ -484,6 +488,18 @@ export default function ShoppingList() {
           <span>
             {UI_TEXT.items.remaining(remainingItemCount)}
           </span>
+
+          {onOpenAdmin && (
+            <button
+              type="button"
+              onClick={onOpenAdmin}
+              className="rounded-lg p-2 text-gray-700 transition hover:bg-blue-100 dark:text-gray-200 dark:hover:bg-blue-900"
+              title={UI_TEXT.admin.open}
+              aria-label={UI_TEXT.admin.open}
+            >
+              <FiSettings size={20} aria-hidden="true" />
+            </button>
+          )}
           <span aria-hidden="true"> • </span>
           <span>{syncLabel}</span>
           {!isOnline && (

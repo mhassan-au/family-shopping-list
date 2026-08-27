@@ -49,7 +49,10 @@ export default function GroceryItem({
 
 }: Props) {
 
-    const { shoppingAliases } = useCategoryConfig();
+    const { shopAliases, shoppingAliases } = useCategoryConfig();
+    const displayedShop = item.shop
+        ? normalizeConfiguredCategory(item.shop, shopAliases)
+        : "";
     const displayedCategory = item.category
         ? normalizeConfiguredCategory(item.category, shoppingAliases)
         : "";
@@ -200,7 +203,7 @@ export default function GroceryItem({
                             onClick={() =>
                                 setEditingTag({
                                     type: "shop",
-                                    value: item.shop ?? "",
+                                    value: displayedShop,
                                 })
                             }
 
@@ -216,12 +219,12 @@ export default function GroceryItem({
                                     ? "opacity-40 grayscale"
                                     : "cursor-pointer active:scale-95"
                                 }
-            ${getTagColor(item.shop)}
+            ${getTagColor(displayedShop)}
             `}
 
                         >
 
-                            {item.shop}
+                            {displayedShop}
 
                         </span>
 

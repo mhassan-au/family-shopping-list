@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { updateItemDetails } from "@/lib/shopping";
 import { ShoppingItem } from "@/lib/types";
-import { SHOPS, PRIORITIES, getShoppingCategoryOptions } from "@/lib/config";
+import { PRIORITIES, getShopOptions, getShoppingCategoryOptions } from "@/lib/config";
 import { normalizeConfiguredCategory, useCategoryConfig } from "@/hooks/useCategoryConfig";
 import { UI_TEXT } from "@/lib/uiText";
 import { getDropdownOptionClass } from "@/lib/dropdownStyle";
@@ -15,10 +15,13 @@ interface Props {
 
 export default function ItemEditor({ item, close }: Props) {
 
-  const { shopping, shoppingAliases } = useCategoryConfig();
+  const { shops, shopping, shopAliases, shoppingAliases } = useCategoryConfig();
+  const shopOptions = getShopOptions(shops);
   const categoryOptions = getShoppingCategoryOptions(shopping);
 
-  const [shop, setShop] = useState(item.shop || "");
+  const [shop, setShop] = useState(
+    item.shop ? normalizeConfiguredCategory(item.shop, shopAliases) : "",
+  );
   const [category, setCategory] = useState(
     item.category ? normalizeConfiguredCategory(item.category, shoppingAliases) : "",
   );
@@ -109,7 +112,7 @@ export default function ItemEditor({ item, close }: Props) {
         "
       >
 
-        {SHOPS.map((shop, index) => (
+        {shopOptions.map((shop, index) => (
 
           <option
             key={shop.label}

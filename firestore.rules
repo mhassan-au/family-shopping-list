@@ -111,19 +111,23 @@ service cloud.firestore {
     function validCategoryConfig() {
       let data = request.resource.data;
       return data.keys().hasOnly([
-          'shopping', 'expenses', 'shoppingAliases', 'expenseAliases',
+          'shops', 'shopping', 'expenses', 'shopAliases', 'shoppingAliases', 'expenseAliases',
           'updatedAt', 'updatedAtMs', 'updatedBy'
         ])
         && data.keys().hasAll([
-          'shopping', 'expenses', 'shoppingAliases', 'expenseAliases',
+          'shops', 'shopping', 'expenses', 'shopAliases', 'shoppingAliases', 'expenseAliases',
           'updatedAt', 'updatedAtMs', 'updatedBy'
         ])
+        && data.shops is list
+        && data.shops.size() > 0
+        && data.shops.size() <= 40
         && data.shopping is list
         && data.shopping.size() > 0
         && data.shopping.size() <= 40
         && data.expenses is list
         && data.expenses.size() > 0
         && data.expenses.size() <= 40
+        && data.shopAliases is map
         && data.shoppingAliases is map
         && data.expenseAliases is map
         && data.updatedAt is timestamp

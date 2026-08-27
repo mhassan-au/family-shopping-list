@@ -200,6 +200,18 @@ export function getShoppingCategoryOptions(names: string[]): TagOption[] {
   ];
 }
 
+export function getShopOptions(names: string[]): TagOption[] {
+  return [
+    { label: "", color: "" },
+    ...names.map((name) =>
+      SHOPS.find((shop) => shop.label === name) ?? {
+        label: name,
+        color: "bg-sky-100 text-sky-800",
+      },
+    ),
+  ];
+}
+
 export const EXPENSE_UNUSUAL_THRESHOLDS: Record<
   (typeof EXPENSE_CATEGORIES)[number],
   number | null

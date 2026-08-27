@@ -15,7 +15,7 @@ MyGrocery is a private, real-time household shopping and expense tracker built w
 - Shared household expense entry grouped into Monday-to-Sunday weeks
 - Day, week, month, and year expense reports with trends and period comparisons
 - Category pie charts, previous/current category bars, and unusual-spend insights
-- Owner-only Admin dashboard for adding and renaming shared shopping and expense categories
+- Owner-only Admin dashboard for adding, renaming, and removing shared shops and categories
 - Family-color indicators showing who added shopping items and expenses
 - Same-day duplicate expense warning with an explicit save-anyway option
 - Manual device approval through Firebase Console
@@ -84,7 +84,7 @@ See [docs/FIREBASE.md](docs/FIREBASE.md) for:
 ## Configuration
 
 - Default categories, shops, priorities, and family colors: `lib/config.ts`
-- Shared category changes: Firestore `app_config/categories`, managed from the owner Admin screen
+- Shared shop and category changes: Firestore `app_config/categories`, managed from the owner Admin screen
 - All visible labels and messages: `lib/uiText.ts`
 - Input lengths and validation rules: `lib/validation.ts`
 - Firestore Security Rules: `firestore.rules`

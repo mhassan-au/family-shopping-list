@@ -111,13 +111,14 @@ function getTrendBucket(period: ReportPeriod, date: Date) {
 
 export default function ExpenseReport({ onClose }: { onClose: () => void }) {
   const { expenses, loading, error } = useExpenses();
-  const { expenseAliases } = useCategoryConfig();
+  const { expenses: expenseCategories, expenseAliases } = useCategoryConfig();
   const normalizeCategory = useCallback(
     (value: string) => normalizeConfiguredCategory(normalizeExpenseCategory(value), expenseAliases),
     [expenseAliases],
   );
   const [period, setPeriod] = useState<ReportPeriod>("week");
   const [anchor, setAnchor] = useState(() => new Date());
+  const [categoryFilter, setCategoryFilter] = useState("");
   const [showUnusualTransactions, setShowUnusualTransactions] = useState(false);
   const [reportOpenedAt] = useState(() => Date.now());
   const { start, end } = getPeriodRange(period, anchor);
@@ -198,6 +199,7 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
 
     return {
       entries,
+      previousEntries,
       total,
       previousTotal,
       totalChange: total - previousTotal,
@@ -222,6 +224,44 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
       trend,
     };
   })();
+
+  const summaryEntries = categoryFilter
+    ? report.entries.filter((expense) => normalizeCategory(expense.category) === categoryFilter)
+    : report.entries;
+  const summaryPreviousEntries = categoryFilter
+    ? report.previousEntries.filter(
+        (expense) => normalizeCategory(expense.category) === categoryFilter,
+      )
+    : report.previousEntries;
+  const summaryTotal = summaryEntries.reduce((sum, expense) => sum + expense.amount, 0);
+  const summaryPreviousTotal = summaryPreviousEntries.reduce(
+    (sum, expense) => sum + expense.amount,
+    0,
+  );
+  const summaryUnusualEntries = summaryEntries.filter(
+    (expense) =>
+      expense.transactionType !== "amendment" &&
+      (expense.unusual ?? isExpenseAmountUnusual(expense.category, expense.amount)),
+  );
+  const summaryReport = {
+    entries: summaryEntries,
+    total: summaryTotal,
+    previousTotal: summaryPreviousTotal,
+    totalChange: summaryTotal - summaryPreviousTotal,
+    changePercent: summaryPreviousTotal > 0
+      ? ((summaryTotal - summaryPreviousTotal) / summaryPreviousTotal) * 100
+      : null,
+    average: summaryEntries.length ? summaryTotal / summaryEntries.length : 0,
+    unusualEntries: summaryUnusualEntries,
+    unusualCount: summaryUnusualEntries.length,
+    unusualTotal: summaryUnusualEntries.reduce((sum, expense) => sum + expense.amount, 0),
+    trend: getTrendLabels(period, new Date(startMs)).map((label, index) => ({
+      label,
+      amount: summaryEntries
+        .filter((expense) => getTrendBucket(period, expenseDate(expense)) === index)
+        .reduce((sum, expense) => sum + expense.amount, 0),
+    })),
+  };
 
   const categoryTotal = report.categories.reduce(
     (sum, category) => sum + category.amount,
@@ -327,6 +367,34 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
         </button>
       </div>
 
+      <div className="mb-4 grid grid-cols-[auto_minmax(0,1fr)] gap-1.5">
+        <button
+          type="button"
+          onClick={() => setCategoryFilter("")}
+          className={`shrink-0 rounded-full border px-3 py-2 text-xs font-semibold transition ${categoryFilter === ""
+            ? "border-rose-600 bg-rose-600 text-white shadow-sm"
+            : "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-100"
+          }`}
+        >
+          {UI_TEXT.expenses.all}
+        </button>
+        <div className="flex min-w-0 gap-1.5 overflow-x-auto pb-1">
+          {expenseCategories.map((categoryName) => (
+            <button
+              key={categoryName}
+              type="button"
+              onClick={() => setCategoryFilter(categoryName)}
+              className={`shrink-0 rounded-full border px-3 py-2 text-xs font-semibold transition ${categoryFilter === categoryName
+                ? "border-rose-600 bg-rose-600 text-white shadow-sm"
+                : "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-100"
+              }`}
+            >
+              {categoryName}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {loading && <p>{UI_TEXT.loading}</p>}
       {error && <p className="mb-3 text-sm text-red-600" role="alert">{error}</p>}
 
@@ -334,9 +402,9 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
         <>
           <section className="mb-4 grid grid-cols-2 gap-2">
             {[
-              { label: UI_TEXT.expenseReport.total, value: formatCurrency(report.total) },
-              { label: UI_TEXT.expenseReport.transactions, value: String(report.entries.length) },
-              { label: UI_TEXT.expenseReport.average, value: formatCurrency(report.average) },
+              { label: UI_TEXT.expenseReport.total, value: formatCurrency(summaryReport.total) },
+              { label: UI_TEXT.expenseReport.transactions, value: String(summaryReport.entries.length) },
+              { label: UI_TEXT.expenseReport.average, value: formatCurrency(summaryReport.average) },
             ].map(({ label, value }) => (
               <div key={label} className="rounded-xl border border-rose-200 bg-white p-3 shadow-sm dark:border-rose-900 dark:bg-slate-900">
                 <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
@@ -346,17 +414,17 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               onClick={() => setShowUnusualTransactions(true)}
-              disabled={report.unusualCount === 0}
+              disabled={summaryReport.unusualCount === 0}
               className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-left shadow-sm transition enabled:hover:bg-amber-100 enabled:active:scale-[0.99] disabled:cursor-default dark:border-amber-900 dark:bg-amber-950 dark:enabled:hover:bg-amber-900"
               aria-label={UI_TEXT.expenseReport.viewUnusual}
             >
               <p className="text-xs text-amber-800 dark:text-amber-200">{UI_TEXT.expenseReport.unusual}</p>
-              <p className="mt-1 text-lg font-bold text-amber-700 dark:text-amber-300">{report.unusualCount}</p>
+              <p className="mt-1 text-lg font-bold text-amber-700 dark:text-amber-300">{summaryReport.unusualCount}</p>
             </button>
           </section>
 
           <section className={`mb-4 rounded-xl border p-4 shadow-sm ${
-            report.totalChange > 0
+            summaryReport.totalChange > 0
               ? "border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950"
               : "border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950"
           }`}>
@@ -366,23 +434,23 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
                 : UI_TEXT.expenseReport.periodComparison}
             </p>
             <p className="mt-1 text-lg font-bold">
-              {report.previousTotal === 0
+              {summaryReport.previousTotal === 0
                 ? UI_TEXT.expenseReport.noPreviousComparison
-                : report.totalChange > 0
+                : summaryReport.totalChange > 0
                   ? UI_TEXT.expenseReport.spendingUp(
-                      formatCurrency(Math.abs(report.totalChange)),
-                      Math.abs(Math.round(report.changePercent ?? 0)),
+                      formatCurrency(Math.abs(summaryReport.totalChange)),
+                      Math.abs(Math.round(summaryReport.changePercent ?? 0)),
                     )
-                  : report.totalChange < 0
+                  : summaryReport.totalChange < 0
                     ? UI_TEXT.expenseReport.spendingDown(
-                        formatCurrency(Math.abs(report.totalChange)),
-                        Math.abs(Math.round(report.changePercent ?? 0)),
+                        formatCurrency(Math.abs(summaryReport.totalChange)),
+                        Math.abs(Math.round(summaryReport.changePercent ?? 0)),
                       )
                     : UI_TEXT.expenseReport.spendingUnchanged}
             </p>
-            {report.previousTotal > 0 && (
+            {summaryReport.previousTotal > 0 && (
               <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
-                {UI_TEXT.expenseReport.previousSpend(formatCurrency(report.previousTotal))}
+                {UI_TEXT.expenseReport.previousSpend(formatCurrency(summaryReport.previousTotal))}
               </p>
             )}
           </section>
@@ -396,8 +464,8 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
               <section className="mb-4 rounded-xl border border-rose-200 bg-white p-4 shadow-sm dark:border-rose-900 dark:bg-slate-900">
                 <h2 className="mb-3 font-bold">{UI_TEXT.expenseReport.spendingTrend}</h2>
                 <div className="flex h-32 items-end gap-1.5">
-                  {report.trend.map((point) => {
-                    const maximum = Math.max(...report.trend.map((item) => item.amount), 1);
+                  {summaryReport.trend.map((point) => {
+                    const maximum = Math.max(...summaryReport.trend.map((item) => item.amount), 1);
                     const height = point.amount > 0 ? Math.max(8, (point.amount / maximum) * 100) : 2;
                     return (
                       <div key={point.label} className="flex min-w-0 flex-1 flex-col items-center justify-end gap-1">
@@ -643,8 +711,8 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
                 </h2>
                 <p className="text-xs text-slate-600 dark:text-slate-300">
                   {UI_TEXT.expenseReport.unusualTransactionsSummary(
-                    report.unusualCount,
-                    formatCurrency(report.unusualTotal),
+                    summaryReport.unusualCount,
+                    formatCurrency(summaryReport.unusualTotal),
                   )}
                 </p>
               </div>
@@ -658,7 +726,7 @@ export default function ExpenseReport({ onClose }: { onClose: () => void }) {
               </button>
             </header>
             <div className="max-h-[65vh] space-y-2 overflow-y-auto p-3">
-              {report.unusualEntries.map((expense) => (
+              {summaryReport.unusualEntries.map((expense) => (
                 <article
                   key={expense.id}
                   className="rounded-xl border border-amber-100 bg-amber-50/60 p-3 dark:border-amber-950 dark:bg-amber-950/40"

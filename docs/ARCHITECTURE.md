@@ -62,7 +62,7 @@ The current shopping list uses one household-wide top-level `shopping_items` col
 
 The `shopping_price_history` collection keeps the latest non-zero unit price under an encoded, case-insensitive item-name key. Adding a matching item copies that value to `expectedUnitPrice` for display only; the value is not treated as an actual purchase price or included in totals.
 
-Shared shopping and expense category names are stored in `app_config/categories`. Static definitions in `lib/config.ts` are fallback defaults, allowing existing deployments to load normally before the owner creates the configuration document. Rename aliases are applied at render and reporting time so append-only expense history and existing shopping items do not need bulk rewrites.
+Shared shop, shopping-category, and expense-category names are stored in `app_config/categories`. Static definitions in `lib/config.ts` are fallback defaults, allowing existing deployments to load normally before the owner creates the configuration document. Rename aliases are applied at render and reporting time so append-only expense history and existing shopping items do not need bulk rewrites. Removing an option only removes it from future selectors; it does not delete or rewrite historical records.
 
 Shopping duplicate detection checks active items only. A completed item may be added again while it remains in the completed list, but another active item with the same case-insensitive name is still blocked.
 

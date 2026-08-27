@@ -3,21 +3,25 @@
 import { createContext, createElement, ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import { doc, onSnapshot, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { CATEGORIES, EXPENSE_CATEGORIES } from "@/lib/config";
+import { CATEGORIES, EXPENSE_CATEGORIES, SHOPS } from "@/lib/config";
 import { getCurrentUsername } from "@/lib/currentUser";
 
-export type CategoryKind = "shopping" | "expenses";
+export type CategoryKind = "shops" | "shopping" | "expenses";
 
 interface StoredCategoryConfig {
+  shops?: string[];
   shopping?: string[];
   expenses?: string[];
+  shopAliases?: Record<string, string>;
   shoppingAliases?: Record<string, string>;
   expenseAliases?: Record<string, string>;
 }
 
 export interface CategoryConfig {
+  shops: string[];
   shopping: string[];
   expenses: string[];
+  shopAliases: Record<string, string>;
   shoppingAliases: Record<string, string>;
   expenseAliases: Record<string, string>;
 }
@@ -31,16 +35,20 @@ interface CategoryConfigContextValue extends CategoryConfig {
     oldName: string,
     newName: string,
   ) => Promise<void>;
+  deleteCategory: (kind: CategoryKind, name: string) => Promise<void>;
 }
 
 const CategoryConfigContext = createContext<CategoryConfigContextValue | null>(null);
 
 const configRef = doc(db, "app_config", "categories");
 const defaultShopping = CATEGORIES.map((category) => category.label).filter(Boolean);
+const defaultShops = SHOPS.map((shop) => shop.label).filter(Boolean);
 
 export const DEFAULT_CATEGORY_CONFIG: CategoryConfig = {
+  shops: defaultShops,
   shopping: defaultShopping,
   expenses: [...EXPENSE_CATEGORIES],
+  shopAliases: {},
   shoppingAliases: {},
   expenseAliases: {},
 };
@@ -65,8 +73,10 @@ function cleanAliases(value: unknown) {
 
 function parseConfig(data?: StoredCategoryConfig): CategoryConfig {
   return {
+    shops: cleanList(data?.shops, DEFAULT_CATEGORY_CONFIG.shops),
     shopping: cleanList(data?.shopping, DEFAULT_CATEGORY_CONFIG.shopping),
     expenses: cleanList(data?.expenses, DEFAULT_CATEGORY_CONFIG.expenses),
+    shopAliases: cleanAliases(data?.shopAliases),
     shoppingAliases: cleanAliases(data?.shoppingAliases),
     expenseAliases: cleanAliases(data?.expenseAliases),
   };
@@ -100,7 +110,11 @@ export function CategoryConfigProvider({ children }: { children: ReactNode }) {
       await saveConfig(nextConfig);
     },
     async renameCategory(kind: CategoryKind, oldName: string, newName: string) {
-      const aliasKey = kind === "shopping" ? "shoppingAliases" : "expenseAliases";
+      const aliasKey = kind === "shops"
+        ? "shopAliases"
+        : kind === "shopping"
+          ? "shoppingAliases"
+          : "expenseAliases";
       const aliases = { ...config[aliasKey] };
       Object.entries(aliases).forEach(([source, target]) => {
         if (target === oldName) aliases[source] = newName;
@@ -113,6 +127,13 @@ export function CategoryConfigProvider({ children }: { children: ReactNode }) {
           category === oldName ? newName : category,
         ),
         [aliasKey]: aliases,
+      };
+      await saveConfig(nextConfig);
+    },
+    async deleteCategory(kind: CategoryKind, name: string) {
+      const nextConfig = {
+        ...config,
+        [kind]: config[kind].filter((category) => category !== name),
       };
       await saveConfig(nextConfig);
     },
