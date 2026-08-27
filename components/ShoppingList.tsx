@@ -304,9 +304,22 @@ export default function ShoppingList({ onOpenAdmin }: Props) {
   "
       >
 
-        <h1 className="text-xl font-bold">
-          🛒 {UI_TEXT.appName}
-        </h1>
+        <div className="flex items-center gap-1">
+          <h1 className="text-xl font-bold">
+            🛒 {UI_TEXT.appName}
+          </h1>
+          {onOpenAdmin && (
+            <button
+              type="button"
+              onClick={onOpenAdmin}
+              className="rounded-lg p-2 text-blue-700 transition hover:bg-blue-100 dark:text-blue-300 dark:hover:bg-blue-900"
+              title={UI_TEXT.admin.open}
+              aria-label={UI_TEXT.admin.open}
+            >
+              <FiSettings size={19} aria-hidden="true" />
+            </button>
+          )}
+        </div>
 
 
         <div className="flex items-center gap-2">
@@ -489,17 +502,6 @@ export default function ShoppingList({ onOpenAdmin }: Props) {
             {UI_TEXT.items.remaining(remainingItemCount)}
           </span>
 
-          {onOpenAdmin && (
-            <button
-              type="button"
-              onClick={onOpenAdmin}
-              className="rounded-lg p-2 text-gray-700 transition hover:bg-blue-100 dark:text-gray-200 dark:hover:bg-blue-900"
-              title={UI_TEXT.admin.open}
-              aria-label={UI_TEXT.admin.open}
-            >
-              <FiSettings size={20} aria-hidden="true" />
-            </button>
-          )}
           <span aria-hidden="true"> • </span>
           <span>{syncLabel}</span>
           {!isOnline && (

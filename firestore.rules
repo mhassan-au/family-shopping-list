@@ -108,6 +108,11 @@ service cloud.firestore {
       allow create: if approvedDevice() && validExpense();
       allow update, delete: if false;
     }
+    function validOptionList(value) {
+      return value is list
+        && value.size() > 0
+        && value.size() <= 100;
+    }
     function validCategoryConfig() {
       let data = request.resource.data;
       return data.keys().hasOnly([
@@ -115,21 +120,19 @@ service cloud.firestore {
           'updatedAt', 'updatedAtMs', 'updatedBy'
         ])
         && data.keys().hasAll([
-          'shops', 'shopping', 'expenses', 'shopAliases', 'shoppingAliases', 'expenseAliases',
-          'updatedAt', 'updatedAtMs', 'updatedBy'
+          'shops', 'shopping', 'expenses', 'updatedAt', 'updatedAtMs', 'updatedBy'
         ])
-        && data.shops is list
-        && data.shops.size() > 0
-        && data.shops.size() <= 40
-        && data.shopping is list
-        && data.shopping.size() > 0
-        && data.shopping.size() <= 40
-        && data.expenses is list
-        && data.expenses.size() > 0
-        && data.expenses.size() <= 40
-        && data.shopAliases is map
-        && data.shoppingAliases is map
-        && data.expenseAliases is map
+        // These lists deliberately validate shape, not specific names. Adding,
+        // renaming, or removing an option therefore never requires another
+        // Firestore Rules deployment.
+        && validOptionList(data.shops)
+        && validOptionList(data.shopping)
+        && validOptionList(data.expenses)
+        // Alias maps are optional for compatibility with an older config
+        // document, and are written automatically after the next rename.
+        && (!('shopAliases' in data) || data.shopAliases is map)
+        && (!('shoppingAliases' in data) || data.shoppingAliases is map)
+        && (!('expenseAliases' in data) || data.expenseAliases is map)
         && data.updatedAt is timestamp
         && data.updatedAtMs is number
         && validText(data.updatedBy, 40);

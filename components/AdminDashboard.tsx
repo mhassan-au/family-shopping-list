@@ -8,6 +8,32 @@ import { CategoryKind, useCategoryConfig } from "@/hooks/useCategoryConfig";
 
 const CATEGORY_PATTERN = /^[\p{L}\p{N}][\p{L}\p{N} &'/.&()-]{0,39}$/u;
 
+const TAB_THEMES: Record<CategoryKind, {
+  active: string;
+  inactive: string;
+  action: string;
+  tag: string;
+}> = {
+  shops: {
+    active: "bg-sky-600 text-white shadow-sm",
+    inactive: "bg-sky-50 text-sky-800 hover:bg-sky-100 dark:bg-sky-950 dark:text-sky-200",
+    action: "bg-sky-600 hover:bg-sky-700",
+    tag: "border-sky-200 bg-sky-50 text-sky-900 hover:border-sky-400 hover:bg-sky-100 dark:border-sky-800 dark:bg-sky-950 dark:text-sky-100",
+  },
+  shopping: {
+    active: "bg-emerald-600 text-white shadow-sm",
+    inactive: "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-200",
+    action: "bg-emerald-600 hover:bg-emerald-700",
+    tag: "border-emerald-200 bg-emerald-50 text-emerald-900 hover:border-emerald-400 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-100",
+  },
+  expenses: {
+    active: "bg-rose-600 text-white shadow-sm",
+    inactive: "bg-rose-50 text-rose-800 hover:bg-rose-100 dark:bg-rose-950 dark:text-rose-200",
+    action: "bg-rose-600 hover:bg-rose-700",
+    tag: "border-rose-200 bg-rose-50 text-rose-900 hover:border-rose-400 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-100",
+  },
+};
+
 export default function AdminDashboard({ onBack }: { onBack: () => void }) {
   const login = getDeviceLogin();
   const config = useCategoryConfig();
@@ -24,6 +50,7 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
   if (login?.role !== "owner") return null;
 
   const categories = config[activeTab];
+  const activeTheme = TAB_THEMES[activeTab];
   const tabs: Array<{ kind: CategoryKind; label: string }> = [
     { kind: "shops", label: UI_TEXT.admin.shops },
     { kind: "shopping", label: UI_TEXT.admin.shoppingCategories },
@@ -121,9 +148,9 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
       {config.error && <p className="mb-3 text-sm text-red-600" role="alert">{UI_TEXT.admin.loadFailed}</p>}
 
       <section className="mb-4 overflow-hidden rounded-xl border border-violet-200 bg-white shadow-sm dark:border-violet-900 dark:bg-slate-900">
-        <div className="grid grid-cols-3 border-b border-violet-100 bg-violet-50 p-1 dark:border-violet-950 dark:bg-violet-950/50">
+        <div className="grid grid-cols-3 gap-1 border-b border-violet-100 bg-slate-50 p-1 dark:border-violet-950 dark:bg-slate-950/50">
           {tabs.map((tab) => (
-            <button key={tab.kind} type="button" onClick={() => setActiveTab(tab.kind)} className={`rounded-lg px-2 py-2 text-xs font-semibold transition ${activeTab === tab.kind ? "bg-violet-600 text-white shadow-sm" : "text-violet-800 hover:bg-white dark:text-violet-200 dark:hover:bg-slate-900"}`}>
+            <button key={tab.kind} type="button" onClick={() => setActiveTab(tab.kind)} className={`rounded-lg px-2 py-2 text-xs font-semibold transition ${activeTab === tab.kind ? TAB_THEMES[tab.kind].active : TAB_THEMES[tab.kind].inactive}`}>
               {tab.label}
             </button>
           ))}
@@ -135,7 +162,7 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
               <h2 className="font-bold">{tabs.find((tab) => tab.kind === activeTab)?.label}</h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">{UI_TEXT.admin.tapToEdit}</p>
             </div>
-            <button type="button" onClick={openAdd} className="flex size-10 shrink-0 items-center justify-center rounded-full bg-violet-600 text-white shadow-sm hover:bg-violet-700" aria-label={UI_TEXT.admin.addCategory}>
+            <button type="button" onClick={openAdd} className={`flex size-10 shrink-0 items-center justify-center rounded-full text-white shadow-sm ${activeTheme.action}`} aria-label={UI_TEXT.admin.addCategory}>
               <FiPlus size={20} aria-hidden="true" />
             </button>
           </div>
@@ -143,7 +170,7 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
           {config.loading ? <p className="text-sm">{UI_TEXT.loading}</p> : (
             <div className="flex flex-wrap gap-2">
               {categories.map((category) => (
-                <button key={category} type="button" onClick={() => openEdit(category)} className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-semibold text-violet-900 transition hover:border-violet-400 hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950 dark:text-violet-100">
+                <button key={category} type="button" onClick={() => openEdit(category)} className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-sm font-semibold transition ${activeTheme.tag}`}>
                   {category}<FiEdit3 size={13} aria-hidden="true" />
                 </button>
               ))}
