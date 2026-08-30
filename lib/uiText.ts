@@ -10,6 +10,10 @@ export const UI_TEXT = {
     remove: "Remove",
     pleaseWait: "Please wait...",
   },
+  moneyChoice: {
+    title: "Which amount did you mean?",
+    help: "Choose the correct amount before saving.",
+  },
   navigation: {
     shopping: "Shopping",
     expenses: "Expenses",
@@ -38,7 +42,7 @@ export const UI_TEXT = {
     saveFailed: "Could not save the category change.",
     loadFailed: "Could not load shared categories.",
     bankSync: "Manual bank sync",
-    bankSyncDescription: "Fetch new UP transactions when you choose. Nothing syncs automatically.",
+    bankSyncDescription: "Sync each UP account separately. Includes pending transactions and checks a 48-hour overlap.",
     syncNow: "Sync now",
     syncingBank: "Syncing...",
     bankSyncResult: (imported: number, fetched: number) =>
@@ -109,6 +113,8 @@ export const UI_TEXT = {
     bankRejected: "UP transaction rejected",
     bankDecisionFailed: "Could not save your decision. Please try again.",
     bankSource: "UP Bank",
+    bankSourceAccount: (account: "peu" | "shamir") => account === "shamir" ? "Shamir UP" : "Peu UP",
+    bankPendingStatus: "Pending",
   },
   expenseReport: {
     open: "Open expense reports",

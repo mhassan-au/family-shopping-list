@@ -22,6 +22,8 @@ MyGrocery is a private, real-time household shopping and expense tracker built w
 - Creator color indicators and user display names
 - Centralized UI copy in `lib/uiText.ts`
 - Client validation plus matching Firestore Security Rules
+- Separate manual UP sync for Peu and Shamir, including HELD and SETTLED transactions with a 48-hour overlap
+- Amount-choice confirmation when whole-number input could mean dollars or cents
 
 ## Technology
 
@@ -69,10 +71,11 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_APP_ID=
 
 # Server-only. Never prefix these with NEXT_PUBLIC_.
-UP_API_TOKEN=
+UP_API_TOKEN_PEU=
+UP_API_TOKEN_SHAMIR=
 ```
 
-Firebase web configuration is public by design; authorization is enforced by Authentication and Firestore Rules. `UP_API_TOKEN` is a server-only Vercel variable. Never add service-account JSON, private keys, household passwords, device UIDs, or tokens to the repository.
+Firebase web configuration is public by design; authorization is enforced by Authentication and Firestore Rules. UP tokens are server-only Vercel variables. The legacy `UP_API_TOKEN` remains a fallback for `UP_API_TOKEN_PEU`. Never add service-account JSON, private keys, household passwords, device UIDs, or tokens to the repository.
 
 ## Firebase setup
 
@@ -97,10 +100,13 @@ See [docs/FIREBASE.md](docs/FIREBASE.md) for:
 Before committing changes, run:
 
 ```bash
+npm test
 npx tsc --noEmit
 npx eslint app components hooks lib --no-cache
 npm run build
 ```
+
+`npm run build` runs `npm test` first, so Vercel's standard build command will stop before deployment if a test fails.
 
 ## Deployment
 

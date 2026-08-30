@@ -87,7 +87,7 @@ service cloud.firestore {
       return data.keys().hasOnly([
           'description', 'category', 'amount', 'createdAt', 'createdAtMs',
           'createdBy', 'transactionType', 'amendsExpenseId', 'unusual', 'source',
-          'sourceTransactionId'
+          'sourceTransactionId', 'sourceAccount'
         ])
         && data.keys().hasAll([
           'description', 'category', 'amount', 'createdAt', 'createdAtMs',
@@ -107,6 +107,7 @@ service cloud.firestore {
         && (('source' in data) && data.source == 'up-bank'
           ? validText(data.sourceTransactionId, 128)
           : !('sourceTransactionId' in data))
+        && (!('sourceAccount' in data) || data.sourceAccount in ['peu', 'shamir'])
         && data.transactionType in ['expense', 'amendment']
         && (data.transactionType == 'expense'
           ? data.amount > 0 && !('amendsExpenseId' in data)
@@ -121,11 +122,13 @@ service cloud.firestore {
       let data = request.resource.data;
       return data.keys().hasOnly([
           'externalId', 'description', 'amount', 'occurredAt', 'occurredAtMs',
-          'importedAt', 'importedAtMs', 'importedBy'
+          'importedAt', 'importedAtMs', 'importedBy', 'accountKey',
+          'accountLabel', 'status'
         ])
         && data.keys().hasAll([
           'externalId', 'description', 'amount', 'occurredAt', 'occurredAtMs',
-          'importedAt', 'importedAtMs', 'importedBy'
+          'importedAt', 'importedAtMs', 'importedBy', 'accountKey',
+          'accountLabel', 'status'
         ])
         && validText(data.externalId, 128)
         && validText(data.description, 80)
@@ -136,20 +139,31 @@ service cloud.firestore {
         && data.occurredAtMs is number
         && data.importedAt is timestamp
         && data.importedAtMs is number
-        && validText(data.importedBy, 40);
+        && validText(data.importedBy, 40)
+        && data.accountKey in ['peu', 'shamir']
+        && validText(data.accountLabel, 40)
+        && data.status in ['HELD', 'SETTLED'];
     }
     match /pending_bank_transactions/{transactionId} {
       allow read: if bankAdminDevice();
       allow create: if bankAdminDevice()
-        && transactionId == request.resource.data.externalId
+        && transactionId == request.resource.data.accountKey + '__' + request.resource.data.externalId
         && validPendingBankTransaction();
-      allow update: if false;
+      allow update: if bankAdminDevice()
+        && transactionId == resource.data.accountKey + '__' + resource.data.externalId
+        && request.resource.data.accountKey == resource.data.accountKey
+        && request.resource.data.externalId == resource.data.externalId
+        && request.resource.data.importedAt == resource.data.importedAt
+        && request.resource.data.importedAtMs == resource.data.importedAtMs
+        && request.resource.data.importedBy == resource.data.importedBy
+        && validPendingBankTransaction();
       allow delete: if bankAdminDevice();
     }
     function validProcessedBankTransaction() {
       let data = request.resource.data;
       return data.keys().hasOnly([
-          'decision', 'processedAt', 'processedAtMs', 'processedBy', 'expenseId'
+          'decision', 'processedAt', 'processedAtMs', 'processedBy', 'expenseId',
+          'accountKey', 'externalId'
         ])
         && data.keys().hasAll([
           'decision', 'processedAt', 'processedAtMs', 'processedBy'
@@ -160,21 +174,28 @@ service cloud.firestore {
         && validText(data.processedBy, 40)
         && (data.decision == 'accepted'
           ? validText(data.expenseId, 128)
-          : !('expenseId' in data));
+          : !('expenseId' in data))
+        && (!('accountKey' in data) || data.accountKey in ['peu', 'shamir'])
+        && (!('externalId' in data) || validText(data.externalId, 128));
     }
     match /processed_bank_transactions/{transactionId} {
       allow get: if bankAdminDevice();
       allow list: if false;
-      allow create: if bankAdminDevice() && validProcessedBankTransaction();
+      allow create: if bankAdminDevice()
+        && validProcessedBankTransaction()
+        && ((!('accountKey' in request.resource.data) && !('externalId' in request.resource.data))
+          || (transactionId == request.resource.data.accountKey + '__' + request.resource.data.externalId));
       allow update, delete: if false;
     }
     function validBankSyncStatus() {
       let data = request.resource.data;
       return data.keys().hasOnly([
-          'lastSyncedAt', 'lastSyncedAtMs', 'lastSinceMs', 'importedCount', 'updatedBy'
+          'lastSyncedAt', 'lastSyncedAtMs', 'lastSinceMs', 'importedCount',
+          'updatedBy', 'accountKey'
         ])
         && data.keys().hasAll([
-          'lastSyncedAt', 'lastSyncedAtMs', 'lastSinceMs', 'importedCount', 'updatedBy'
+          'lastSyncedAt', 'lastSyncedAtMs', 'lastSinceMs', 'importedCount',
+          'updatedBy', 'accountKey'
         ])
         && data.lastSyncedAt is timestamp
         && data.lastSyncedAtMs is number
@@ -182,12 +203,15 @@ service cloud.firestore {
         && data.importedCount is int
         && data.importedCount >= 0
         && data.importedCount <= 1000
-        && validText(data.updatedBy, 40);
+        && validText(data.updatedBy, 40)
+        && data.accountKey in ['peu', 'shamir'];
     }
-    match /bank_sync/status {
+    match /bank_sync/{accountKey} {
       allow get: if bankAdminDevice();
       allow list, delete: if false;
-      allow create, update: if bankAdminDevice() && validBankSyncStatus();
+      allow create, update: if bankAdminDevice()
+        && request.resource.data.accountKey == accountKey
+        && validBankSyncStatus();
     }
     match /bank_admin_devices/{uid} {
       allow get: if signedIn() && request.auth.uid == uid;

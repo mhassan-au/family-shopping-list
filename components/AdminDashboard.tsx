@@ -6,7 +6,8 @@ import { getDeviceLogin } from "@/lib/device";
 import { UI_TEXT } from "@/lib/uiText";
 import { CategoryKind, useCategoryConfig } from "@/hooks/useCategoryConfig";
 import { useBankSync } from "@/hooks/useBankSync";
-import { runManualBankSync } from "@/lib/bankSync";
+import { BANK_ACCOUNTS, runManualBankSync } from "@/lib/bankSync";
+import { BankAccountKey } from "@/lib/types";
 
 const CATEGORY_PATTERN = /^[\p{L}\p{N}][\p{L}\p{N} &'/.&()-]{0,39}$/u;
 
@@ -49,7 +50,7 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
   const [value, setValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
-  const [syncingBank, setSyncingBank] = useState(false);
+  const [syncingBank, setSyncingBank] = useState<BankAccountKey | null>(null);
 
   if (login?.role !== "owner") return null;
 
@@ -129,11 +130,14 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
     }
   }
 
-  async function handleBankSync() {
-    setSyncingBank(true);
+  async function handleBankSync(accountKey: BankAccountKey) {
+    setSyncingBank(accountKey);
     setMessage(null);
     try {
-      const result = await runManualBankSync(bankSync.status?.lastSyncedAtMs);
+      const result = await runManualBankSync(
+        accountKey,
+        bankSync.statuses[accountKey]?.lastSyncedAtMs,
+      );
       setMessage({
         text: UI_TEXT.admin.bankSyncResult(result.importedCount, result.fetchedCount),
         error: false,
@@ -142,7 +146,7 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
       console.error("Manual UP sync failed", syncError);
       setMessage({ text: UI_TEXT.admin.bankSyncFailed, error: true });
     } finally {
-      setSyncingBank(false);
+      setSyncingBank(null);
     }
   }
 
@@ -201,24 +205,33 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
       </section>
 
       <section className="rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-indigo-50 p-4 shadow-sm dark:border-violet-900 dark:from-violet-950/60 dark:to-indigo-950/60">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <FiRefreshCw className={`mt-0.5 shrink-0 text-violet-600 ${syncingBank ? "animate-spin" : ""}`} size={21} />
-            <div>
-            <h2 className="font-bold">{UI_TEXT.admin.bankSync}</h2>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{UI_TEXT.admin.bankSyncDescription}</p>
-              <p className="mt-2 text-xs text-slate-500">
-                {bankSync.status?.lastSyncedAtMs
-                  ? UI_TEXT.admin.lastSync(new Intl.DateTimeFormat("en-AU", { dateStyle: "medium", timeStyle: "short" }).format(new Date(bankSync.status.lastSyncedAtMs)))
-                  : UI_TEXT.admin.lastSyncNever}
-              </p>
-              {bankSync.error && <p className="mt-1 text-xs text-red-700 dark:text-red-300">{UI_TEXT.admin.bankSyncFailed}</p>}
-            </div>
-          </div>
-          <button type="button" onClick={() => void handleBankSync()} disabled={syncingBank || bankSync.loading} className="shrink-0 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-violet-700 disabled:opacity-50">
-            {syncingBank ? UI_TEXT.admin.syncingBank : UI_TEXT.admin.syncNow}
-          </button>
+        <h2 className="font-bold">{UI_TEXT.admin.bankSync}</h2>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{UI_TEXT.admin.bankSyncDescription}</p>
+        <div className="mt-3 space-y-2">
+          {BANK_ACCOUNTS.map((account) => {
+            const status = bankSync.statuses[account.key];
+            const isSyncing = syncingBank === account.key;
+            return (
+              <div key={account.key} className="flex items-center justify-between gap-3 rounded-xl border border-violet-200 bg-white/75 p-3 dark:border-violet-800 dark:bg-slate-900/60">
+                <div className="flex min-w-0 items-center gap-2">
+                  <FiRefreshCw className={`shrink-0 text-violet-600 ${isSyncing ? "animate-spin" : ""}`} size={18} />
+                  <div className="min-w-0">
+                    <p className="font-semibold">{account.label}</p>
+                    <p className="truncate text-xs text-slate-500">
+                      {status?.lastSyncedAtMs
+                        ? UI_TEXT.admin.lastSync(new Intl.DateTimeFormat("en-AU", { dateStyle: "medium", timeStyle: "short" }).format(new Date(status.lastSyncedAtMs)))
+                        : UI_TEXT.admin.lastSyncNever}
+                    </p>
+                  </div>
+                </div>
+                <button type="button" onClick={() => void handleBankSync(account.key)} disabled={Boolean(syncingBank) || bankSync.loading} className="shrink-0 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-violet-700 disabled:opacity-50">
+                  {isSyncing ? UI_TEXT.admin.syncingBank : UI_TEXT.admin.syncNow}
+                </button>
+              </div>
+            );
+          })}
         </div>
+        {bankSync.error && <p className="mt-2 text-xs text-red-700 dark:text-red-300">{UI_TEXT.admin.bankSyncFailed}</p>}
       </section>
 
       {dialog && (

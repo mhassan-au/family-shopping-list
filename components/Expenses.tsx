@@ -28,6 +28,7 @@ import { normalizeConfiguredCategory, useCategoryConfig } from "@/hooks/useCateg
 import { getDeviceLogin } from "@/lib/device";
 import { useBankSync } from "@/hooks/useBankSync";
 import { acceptPendingBankTransaction, rejectPendingBankTransaction } from "@/lib/bankSync";
+import AmountChoiceDialog from "@/components/AmountChoiceDialog";
 
 type Toast = { id: number; message: string; type: "success" | "error" };
 type PendingExpense = { description: string; category: string; amount: number };
@@ -121,6 +122,7 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
     shiftDecimal: shiftAmountDecimal,
     canShift: canShiftAmount,
     parsedValue: parsedAmount,
+    ambiguousValues: ambiguousAmountValues,
   } = useSmartMoneyInput();
   const [adding, setAdding] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -146,6 +148,7 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
   const [bankDescription, setBankDescription] = useState("");
   const [bankCategory, setBankCategory] = useState("");
   const [bankDecisionId, setBankDecisionId] = useState<string | null>(null);
+  const [showAmountChoice, setShowAmountChoice] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     return () => {
@@ -272,12 +275,21 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const numericAmount = parsedAmount;
 
     if (!isValidExpenseDescription(description)) {
       showToast(UI_TEXT.expenses.invalidDescription, "error");
       return;
     }
+
+    if (ambiguousAmountValues) {
+      setShowAmountChoice(true);
+      return;
+    }
+
+    prepareExpense(parsedAmount);
+  }
+
+  function prepareExpense(numericAmount: number) {
 
     if (!isValidExpenseAmount(numericAmount)) {
       showToast(UI_TEXT.expenses.invalidAmount, "error");
@@ -502,7 +514,11 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate font-semibold">{transaction.description}</p>
-                    <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{UI_TEXT.expenses.bankImportedAt(new Intl.DateTimeFormat("en-AU", { dateStyle: "medium", timeStyle: "short" }).format(new Date(transaction.occurredAtMs)))}</p>
+                    <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                      <span>{transaction.accountLabel ?? UI_TEXT.expenses.bankSource}</span>
+                      {transaction.status === "HELD" && <span className="rounded-full bg-amber-100 px-1.5 py-0.5 font-bold text-amber-800 dark:bg-amber-900 dark:text-amber-100">{UI_TEXT.expenses.bankPendingStatus}</span>}
+                      <span>· {UI_TEXT.expenses.bankImportedAt(new Intl.DateTimeFormat("en-AU", { dateStyle: "medium", timeStyle: "short" }).format(new Date(transaction.occurredAtMs)))}</span>
+                    </p>
                   </div>
                   <span className="shrink-0 font-bold text-fuchsia-800 dark:text-fuchsia-200">{formatCurrency(transaction.amount)}</span>
                 </div>
@@ -686,7 +702,9 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
                         )}
                         {expense.source === "up-bank" && (
                           <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wide text-cyan-800 dark:bg-cyan-900 dark:text-cyan-100">
-                            {UI_TEXT.expenses.bankSource}
+                            {expense.sourceAccount
+                              ? UI_TEXT.expenses.bankSourceAccount(expense.sourceAccount)
+                              : UI_TEXT.expenses.bankSource}
                           </span>
                         )}
                         {isUnusualExpense(expense) && (
@@ -748,6 +766,20 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
         </button>
       )}
 
+      {showAmountChoice && ambiguousAmountValues && (
+        <AmountChoiceDialog
+          wholeAmount={ambiguousAmountValues.whole}
+          centsAmount={ambiguousAmountValues.cents}
+          tone="rose"
+          onCancel={() => setShowAmountChoice(false)}
+          onChoose={(selectedAmount) => {
+            setAmount(selectedAmount.toFixed(2));
+            setShowAmountChoice(false);
+            prepareExpense(selectedAmount);
+          }}
+        />
+      )}
+
       {reviewingBankTransaction && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/45 p-3 backdrop-blur-sm sm:items-center" onMouseDown={(event) => { if (event.target === event.currentTarget && !bankDecisionId) setReviewingBankTransaction(null); }}>
           <form onSubmit={(event) => void handleBankAccept(event)} className="w-full max-w-sm space-y-4 rounded-2xl border border-fuchsia-200 bg-white p-5 shadow-2xl dark:border-fuchsia-900 dark:bg-slate-900" role="dialog" aria-modal="true" aria-labelledby="bank-review-title">
@@ -760,7 +792,7 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
             </div>
             <div className="rounded-xl bg-fuchsia-50 px-3 py-2 dark:bg-fuchsia-950">
               <p className="text-xl font-bold text-fuchsia-900 dark:text-fuchsia-100">{formatCurrency(reviewingBankTransaction.amount)}</p>
-              <p className="text-xs text-fuchsia-700 dark:text-fuchsia-300">{UI_TEXT.expenses.bankImportedAt(new Intl.DateTimeFormat("en-AU", { dateStyle: "medium", timeStyle: "short" }).format(new Date(reviewingBankTransaction.occurredAtMs)))}</p>
+              <p className="text-xs text-fuchsia-700 dark:text-fuchsia-300">{reviewingBankTransaction.accountLabel ?? UI_TEXT.expenses.bankSource} · {UI_TEXT.expenses.bankImportedAt(new Intl.DateTimeFormat("en-AU", { dateStyle: "medium", timeStyle: "short" }).format(new Date(reviewingBankTransaction.occurredAtMs)))}</p>
             </div>
             <label className="block text-sm font-semibold">{UI_TEXT.expenses.description}
               <input value={bankDescription} onChange={(event) => setBankDescription(event.target.value)} maxLength={INPUT_LIMITS.expenseDescription} className="input mt-1 w-full px-3 py-2" autoFocus disabled={Boolean(bankDecisionId)} />

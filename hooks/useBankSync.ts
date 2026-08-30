@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from "react";
 import {
+  BANK_ACCOUNTS,
   subscribeToBankSyncStatus,
   subscribeToPendingBankTransactions,
 } from "@/lib/bankSync";
-import { BankSyncStatus, PendingBankTransaction } from "@/lib/types";
+import { BankAccountKey, BankSyncStatus, PendingBankTransaction } from "@/lib/types";
+
+type BankStatuses = Record<BankAccountKey, BankSyncStatus | null>;
 
 export function useBankSync(enabled: boolean) {
   const [pending, setPending] = useState<PendingBankTransaction[]>([]);
-  const [status, setStatus] = useState<BankSyncStatus | null>(null);
+  const [statuses, setStatuses] = useState<BankStatuses>({ peu: null, shamir: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,9 +22,9 @@ export function useBankSync(enabled: boolean) {
     }
 
     let pendingReady = false;
-    let statusReady = false;
+    const readyAccounts = new Set<BankAccountKey>();
     const markReady = () => {
-      if (pendingReady && statusReady) setLoading(false);
+      if (pendingReady && readyAccounts.size === BANK_ACCOUNTS.length) setLoading(false);
     };
     const handleError = (message: string) => {
       setError(message);
@@ -35,22 +38,25 @@ export function useBankSync(enabled: boolean) {
       },
       handleError,
     );
-    const unsubscribeStatus = subscribeToBankSyncStatus(
-      (nextStatus) => {
-        statusReady = true;
-        setStatus(nextStatus);
-        markReady();
-      },
-      handleError,
+    const unsubscribeStatuses = BANK_ACCOUNTS.map((account) =>
+      subscribeToBankSyncStatus(
+        account.key,
+        (nextStatus) => {
+          readyAccounts.add(account.key);
+          setStatuses((current) => ({ ...current, [account.key]: nextStatus }));
+          markReady();
+        },
+        handleError,
+      ),
     );
 
     return () => {
       unsubscribePending();
-      unsubscribeStatus();
+      unsubscribeStatuses.forEach((unsubscribe) => unsubscribe());
     };
   }, [enabled]);
 
   return enabled
-    ? { pending, status, loading, error }
-    : { pending: [], status: null, loading: false, error: null };
+    ? { pending, statuses, loading, error }
+    : { pending: [], statuses: { peu: null, shamir: null }, loading: false, error: null };
 }

@@ -1,5 +1,13 @@
 import "server-only";
 
+import { BankAccountKey } from "@/lib/types";
+import { getBankSyncSince } from "@/lib/bankSyncPolicy";
+
+const ACCOUNT_CONFIG: Record<BankAccountKey, { label: string; token: string | undefined }> = {
+  peu: { label: "Peu UP", token: process.env.UP_API_TOKEN_PEU ?? process.env.UP_API_TOKEN },
+  shamir: { label: "Shamir UP", token: process.env.UP_API_TOKEN_SHAMIR },
+};
+
 interface UpTransactionResource {
   id: string;
   attributes: {
@@ -25,10 +33,9 @@ interface UpTransactionPage {
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const upToken = process.env.UP_API_TOKEN;
   const firebaseApiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
   const firebaseProjectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-  if (!upToken || !firebaseApiKey || !firebaseProjectId) {
+  if (!firebaseApiKey || !firebaseProjectId) {
     return Response.json({ error: "Bank sync is not configured" }, { status: 503 });
   }
 
@@ -43,23 +50,33 @@ export async function POST(request: Request) {
   }
 
   let requestedSince: number | undefined;
+  let accountKey: BankAccountKey | undefined;
   try {
-    const body = await request.json() as { since?: unknown };
+    const body = await request.json() as { since?: unknown; account?: unknown };
     if (typeof body.since === "number" && Number.isFinite(body.since)) {
       requestedSince = body.since;
     }
+    if (body.account === "peu" || body.account === "shamir") {
+      accountKey = body.account;
+    }
   } catch {
-    // An empty body is treated as the first sync.
+    // Invalid request bodies are rejected below.
+  }
+
+  if (!accountKey) {
+    return Response.json({ error: "Invalid UP account" }, { status: 400 });
+  }
+  const account = ACCOUNT_CONFIG[accountKey];
+  if (!account.token) {
+    return Response.json({ error: `${account.label} is not configured` }, { status: 503 });
   }
 
   const syncedAtMs = Date.now();
-  const sinceMs = requestedSince && requestedSince > 0 && requestedSince < syncedAtMs
-    ? requestedSince
-    : syncedAtMs - 72 * 60 * 60 * 1000;
+  const sinceMs = getBankSyncSince(requestedSince, syncedAtMs);
 
   try {
-    const transactions = await fetchTransactions(upToken, sinceMs, syncedAtMs);
-    return Response.json({ syncedAtMs, sinceMs, transactions });
+    const transactions = await fetchTransactions(account.token, sinceMs, syncedAtMs);
+    return Response.json({ accountKey, accountLabel: account.label, syncedAtMs, sinceMs, transactions });
   } catch (error) {
     console.error("UP transaction sync failed", error);
     return Response.json({ error: "UP Bank sync failed" }, { status: 502 });
@@ -101,7 +118,6 @@ async function fetchTransactions(token: string, sinceMs: number, untilMs: number
   const url = new URL("https://api.up.com.au/api/v1/transactions");
   url.searchParams.set("filter[since]", new Date(sinceMs).toISOString());
   url.searchParams.set("filter[until]", new Date(untilMs).toISOString());
-  url.searchParams.set("filter[status]", "SETTLED");
   url.searchParams.set("page[size]", "100");
 
   const transactions: UpTransactionResource[] = [];
@@ -123,7 +139,7 @@ async function fetchTransactions(token: string, sinceMs: number, untilMs: number
   return transactions
     .filter(
       (transaction) =>
-        transaction.attributes.status === "SETTLED" &&
+        ["HELD", "SETTLED"].includes(transaction.attributes.status) &&
         transaction.attributes.amount.currencyCode === "AUD" &&
         transaction.attributes.amount.valueInBaseUnits < 0,
     )
@@ -138,6 +154,7 @@ async function fetchTransactions(token: string, sinceMs: number, untilMs: number
         "UP transaction"
       ).trim().slice(0, 80),
       amount: Math.abs(transaction.attributes.amount.valueInBaseUnits) / 100,
+      status: transaction.attributes.status,
       occurredAt,
       occurredAtMs: new Date(occurredAt).getTime(),
     };})

@@ -5,6 +5,7 @@
 - Begin every implementation request with one concise classification line using the change type, execution mode, and risk level from `docs/WORKFLOW_CLASSIFICATION.md`.
 - Follow that document's routing, verification, approval, and automatic-escalation rules. Proceed without approval for clear low- and medium-risk work.
 - Preserve user changes and unrelated worktree modifications. Do not commit or push unless explicitly requested.
+- At the end of every completed implementation, include ready-to-run Git add, commit, and push commands with a concise suggested commit message. Provide the commands only; do not execute them unless explicitly requested.
 - Search for affected symbols first and read only the files and documentation routed by the classification. Do not read every Markdown file for every task.
 - This project uses Next.js 16 with breaking changes. Before changing Next.js APIs, conventions, configuration, routing, or file structure, read the relevant installed guide under `node_modules/next/dist/docs/` and heed deprecations.
 

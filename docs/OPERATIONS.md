@@ -5,10 +5,13 @@
 ```bash
 npm install
 npm run dev
+npm test
 npx tsc --noEmit
 npx eslint app components hooks lib --no-cache
 npm run build
 ```
+
+The build script runs the tests before invoking Next.js, which makes the normal Vercel build fail fast when a tested money-input or bank-sync rule regresses.
 
 ## Device lifecycle
 
@@ -62,6 +65,13 @@ Run `npm run dev` and open `http://localhost:3000`.
 - Confirm the Git push reached `main`.
 - Check the Vercel deployment status.
 - Fully close/reopen an installed PWA or clear its site cache if it retains an old build.
+
+### One UP account does not sync
+
+- Confirm that account's server-only token exists in the current environment: `UP_API_TOKEN_PEU` or `UP_API_TOKEN_SHAMIR`.
+- Restart the local server or redeploy Vercel after changing environment variables.
+- Confirm the current device has `bank_admin_devices/{uid}.approved` set to boolean `true`.
+- Each account records its own checkpoint under `bank_sync`; a 48-hour overlap is queried automatically.
 
 ### Duplicate expense warning
 

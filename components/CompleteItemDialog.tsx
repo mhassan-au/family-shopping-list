@@ -11,6 +11,7 @@ import {
     isValidUnitPrice,
 } from "@/lib/validation";
 import { useSmartMoneyInput } from "@/hooks/useSmartMoneyInput";
+import AmountChoiceDialog from "@/components/AmountChoiceDialog";
 
 interface Props {
 
@@ -51,10 +52,19 @@ export default function CompleteItemDialog({
         shiftDecimal,
         canShift,
         parsedValue: parsedPrice,
+        ambiguousValues,
     } = useSmartMoneyInput(
         defaultUnitPrice > 0 ? defaultUnitPrice.toFixed(2) : "",
     );
     const priceInputRef = useRef<HTMLInputElement>(null);
+    const [showAmountChoice, setShowAmountChoice] = useState(false);
+
+    function completeWithPrice(price: number) {
+        const parsedQty = Number(qty);
+        if (isValidQuantity(parsedQty) && isValidUnitPrice(price)) {
+            onSave(parsedQty, price);
+        }
+    }
 
     useEffect(() => {
         priceInputRef.current?.focus();
@@ -237,13 +247,11 @@ z-50
                     <button
 
                         onClick={() => {
-                            const parsedQty = Number(qty);
-                            if (
-                                isValidQuantity(parsedQty) &&
-                                isValidUnitPrice(parsedPrice)
-                            ) {
-                                onSave(parsedQty, parsedPrice);
+                            if (ambiguousValues) {
+                                setShowAmountChoice(true);
+                                return;
                             }
+                            completeWithPrice(parsedPrice);
                         }}
 
                         className="btn-primary"
@@ -255,6 +263,19 @@ z-50
                     </button>
 
                 </div>
+
+                {showAmountChoice && ambiguousValues && (
+                    <AmountChoiceDialog
+                        wholeAmount={ambiguousValues.whole}
+                        centsAmount={ambiguousValues.cents}
+                        onCancel={() => setShowAmountChoice(false)}
+                        onChoose={(price) => {
+                            setUnitPrice(price.toFixed(2));
+                            setShowAmountChoice(false);
+                            completeWithPrice(price);
+                        }}
+                    />
+                )}
 
             </div>
 

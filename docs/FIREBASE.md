@@ -11,7 +11,7 @@ No Firebase Storage, Cloud Functions, or Cloud Messaging service is required by 
 
 ## Manual UP Bank sync
 
-The Admin screen triggers sync only when the owner presses **Sync now**. The first sync requests the last 72 hours; later syncs request transactions since the recorded last-sync time. Transactions enter a pending queue and are never added to expenses until accepted. Rejecting a transaction records that decision so it is not imported again.
+The Admin screen has independent **Sync now** actions for Peu UP and Shamir UP. The first sync for each account requests the last 72 hours. Later syncs begin 48 hours before that account's last successful checkpoint, allowing late-settling activity to be found. HELD and SETTLED outgoing AUD transactions enter the pending queue and are never added to expenses until accepted. Rejecting a transaction records that account-and-transaction identity so it is not imported again.
 
 Create this document manually for the owner's approved browser/device:
 
@@ -20,13 +20,13 @@ bank_admin_devices/{ownerFirebaseAnonymousUid}
   approved: true
 ```
 
-Create one `bank_admin_devices/{uid}` document for each of the owner's devices. The server verifies this document using the signed-in device's Firebase ID token, so no separate UID environment variable is required. Add only `UP_API_TOKEN` to `.env.local` for local testing and to Vercel for production. Do not put the UP token in Firestore or in any `NEXT_PUBLIC_` variable.
+Create one `bank_admin_devices/{uid}` document for each of the owner's devices. The server verifies this document using the signed-in device's Firebase ID token, so no separate UID environment variable is required. Add `UP_API_TOKEN_PEU` and `UP_API_TOKEN_SHAMIR` to `.env.local` for local testing and to Vercel for production. The old `UP_API_TOKEN` remains a fallback for Peu. Do not put either token in Firestore or in any `NEXT_PUBLIC_` variable.
 
 Publish the repository's updated `firestore.rules` before using sync. The app then manages:
 
-- `pending_bank_transactions`: awaiting owner Accept/Reject review
-- `processed_bank_transactions`: permanent deduplication decisions
-- `bank_sync/status`: last successful sync time
+- `pending_bank_transactions`: awaiting owner Accept/Reject review; new document IDs combine account key and UP transaction ID
+- `processed_bank_transactions`: permanent per-account deduplication decisions
+- `bank_sync/peu` and `bank_sync/shamir`: independent successful-sync checkpoints
 
 ## Collections
 
@@ -104,6 +104,7 @@ Created by the app for approved devices. Each record contains:
 - `createdBy`, `createdAt`, and `createdAtMs`
 - `amendsExpenseId` for an amendment transaction
 - `source: shopping-transfer` for totals transferred from the completed-shopping popup
+- `source: up-bank`, `sourceAccount`, and `sourceTransactionId` for accepted bank transactions
 
 Expense categories are loaded from `app_config/categories`. The defaults remain in `lib/config.ts` and are used automatically until the shared configuration document is created. Rules validate category text rather than maintaining a hard-coded allow-list.
 

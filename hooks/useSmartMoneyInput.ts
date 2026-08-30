@@ -9,11 +9,15 @@ import {
 export function useSmartMoneyInput(initialValue = "") {
   const [value, setValueState] = useState(initialValue);
   const [shiftedRight, setShiftedRight] = useState(false);
+  const [wholeNumberDigits, setWholeNumberDigits] = useState<string | null>(
+    /^\d+$/.test(initialValue) ? initialValue : null,
+  );
 
   const setValue = useCallback(
     (nextValue: string) => {
       setValueState(nextValue);
       setShiftedRight(false);
+      setWholeNumberDigits(/^\d+$/.test(nextValue) ? nextValue : null);
     },
     [],
   );
@@ -34,7 +38,13 @@ export function useSmartMoneyInput(initialValue = "") {
         : numericValue.toFixed(2),
     );
     setShiftedRight(true);
+    setWholeNumberDigits(null);
   }, [shiftedRight, value]);
+
+  const wholeNumberValue = wholeNumberDigits ? Number(wholeNumberDigits) : 0;
+  const ambiguousValues = wholeNumberValue > 0
+    ? { whole: wholeNumberValue, cents: wholeNumberValue / 100 }
+    : null;
 
   return {
     value,
@@ -43,5 +53,6 @@ export function useSmartMoneyInput(initialValue = "") {
     shiftDecimal,
     canShift: Boolean(value.trim()) && !shiftedRight,
     parsedValue: parseFlexibleMoneyInput(value),
+    ambiguousValues,
   };
 }

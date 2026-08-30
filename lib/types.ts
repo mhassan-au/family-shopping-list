@@ -48,7 +48,12 @@ export interface Expense {
   unusual?: boolean;
   source?: "shopping-transfer" | "up-bank";
   sourceTransactionId?: string;
+  sourceAccount?: BankAccountKey;
 }
+
+export type BankAccountKey = "peu" | "shamir";
+
+export type BankTransactionStatus = "HELD" | "SETTLED";
 
 export interface PendingBankTransaction {
   id: string;
@@ -59,6 +64,9 @@ export interface PendingBankTransaction {
   occurredAtMs: number;
   importedAtMs: number;
   importedBy: string;
+  accountKey?: BankAccountKey;
+  accountLabel?: string;
+  status?: BankTransactionStatus;
 }
 
 export interface BankSyncStatus {
@@ -66,4 +74,5 @@ export interface BankSyncStatus {
   lastSinceMs?: number | null;
   importedCount: number;
   updatedBy: string;
+  accountKey: BankAccountKey;
 }
