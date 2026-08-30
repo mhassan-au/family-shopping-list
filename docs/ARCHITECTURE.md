@@ -26,6 +26,7 @@
 | `lib/firebase.ts` | Firebase, persistent cache, long polling |
 | `app/api/up/sync/route.ts` | Owner-authenticated, server-only UP transaction fetch |
 | `lib/bankSync.ts` | Pending transaction import, accept/reject, and deduplication writes |
+| `lib/securityPolicy.ts` | Allow-list validation for server-side UP API pagination |
 | `hooks/useBankSync.ts` | Live pending queue and last-sync status |
 | `lib/deviceApproval.ts` | Pending and approved-device lookup |
 | `lib/config.ts` | Shops, categories, priorities, member colors |
@@ -71,6 +72,6 @@ Shopping duplicate detection checks active items only. A completed item may be a
 
 The completed-items popup has two separate flows. **Clear completed** deletes only shopping items. **Transfer to Expenses & Clear** uses one Firestore batch to create a `Grocery` expense with `source: shopping-transfer` and delete the completed items atomically. The expense list displays this source with an Auto added tag.
 
-UP Bank sync is deliberately manual and separate for Peu and Shamir. The browser sends its Firebase ID token and selected account key to a server-only route; the route verifies the token and confirms that the matching `bank_admin_devices/{uid}` document is approved before selecting that account's server-only token. Each account has an independent checkpoint. Later syncs query from 48 hours before that checkpoint so late settlement is not missed, while account-key-plus-transaction-ID deduplication prevents repeat review. Both HELD and SETTLED outgoing AUD transactions enter the pending queue, and an existing pending item is refreshed when its bank status or amount changes. Accepting atomically creates an immutable expense, records the account and external transaction as processed, and removes it from the queue. Rejecting records the same identity and removes it without creating an expense.
+UP Bank sync is deliberately manual and separate for Peu and Shamir. The browser sends its Firebase ID token and selected account key to a server-only route; the route verifies the token and confirms that the matching `bank_admin_devices/{uid}` document is approved before selecting that account's server-only token. Every UP pagination link is revalidated against the official HTTPS API origin and path before the server follows it. Each account has an independent checkpoint. Later syncs query from 48 hours before that checkpoint so late settlement is not missed, while account-key-plus-transaction-ID deduplication prevents repeat review. Both HELD and SETTLED outgoing AUD transactions enter the pending queue, and an existing pending item is refreshed when its bank status or amount changes. Accepting atomically creates an immutable expense, records the account and external transaction as processed, and removes it from the queue. Rejecting records the same identity and removes it without creating an expense.
 
 Whole-number money input remains optimized for cents, but is ambiguous: `12` may mean `$0.12` or `$12.00`. Shopping completion and new-expense entry therefore show a two-choice confirmation before saving unless the user entered a decimal or used the `>>` action.

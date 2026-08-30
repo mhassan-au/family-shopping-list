@@ -248,9 +248,9 @@ service cloud.firestore {
     }
     match /app_config/categories {
       allow read: if approvedDevice();
-      // The Admin section is hidden for non-owners. Backend owner enforcement
-      // will be tightened when approved-device role metadata is introduced.
-      allow create, update: if approvedDevice() && validCategoryConfig();
+      // Shared options are an owner-admin operation. Reuse the manually
+      // controlled bank-admin device allow-list as the trusted owner boundary.
+      allow create, update: if bankAdminDevice() && validCategoryConfig();
       allow delete: if false;
     }
     // Login needs to read the selected household user after anonymous auth.

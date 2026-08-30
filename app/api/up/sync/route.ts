@@ -2,6 +2,7 @@ import "server-only";
 
 import { BankAccountKey } from "@/lib/types";
 import { getBankSyncSince } from "@/lib/bankSyncPolicy";
+import { isAllowedUpApiUrl } from "@/lib/securityPolicy";
 
 const ACCOUNT_CONFIG: Record<BankAccountKey, { label: string; token: string | undefined }> = {
   peu: { label: "Peu UP", token: process.env.UP_API_TOKEN_PEU ?? process.env.UP_API_TOKEN },
@@ -32,11 +33,21 @@ interface UpTransactionPage {
 
 export const runtime = "nodejs";
 
+function jsonResponse(body: unknown, status = 200) {
+  return Response.json(body, {
+    status,
+    headers: {
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
+}
+
 export async function POST(request: Request) {
   const firebaseApiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
   const firebaseProjectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   if (!firebaseApiKey || !firebaseProjectId) {
-    return Response.json({ error: "Bank sync is not configured" }, { status: 503 });
+    return jsonResponse({ error: "Bank sync is not configured" }, 503);
   }
 
   const bearer = request.headers.get("authorization");
@@ -46,7 +57,7 @@ export async function POST(request: Request) {
     !authenticatedUid ||
     !(await isApprovedBankAdmin(idToken, authenticatedUid, firebaseProjectId))
   ) {
-    return Response.json({ error: "Not authorized" }, { status: 403 });
+    return jsonResponse({ error: "Not authorized" }, 403);
   }
 
   let requestedSince: number | undefined;
@@ -64,11 +75,11 @@ export async function POST(request: Request) {
   }
 
   if (!accountKey) {
-    return Response.json({ error: "Invalid UP account" }, { status: 400 });
+    return jsonResponse({ error: "Invalid UP account" }, 400);
   }
   const account = ACCOUNT_CONFIG[accountKey];
   if (!account.token) {
-    return Response.json({ error: `${account.label} is not configured` }, { status: 503 });
+    return jsonResponse({ error: `${account.label} is not configured` }, 503);
   }
 
   const syncedAtMs = Date.now();
@@ -76,10 +87,10 @@ export async function POST(request: Request) {
 
   try {
     const transactions = await fetchTransactions(account.token, sinceMs, syncedAtMs);
-    return Response.json({ accountKey, accountLabel: account.label, syncedAtMs, sinceMs, transactions });
+    return jsonResponse({ accountKey, accountLabel: account.label, syncedAtMs, sinceMs, transactions });
   } catch (error) {
     console.error("UP transaction sync failed", error);
-    return Response.json({ error: "UP Bank sync failed" }, { status: 502 });
+    return jsonResponse({ error: "UP Bank sync failed" }, 502);
   }
 }
 
@@ -124,6 +135,9 @@ async function fetchTransactions(token: string, sinceMs: number, untilMs: number
   let nextUrl: string | null = url.toString();
   let pages = 0;
   while (nextUrl && pages < 10) {
+    if (!isAllowedUpApiUrl(nextUrl)) {
+      throw new Error("UP returned an invalid pagination URL");
+    }
     const response = await fetch(nextUrl, {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",

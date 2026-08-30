@@ -66,9 +66,10 @@ Do not request approval for ordinary in-scope coding, inspection, or testing.
 ## Project command reference
 
 - Targeted type check: `npx tsc --noEmit`
+- Automated tests: `npm test`
 - Targeted lint: `npx eslint <affected-files> --no-cache`
 - Full application lint: `npx eslint app components hooks lib --no-cache`
 - Production build: `npm run build`
 - Development server: `npm run dev`
 
-The repository has no automated test script. Prefer focused manual/local verification for behavior and do not substitute a production deployment for local checks.
+The repository has build-gated automated tests. Add focused tests for reusable business or security policy, and do not substitute a production deployment for local checks.

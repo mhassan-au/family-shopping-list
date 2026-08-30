@@ -8,6 +8,34 @@
 - Firestore Security Rules are the authoritative protection for data and quota.
 - Local storage is convenience state only and must never be trusted by backend rules.
 
+## Threat model
+
+### Protected assets
+
+- Household shopping and append-only expense history
+- Password hashes, approved-device identities, and owner-admin authorization
+- Server-only UP Bank tokens and imported transaction details
+- Firebase/Vercel quota and the availability of the household app
+
+### Relevant threat actors
+
+- An unauthenticated internet user or automated quota-abuse client
+- A signed-in but unapproved browser
+- A compromised approved household device, including a non-owner device
+- A malicious or compromised upstream response during bank pagination
+- Accidental configuration, deployment, or secret-management mistakes
+
+### Trust boundaries and mitigations
+
+| Boundary | Main threat | Mitigation |
+|---|---|---|
+| Browser → Firestore | Unauthorized reads/writes and quota abuse | Anonymous Firebase identity plus manually approved UID; deny-by-default Rules; field, range, and immutable-ledger validation |
+| Non-owner → shared configuration | Direct category/shop tampering outside the hidden UI | `app_config/categories` writes require the manually maintained `bank_admin_devices` owner boundary |
+| Browser → bank-sync route | Token theft or unauthorized imports | Firebase ID-token verification, owner bank-admin lookup, fixed account allow-list, server-only tokens, and no-store responses |
+| UP API → server pagination | Server-side request forgery through a forged `next` link | Every page URL must remain HTTPS on `api.up.com.au` under `/api/v1/`, with a ten-page cap |
+| Third-party page → app browser | Clickjacking, referrer leakage, or unnecessary device API access | CSP frame protection, frame denial, no-referrer, nosniff, HSTS, and a restrictive Permissions Policy |
+| Code change → deployment | Accidental weakening of important boundaries | Security contract and URL-policy tests run inside `npm run build` before Next.js builds |
+
 ## Current protections
 
 - Shopping-list reads and writes require an approved authenticated UID.
@@ -16,18 +44,24 @@
 - Approval records can only be managed in Firebase Console.
 - Both UP Bank tokens are read only by the Next.js server route and must remain in the server-only `UP_API_TOKEN_PEU` and `UP_API_TOKEN_SHAMIR` environment variables. The legacy `UP_API_TOKEN` is only a compatibility fallback for Peu.
 - Manual bank sync requires both the owner's verified Firebase UID and a manually approved `bank_admin_devices/{uid}` document. The requested account is selected from a fixed server allow-list, not an arbitrary environment-variable name. Imported transactions remain pending until the owner accepts or rejects them.
+- UP pagination is restricted to the official HTTPS API origin and path, and bank-sync responses cannot be cached.
+- Shared shop and category configuration can be changed only by a manually approved bank-admin device.
+- Production responses include clickjacking, MIME-sniffing, referrer, transport, and browser-permission protections.
 - Unknown collections and notification requests are denied.
 - Shopping documents have an allowed-field list and size/range validation.
 - Shopping price-history reads and validated writes require an approved device; app-side deletion is denied.
 - Expense reads and append-only writes require an approved authenticated UID.
-- Expense documents have an allowed-field list, category allow-list, and amount validation.
+- Expense documents have an allowed-field list, bounded category text, and amount validation; shared category choices are managed separately so historical names remain valid.
 - Shopping transfers create the validated expense and delete completed items atomically in one approved-device batch.
 - Client inputs are validated again immediately before Firestore writes.
 - Price input accepts digits, one decimal point, and at most two decimals.
 
-## Known limitation
+## Residual risks and next priorities
 
-Household passwords are currently unsalted SHA-256 hashes and are verified client-side after a direct user-document lookup. Device approval and Firestore Rules protect shopping data, but PBKDF2 or server-verified authentication would provide stronger password security.
+- Household passwords are unsalted SHA-256 hashes and are verified client-side after a direct user-document lookup. An attacker who learns a family code and username can retrieve that one hash after anonymous authentication and attempt offline guesses. A future server-verified login or managed Firebase Authentication migration is the strongest fix; PBKDF2 with per-user salt is an interim improvement.
+- A compromised approved device can use the ordinary shopping and expense permissions until its UID is revoked. Manual approval, periodic review, and rapid revocation are therefore important.
+- Firestore Rules protect the database, but anonymous-auth and login endpoints do not currently have server-side rate limiting or App Check. Monitor quota; consider App Check or a server login boundary only if abuse appears because those add deployment/configuration work.
+- The repository tests enforce important Rules text and helper policy, but they do not execute Rules against the Firebase Emulator. Emulator-based authorization tests are a worthwhile future improvement if the extra tooling becomes justified.
 
 ## Owner-account security
 

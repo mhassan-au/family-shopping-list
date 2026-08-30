@@ -11,7 +11,9 @@ npx eslint app components hooks lib --no-cache
 npm run build
 ```
 
-The build script runs the tests before invoking Next.js, which makes the normal Vercel build fail fast when a tested money-input or bank-sync rule regresses.
+The build script runs the tests before invoking Next.js, which makes the normal Vercel build fail fast when a tested money-input, bank-sync, URL-origin, security-header, or Firestore security contract regresses.
+
+Security reviews should also run `npm audit` without automatically applying dependency changes. Firestore Rules publication remains a separate Firebase Console action and is not performed by Vercel.
 
 ## Device lifecycle
 

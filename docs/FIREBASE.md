@@ -124,7 +124,7 @@ Created when the owner first adds or renames a category in the Admin dashboard. 
 - `shopAliases`, `shoppingAliases`, and `expenseAliases`: rename mappings so existing records appear under their replacement option
 - `updatedBy`, `updatedAt`, and `updatedAtMs`: audit metadata
 
-The Admin settings icon is shown only in the shopping header when the locally saved household role is `owner`. In this first phase, Rules allow any approved device to read the configuration and submit a structurally valid update; backend owner enforcement requires trusted role metadata and will be added with the bank-sync security work. This limitation must be resolved before treating the Admin role as a hard security boundary.
+The Admin settings icon is shown only in the shopping header when the locally saved household role is `owner`. All approved devices can read this shared configuration, but Rules require the device UID to have an approved `bank_admin_devices/{uid}` document before it can create or update the configuration. Configuration deletion remains denied.
 
 ## Approving a device
 
@@ -153,7 +153,9 @@ To publish manually:
 2. Replace the editor contents with `firestore.rules`
 3. Publish
 4. Immediately test shopping read/write actions and adding an expense from an approved device
-5. Confirm an unapproved browser remains on the approval screen
+5. Confirm the owner's Admin category/shop update works from a device listed in `bank_admin_devices`
+6. Confirm an approved non-admin device cannot update `app_config/categories` directly
+7. Confirm an unapproved browser remains on the approval screen
 
 Vercel does not deploy Firestore Rules.
 

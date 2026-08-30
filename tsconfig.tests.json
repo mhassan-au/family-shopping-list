@@ -11,6 +11,7 @@
   },
   "include": [
     "lib/bankSyncPolicy.ts",
+    "lib/securityPolicy.ts",
     "lib/validation.ts",
     "tests/**/*.test.ts"
   ]
