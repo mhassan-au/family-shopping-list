@@ -1,7 +1,7 @@
 import "server-only";
 
 import { BankAccountKey } from "@/lib/types";
-import { getBankSyncSince } from "@/lib/bankSyncPolicy";
+import { getBankSyncSince, isExcludedBankTransaction } from "@/lib/bankSyncPolicy";
 import { isAllowedUpApiUrl } from "@/lib/securityPolicy";
 
 const ACCOUNT_CONFIG: Record<BankAccountKey, { label: string; token: string | undefined }> = {
@@ -155,7 +155,12 @@ async function fetchTransactions(token: string, sinceMs: number, untilMs: number
       (transaction) =>
         ["HELD", "SETTLED"].includes(transaction.attributes.status) &&
         transaction.attributes.amount.currencyCode === "AUD" &&
-        transaction.attributes.amount.valueInBaseUnits < 0,
+        transaction.attributes.amount.valueInBaseUnits < 0 &&
+        !isExcludedBankTransaction(
+          transaction.attributes.description,
+          transaction.attributes.rawText,
+          transaction.attributes.message,
+        ),
     )
     .map((transaction) => {
       const occurredAt = transaction.attributes.settledAt ?? transaction.attributes.createdAt;

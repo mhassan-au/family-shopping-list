@@ -37,7 +37,13 @@ export default function HouseholdApp() {
         <ExpenseReport onClose={() => setSection("expenses")} />
       )}
       {section === "admin" && isOwner && (
-        <AdminDashboard onBack={() => setSection("shopping")} />
+        <AdminDashboard
+          onBack={() => setSection("shopping")}
+          onOpenTransactions={() => {
+            setSection("expenses");
+            window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+          }}
+        />
       )}
 
       {section !== "admin" && <nav

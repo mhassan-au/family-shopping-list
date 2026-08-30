@@ -37,7 +37,13 @@ const TAB_THEMES: Record<CategoryKind, {
   },
 };
 
-export default function AdminDashboard({ onBack }: { onBack: () => void }) {
+export default function AdminDashboard({
+  onBack,
+  onOpenTransactions,
+}: {
+  onBack: () => void;
+  onOpenTransactions: () => void;
+}) {
   const login = getDeviceLogin();
   const config = useCategoryConfig();
   const bankSync = useBankSync(login?.role === "owner");
@@ -49,7 +55,11 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
   } | null>(null);
   const [value, setValue] = useState("");
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
+  const [message, setMessage] = useState<{
+    text: string;
+    error: boolean;
+    openTransactions?: boolean;
+  } | null>(null);
   const [syncingBank, setSyncingBank] = useState<BankAccountKey | null>(null);
 
   if (login?.role !== "owner") return null;
@@ -141,6 +151,7 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
       setMessage({
         text: UI_TEXT.admin.bankSyncResult(result.importedCount, result.fetchedCount),
         error: false,
+        openTransactions: result.importedCount > 0,
       });
     } catch (syncError) {
       console.error("Manual UP sync failed", syncError);
@@ -166,9 +177,20 @@ export default function AdminDashboard({ onBack }: { onBack: () => void }) {
       </header>
 
       {message && (
-        <p className={`mb-3 rounded-lg px-3 py-2 text-sm ${message.error ? "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"}`} role={message.error ? "alert" : "status"}>
-          {message.text}
-        </p>
+        message.openTransactions ? (
+          <button
+            type="button"
+            onClick={onOpenTransactions}
+            className="mb-3 w-full rounded-lg bg-emerald-100 px-3 py-2 text-left text-sm text-emerald-800 transition hover:bg-emerald-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:bg-emerald-950 dark:text-emerald-200 dark:hover:bg-emerald-900"
+            aria-label={UI_TEXT.admin.openSyncedTransactions}
+          >
+            {message.text}
+          </button>
+        ) : (
+          <p className={`mb-3 rounded-lg px-3 py-2 text-sm ${message.error ? "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"}`} role={message.error ? "alert" : "status"}>
+            {message.text}
+          </p>
+        )
       )}
       {config.error && <p className="mb-3 text-sm text-red-600" role="alert">{UI_TEXT.admin.loadFailed}</p>}
 

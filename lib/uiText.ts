@@ -48,6 +48,7 @@ export const UI_TEXT = {
     bankSyncResult: (imported: number, fetched: number) =>
       `${imported} new transaction${imported === 1 ? "" : "s"} ready to review (${fetched} fetched).`,
     bankSyncFailed: "UP Bank sync failed. Check the connection settings and try again.",
+    openSyncedTransactions: "Open synced transactions for review",
     lastSync: (date: string) => `Last sync: ${date}`,
     lastSyncNever: "Last sync: Never",
   },

@@ -11,7 +11,7 @@ No Firebase Storage, Cloud Functions, or Cloud Messaging service is required by 
 
 ## Manual UP Bank sync
 
-The Admin screen has independent **Sync now** actions for Peu UP and Shamir UP. The first sync for each account requests the last 72 hours. Later syncs begin 48 hours before that account's last successful checkpoint, allowing late-settling activity to be found. HELD and SETTLED outgoing AUD transactions enter the pending queue and are never added to expenses until accepted. Rejecting a transaction records that account-and-transaction identity so it is not imported again.
+The Admin screen has independent **Sync now** actions for Peu UP and Shamir UP. The first sync for each account requests the last 72 hours. Later syncs begin 48 hours before that account's last successful checkpoint, allowing late-settling activity to be found. HELD and SETTLED outgoing AUD purchases enter the pending queue and are never added to expenses until accepted. Transfers, Afterpay, Zip, BPAY/bill payments, credit-card payments, and payments to another account are filtered out before import. Rejecting a reviewed transaction records that account-and-transaction identity so it is not imported again.
 
 Create this document manually for the owner's approved browser/device:
 
