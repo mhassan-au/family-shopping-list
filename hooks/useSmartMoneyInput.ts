@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import {
   formatFlexibleMoneyInput,
+  getAmbiguousMoneyValues,
   parseFlexibleMoneyInput,
 } from "@/lib/validation";
 
@@ -41,10 +42,7 @@ export function useSmartMoneyInput(initialValue = "") {
     setWholeNumberDigits(null);
   }, [shiftedRight, value]);
 
-  const wholeNumberValue = wholeNumberDigits ? Number(wholeNumberDigits) : 0;
-  const ambiguousValues = wholeNumberValue > 0
-    ? { whole: wholeNumberValue, cents: wholeNumberValue / 100 }
-    : null;
+  const ambiguousValues = getAmbiguousMoneyValues(wholeNumberDigits);
 
   return {
     value,

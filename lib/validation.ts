@@ -120,3 +120,15 @@ export function formatFlexibleMoneyInput(value: string) {
   const parsedValue = parseFlexibleMoneyInput(value);
   return Number.isFinite(parsedValue) ? parsedValue.toFixed(2) : value;
 }
+
+export function getAmbiguousMoneyValues(wholeNumberDigits: string | null) {
+  if (!wholeNumberDigits) return null;
+
+  const whole = Number(wholeNumberDigits);
+  const cents = whole / 100;
+  if (!Number.isFinite(whole) || whole <= 0 || (cents >= 1 && cents <= 1000)) {
+    return null;
+  }
+
+  return { whole, cents };
+}
