@@ -24,6 +24,7 @@ function getOwnerSnapshot() {
 
 export default function HouseholdApp() {
   const [section, setSection] = useState<AppSection>("shopping");
+  const [adminReturnSection, setAdminReturnSection] = useState<Exclude<AppSection, "admin">>("shopping");
   const [menuOpen, setMenuOpen] = useState(false);
   const isOwner = useSyncExternalStore(subscribeToLogin, getOwnerSnapshot, () => false);
   const device = getDeviceLogin();
@@ -41,6 +42,11 @@ export default function HouseholdApp() {
     if (!window.confirm(UI_TEXT.logout.confirm)) return;
     clearDeviceLogin();
     window.location.reload();
+  }
+
+  function openAdmin() {
+    if (section !== "admin") setAdminReturnSection(section);
+    setSection("admin");
   }
 
   const bannerTheme = section === "expenses" || section === "expense-report"
@@ -84,7 +90,7 @@ export default function HouseholdApp() {
         {section === "forecast" && isOwner && <Forecast />}
         {section === "admin" && isOwner && (
           <AdminDashboard
-            onBack={() => setSection("shopping")}
+            onBack={() => setSection(adminReturnSection)}
             onOpenTransactions={() => {
               setSection("expenses");
               window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
@@ -103,7 +109,7 @@ export default function HouseholdApp() {
                 <button type="button" onClick={() => setMenuOpen(false)} className="flex size-9 items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" aria-label={UI_TEXT.navigation.closeMenu}><FiX size={20} aria-hidden="true" /></button>
               </div>
               <div className="mt-3 space-y-1 border-t border-slate-100 pt-3 dark:border-slate-800">
-                {isOwner && <button type="button" onClick={() => { setMenuOpen(false); setSection("admin"); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-semibold text-violet-800 hover:bg-violet-50 dark:text-violet-200 dark:hover:bg-violet-950"><FiSettings size={19} aria-hidden="true" />{UI_TEXT.navigation.settings}</button>}
+                {isOwner && <button type="button" onClick={() => { setMenuOpen(false); openAdmin(); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-semibold text-violet-800 hover:bg-violet-50 dark:text-violet-200 dark:hover:bg-violet-950"><FiSettings size={19} aria-hidden="true" />{UI_TEXT.navigation.settings}</button>}
                 <button type="button" onClick={handleLogout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-semibold text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950"><FiLogOut size={19} aria-hidden="true" />{UI_TEXT.logout.label}</button>
               </div>
             </aside>

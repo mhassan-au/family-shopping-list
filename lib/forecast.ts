@@ -5,6 +5,7 @@ export type ForecastEntry = {
   amount: number;
   direction: "income" | "expense";
   source: "scheduled" | "actual";
+  excluded?: boolean;
 };
 
 export type ForecastDay = {
@@ -34,7 +35,7 @@ export function buildMonthlyProjection({ year, monthIndex, openingBalance, entri
     const dateKey = toDateKey(year, monthIndex, day);
     const dayEntries = entries.filter((entry) => entry.dateKey === dateKey);
     const includedEntries = dayEntries.filter(
-      (entry) => entry.source === "scheduled" || entry.dateKey <= todayKey,
+      (entry) => !entry.excluded && (entry.source === "scheduled" || entry.dateKey <= todayKey),
     );
     balance += includedEntries.reduce(
       (total, entry) => total + (entry.direction === "income" ? entry.amount : -entry.amount),
