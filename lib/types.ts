@@ -139,3 +139,22 @@ export interface ForecastAuditRecord {
   createdAtMs: number;
   createdBy: string;
 }
+
+export interface PersonalLoan {
+  id: string;
+  lender: string;
+  reason: string;
+  originalAmount: number;
+  takenDate: string;
+  createdAtMs: number;
+  createdBy: string;
+}
+
+export interface PersonalLoanRepayment {
+  id: string;
+  loanId: string;
+  amount: number;
+  repaidDate: string;
+  createdAtMs: number;
+  createdBy: string;
+}

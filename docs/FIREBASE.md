@@ -133,6 +133,15 @@ Forecast data is owner-only and uses the same manually controlled `bank_admin_de
 
 Publish `firestore.rules` before opening Forecast. Every owner device needs both `approved_devices/{uid}` and `bank_admin_devices/{uid}` with boolean `approved: true`.
 
+### Personal Loan collections
+
+Personal Loan data is owner-only and uses the same `bank_admin_devices/{uid}` boundary as Forecast and bank administration.
+
+- `personal_loans` is append-only and stores `lender`, `reason`, `originalAmount`, `takenDate`, `createdAt`, `createdAtMs`, and `createdBy`.
+- `personal_loan_repayments` is append-only and stores `loanId`, `amount`, `repaidDate`, `createdAt`, `createdAtMs`, and `createdBy`.
+
+Outstanding balances are calculated from the original loan minus all linked repayment records. Neither collection permits client updates or deletes. Publish the updated `firestore.rules` before opening the Personal Loan Ledger or recording data.
+
 ## Approving a device
 
 1. User enters home code, username, and password.
@@ -163,6 +172,8 @@ To publish manually:
 5. Confirm the owner's Admin category/shop update works from a device listed in `bank_admin_devices`
 6. Confirm an approved non-admin device cannot update `app_config/categories` directly
 7. Confirm an unapproved browser remains on the approval screen
+8. Confirm an owner device can create a Personal Loan and partial repayment
+9. Confirm an approved contributor cannot read or write either Personal Loan collection
 
 Vercel does not deploy Firestore Rules.
 
