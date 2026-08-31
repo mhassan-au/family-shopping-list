@@ -139,6 +139,12 @@ At the next UI/data review, explicitly verify:
 - [ ] Contributor devices cannot see or reach Forecast, Settings, or audit data.
 - [ ] Refreshing, offline use, and later synchronization do not lose or duplicate one-off entries, overrides, schedules, or audit events.
 
+### Deferred live-testing idea
+
+**Trigger phrase: `ACTUALISE RECURRING`**
+
+After observing the Forecast in daily use, reconsider whether a recurring expense should become an editable, occurrence-specific actual value on its due date. If implemented, the adjustment must affect only that dated occurrence and must never change the recurring schedule or its future projected values. Keep future recurring outgoing entries red, return the due/past occurrence to normal black, require a reason for edits or exclusion, retain an append-only audit record, and prevent double-counting against the daily **Expenses section total**. Do not implement this until the owner uses the trigger phrase after live testing.
+
 ## Verification baseline
 
 The project currently uses build-gated Node tests. Before handing off an implementation, run:

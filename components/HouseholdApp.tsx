@@ -78,7 +78,7 @@ export default function HouseholdApp() {
 
   return (
     <CategoryConfigProvider>
-      <div className="mx-auto w-full max-w-md px-4 pt-4 sm:px-5 sm:pt-5">
+      {section !== "admin" && section !== "expense-report" && <div className="mx-auto w-full max-w-md px-4 pt-4 sm:px-5 sm:pt-5">
         <header className={`flex w-full items-center justify-between rounded-xl border bg-gradient-to-r px-3 py-2 shadow-sm ${bannerTheme}`}>
           <h1 className="flex items-center gap-1.5 text-xl font-bold">{bannerTitle}</h1>
           <div className="flex items-center gap-1">
@@ -88,7 +88,7 @@ export default function HouseholdApp() {
             </button>
           </div>
         </header>
-      </div>
+      </div>}
 
       <div>
         {section === "shopping" && <ShoppingList />}
