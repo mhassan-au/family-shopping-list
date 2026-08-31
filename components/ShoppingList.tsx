@@ -12,8 +12,7 @@ import GroceryInput from "./GroceryInput";
 import GroceryGroup from "./GroceryGroup";
 import ConfirmDialog from "./ConfirmDialog";
 import CompletedItemsDialog from "./CompletedItemsDialog";
-import { FiLogOut, FiSettings } from "react-icons/fi";
-import { clearDeviceLogin, getDeviceLogin } from "@/lib/device";
+import { getDeviceLogin } from "@/lib/device";
 import { UI_TEXT } from "@/lib/uiText";
 import { transferCompletedShoppingToExpense } from "@/lib/expenses";
 import {
@@ -34,11 +33,7 @@ const todayDateTime = [
   String(today.getDate()).padStart(2, "0"),
 ].join("-");
 
-interface Props {
-  onOpenAdmin?: () => void;
-}
-
-export default function ShoppingList({ onOpenAdmin }: Props) {
+export default function ShoppingList() {
 
   const device = getDeviceLogin();
   const defaultCategory =
@@ -163,22 +158,6 @@ export default function ShoppingList({ onOpenAdmin }: Props) {
       ? UI_TEXT.sync.syncing
       : UI_TEXT.sync.synced;
 
-  function handleLogout() {
-
-    const confirmed = window.confirm(
-      UI_TEXT.logout.confirm
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-
-    clearDeviceLogin();
-
-    window.location.reload();
-
-  }
   // Add grocery item
 
   function handleAddNew() {
@@ -282,82 +261,22 @@ export default function ShoppingList({ onOpenAdmin }: Props) {
 
   return (
     <main className="w-full max-w-md mx-auto p-4 pb-24 sm:p-5 sm:pb-24">
-      <div
-        className="
-    flex
-    items-center
-    justify-between
-    w-full
-    rounded-xl
-    border
-    border-blue-200
-    bg-gradient-to-r
-    from-blue-100
-    to-cyan-50
-    px-3
-    py-2
-    mb-4
-    shadow-sm
-    dark:border-blue-800
-    dark:from-blue-950
-    dark:to-slate-900
-  "
-      >
-
-        <div className="flex items-center gap-1">
-          <h1 className="text-xl font-bold">
-            🛒 {UI_TEXT.appName}
-          </h1>
-          {onOpenAdmin && (
-            <button
-              type="button"
-              onClick={onOpenAdmin}
-              className="rounded-lg p-2 text-blue-700 transition hover:bg-blue-100 dark:text-blue-300 dark:hover:bg-blue-900"
-              title={UI_TEXT.admin.open}
-              aria-label={UI_TEXT.admin.open}
-            >
-              <FiSettings size={19} aria-hidden="true" />
-            </button>
-          )}
+      <section className="mb-4 rounded-xl border border-blue-200 bg-blue-100/95 p-2 text-center text-blue-900 shadow-sm backdrop-blur dark:border-blue-800 dark:bg-blue-950/95 dark:text-blue-100">
+        <div className="px-2 py-1 text-sm font-medium">
+          <time dateTime={todayDateTime} suppressHydrationWarning>{todayLabel}</time>
+          <span aria-hidden="true"> • </span>
+          <span>{UI_TEXT.items.remaining(remainingItemCount)}</span>
+          <span aria-hidden="true"> • </span>
+          <span>{syncLabel}</span>
+          {!isOnline && <div className="mt-1 text-xs font-normal text-amber-700 dark:text-amber-300">{UI_TEXT.sync.offlineMode}</div>}
         </div>
-
-
-        <div className="flex items-center gap-2">
-
-          <span className="
-    text-sm
-    font-medium
-    text-gray-700
-    dark:text-gray-200
-  ">
-            {device?.username}
-          </span>
-
-
-          <button
-            onClick={handleLogout}
-            className="
-      p-2
-      rounded-lg
-
-      text-gray-700
-      dark:text-gray-200
-
-      hover:bg-gray-100
-      dark:hover:bg-gray-800
-
-      transition
-    "
-            title={UI_TEXT.logout.label}
-          >
-
-            <FiLogOut size={20} />
-
+        {expectedTotal > 0 && <div className="px-2 pb-1 text-xs font-medium text-slate-400 dark:text-slate-500">{UI_TEXT.items.expectedTotal(expectedTotal)}</div>}
+        {completedItems.length > 0 && (
+          <button type="button" onClick={() => setShowClearConfirm(true)} className="mt-1 w-full rounded-lg border border-blue-300 bg-gradient-to-r from-blue-50 to-cyan-100 px-4 py-2 text-lg font-bold text-red-600 shadow-sm transition hover:from-blue-100 hover:to-cyan-200 active:scale-[0.99] dark:border-blue-700 dark:from-blue-900 dark:to-cyan-950 dark:text-red-400 dark:hover:from-blue-800 dark:hover:to-cyan-900">
+            {UI_TEXT.items.total(completedTotal)}
           </button>
-
-        </div>
-
-      </div>
+        )}
+      </section>
 
       {/* Grocery Input */}
 
@@ -491,40 +410,6 @@ export default function ShoppingList({ onOpenAdmin }: Props) {
           {UI_TEXT.items.empty}
         </p>
       )}
-
-      <footer className="sticky bottom-20 z-10 mt-6 rounded-xl border border-blue-200 bg-blue-100/95 p-2 text-center text-blue-900 shadow-sm backdrop-blur dark:border-blue-800 dark:bg-blue-950/95 dark:text-blue-100">
-        <div className="px-2 py-1 text-sm font-medium">
-          <time dateTime={todayDateTime} suppressHydrationWarning>
-            {todayLabel}
-          </time>
-          <span aria-hidden="true"> • </span>
-          <span>
-            {UI_TEXT.items.remaining(remainingItemCount)}
-          </span>
-
-          <span aria-hidden="true"> • </span>
-          <span>{syncLabel}</span>
-          {!isOnline && (
-            <div className="mt-1 text-xs font-normal text-amber-700 dark:text-amber-300">
-              {UI_TEXT.sync.offlineMode}
-            </div>
-          )}
-        </div>
-        {expectedTotal > 0 && (
-          <div className="px-2 pb-1 text-xs font-medium text-slate-400 dark:text-slate-500">
-            {UI_TEXT.items.expectedTotal(expectedTotal)}
-          </div>
-        )}
-        {completedItems.length > 0 && (
-          <button
-            type="button"
-            onClick={() => setShowClearConfirm(true)}
-            className="mt-1 w-full rounded-lg border border-blue-300 bg-gradient-to-r from-blue-50 to-cyan-100 px-4 py-2 text-lg font-bold text-red-600 shadow-sm transition hover:from-blue-100 hover:to-cyan-200 active:scale-[0.99] dark:border-blue-700 dark:from-blue-900 dark:to-cyan-950 dark:text-red-400 dark:hover:from-blue-800 dark:hover:to-cyan-900"
-          >
-            {UI_TEXT.items.total(completedTotal)}
-          </button>
-        )}
-      </footer>
 
       {/* Delete Confirmation */}
 

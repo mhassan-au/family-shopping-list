@@ -7,9 +7,10 @@
 3. Unknown UIDs create a `pending_devices` request.
 4. `DeviceApprovalScreen` waits for manual approval.
 5. Approved devices render `HouseholdApp`.
-6. The bottom menu switches between `ShoppingList` and `Expenses` without a page reload.
+6. The bottom menu switches between `ShoppingList`, `Expenses`, and the staged `Forecast` section without a page reload.
 7. The expense banner opens `ExpenseReport`, while the Expenses navigation tab stays active.
-8. The shopping and expense hooks maintain their real-time Firestore listeners.
+8. Owner-only administration opens from the top menu without occupying a primary navigation tab.
+9. The shopping and expense hooks maintain their real-time Firestore listeners.
 
 ## Key files
 
@@ -19,6 +20,7 @@
 | `components/HouseholdApp.tsx` | Bottom navigation and section switching |
 | `components/Expenses.tsx` | Expense form and weekly expense list |
 | `components/ExpenseReport.tsx` | Day/week/month/year insights and category comparisons |
+| `components/Forecast.tsx` | Forecast section shell; persistence and calculations are added in later milestones |
 | `hooks/useShoppingList.ts` | Real-time state, optimistic updates, reconnects |
 | `hooks/useExpenses.ts` | Real-time expense state |
 | `lib/shopping.ts` | Firestore shopping-item and price-history operations |

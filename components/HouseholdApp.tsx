@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
-import { FiDollarSign, FiShoppingCart } from "react-icons/fi";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { FiDollarSign, FiLogOut, FiMenu, FiSettings, FiShoppingCart, FiTrendingUp, FiX } from "react-icons/fi";
 import ShoppingList from "./ShoppingList";
 import Expenses from "./Expenses";
 import ExpenseReport from "./ExpenseReport";
 import AdminDashboard from "./AdminDashboard";
+import Forecast from "./Forecast";
 import { UI_TEXT } from "@/lib/uiText";
-import { getDeviceLogin } from "@/lib/device";
+import { clearDeviceLogin, getDeviceLogin } from "@/lib/device";
 import { CategoryConfigProvider } from "@/hooks/useCategoryConfig";
 
-type AppSection = "shopping" | "expenses" | "expense-report" | "admin";
+type AppSection = "shopping" | "expenses" | "expense-report" | "forecast" | "admin";
 
 function subscribeToLogin(callback: () => void) {
   window.addEventListener("storage", callback);
@@ -23,34 +24,98 @@ function getOwnerSnapshot() {
 
 export default function HouseholdApp() {
   const [section, setSection] = useState<AppSection>("shopping");
+  const [menuOpen, setMenuOpen] = useState(false);
   const isOwner = useSyncExternalStore(subscribeToLogin, getOwnerSnapshot, () => false);
+  const device = getDeviceLogin();
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setMenuOpen(false);
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [menuOpen]);
+
+  function handleLogout() {
+    if (!window.confirm(UI_TEXT.logout.confirm)) return;
+    clearDeviceLogin();
+    window.location.reload();
+  }
+
+  const bannerTheme = section === "expenses" || section === "expense-report"
+    ? "border-rose-200 from-rose-100 to-orange-50 dark:border-rose-900 dark:from-rose-950 dark:to-slate-900"
+    : section === "forecast"
+      ? "border-emerald-200 from-emerald-100 to-cyan-50 dark:border-emerald-900 dark:from-emerald-950 dark:to-slate-900"
+      : section === "admin"
+        ? "border-violet-200 from-violet-100 to-fuchsia-50 dark:border-violet-900 dark:from-violet-950 dark:to-slate-900"
+        : "border-blue-200 from-blue-100 to-cyan-50 dark:border-blue-800 dark:from-blue-950 dark:to-slate-900";
+
+  const menuHoverTheme = section === "expenses" || section === "expense-report"
+    ? "hover:bg-rose-100 dark:hover:bg-rose-900"
+    : section === "forecast"
+      ? "hover:bg-emerald-100 dark:hover:bg-emerald-900"
+      : section === "admin"
+        ? "hover:bg-violet-100 dark:hover:bg-violet-900"
+        : "hover:bg-blue-100 dark:hover:bg-blue-900";
 
   return (
     <CategoryConfigProvider>
-      {section === "shopping" && (
-        <ShoppingList onOpenAdmin={isOwner ? () => setSection("admin") : undefined} />
-      )}
-      {section === "expenses" && (
-        <Expenses onOpenReport={() => setSection("expense-report")} />
-      )}
-      {section === "expense-report" && (
-        <ExpenseReport onClose={() => setSection("expenses")} />
-      )}
-      {section === "admin" && isOwner && (
-        <AdminDashboard
-          onBack={() => setSection("shopping")}
-          onOpenTransactions={() => {
-            setSection("expenses");
-            window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
-          }}
-        />
+      <div className="mx-auto w-full max-w-md px-4 pt-4 sm:px-5 sm:pt-5">
+        <header className={`flex w-full items-center justify-between rounded-xl border bg-gradient-to-r px-3 py-2 shadow-sm ${bannerTheme}`}>
+          <h1 className="text-xl font-bold">🛒 {UI_TEXT.appName}</h1>
+          <div className="flex items-center gap-1">
+            <span className="max-w-28 truncate text-sm font-medium text-gray-700 dark:text-gray-200">{device?.username}</span>
+            <button type="button" onClick={() => setMenuOpen(true)} className={`rounded-lg p-2 text-gray-700 transition dark:text-gray-200 ${menuHoverTheme}`} aria-label={UI_TEXT.navigation.menu} title={UI_TEXT.navigation.menu}>
+              <FiMenu size={20} aria-hidden="true" />
+            </button>
+          </div>
+        </header>
+      </div>
+
+      <div>
+        {section === "shopping" && <ShoppingList />}
+        {section === "expenses" && (
+          <Expenses onOpenReport={() => setSection("expense-report")} />
+        )}
+        {section === "expense-report" && (
+          <ExpenseReport onClose={() => setSection("expenses")} />
+        )}
+        {section === "forecast" && isOwner && <Forecast />}
+        {section === "admin" && isOwner && (
+          <AdminDashboard
+            onBack={() => setSection("shopping")}
+            onOpenTransactions={() => {
+              setSection("expenses");
+              window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+            }}
+          />
+        )}
+      </div>
+
+      {menuOpen && (
+        <>
+          <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-label={UI_TEXT.navigation.menu}>
+            <button type="button" className="absolute inset-0 bg-slate-950/25" onClick={() => setMenuOpen(false)} aria-label={UI_TEXT.navigation.closeMenu} />
+            <aside className="absolute right-4 top-4 w-64 rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl dark:border-slate-700 dark:bg-slate-950 sm:right-[calc((100vw-28rem)/2+1.25rem)] sm:top-5">
+              <div className="flex items-center justify-between">
+                <div><p className="text-sm font-bold">{device?.username}</p><p className="text-xs text-slate-500 dark:text-slate-400">{UI_TEXT.appName}</p></div>
+                <button type="button" onClick={() => setMenuOpen(false)} className="flex size-9 items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" aria-label={UI_TEXT.navigation.closeMenu}><FiX size={20} aria-hidden="true" /></button>
+              </div>
+              <div className="mt-3 space-y-1 border-t border-slate-100 pt-3 dark:border-slate-800">
+                {isOwner && <button type="button" onClick={() => { setMenuOpen(false); setSection("admin"); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-semibold text-violet-800 hover:bg-violet-50 dark:text-violet-200 dark:hover:bg-violet-950"><FiSettings size={19} aria-hidden="true" />{UI_TEXT.navigation.settings}</button>}
+                <button type="button" onClick={handleLogout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-semibold text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950"><FiLogOut size={19} aria-hidden="true" />{UI_TEXT.logout.label}</button>
+              </div>
+            </aside>
+          </div>
+        </>
       )}
 
       {section !== "admin" && <nav
         className="fixed inset-x-0 bottom-0 z-40 border-t border-blue-200 bg-white/95 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-4px_18px_rgba(15,23,42,0.08)] backdrop-blur dark:border-blue-900 dark:bg-slate-950/95"
         aria-label="Main navigation"
       >
-        <div className="mx-auto grid max-w-md grid-cols-2 gap-2">
+        <div className={`mx-auto grid max-w-md gap-2 ${isOwner ? "grid-cols-3" : "grid-cols-2"}`}>
           <NavButton
             active={section === "shopping"}
             activeTheme="blue"
@@ -65,6 +130,13 @@ export default function HouseholdApp() {
             icon={<FiDollarSign size={20} />}
             onClick={() => setSection("expenses")}
           />
+          {isOwner && <NavButton
+            active={section === "forecast"}
+            activeTheme="emerald"
+            label={UI_TEXT.navigation.forecast}
+            icon={<FiTrendingUp size={20} />}
+            onClick={() => setSection("forecast")}
+          />}
         </div>
       </nav>}
     </CategoryConfigProvider>
@@ -79,7 +151,7 @@ function NavButton({
   onClick,
 }: {
   active: boolean;
-  activeTheme: "blue" | "rose";
+  activeTheme: "blue" | "rose" | "emerald";
   label: string;
   icon: React.ReactNode;
   onClick: () => void;
@@ -92,6 +164,8 @@ function NavButton({
         active
           ? activeTheme === "rose"
             ? "bg-rose-100 text-rose-900 dark:bg-rose-900 dark:text-rose-50"
+            : activeTheme === "emerald"
+              ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-900 dark:text-emerald-50"
             : "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-50"
           : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
       }`}
