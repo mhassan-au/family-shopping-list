@@ -44,6 +44,7 @@
 - Approval records can only be managed in Firebase Console.
 - Both UP Bank tokens are read only by the Next.js server route and must remain in the server-only `UP_API_TOKEN_PEU` and `UP_API_TOKEN_SHAMIR` environment variables. The legacy `UP_API_TOKEN` is only a compatibility fallback for Peu.
 - Manual bank sync requires both the owner's verified Firebase UID and a manually approved `bank_admin_devices/{uid}` document. The requested account is selected from a fixed server allow-list, not an arbitrary environment-variable name. Imported transactions remain pending until the owner accepts or rejects them.
+- Authorized manual bank-sync attempts append a minimal success/failure event to the owner-only `bank_sync_audit` collection. Events contain no bank token or transaction description and cannot be updated or deleted by the app.
 - UP pagination is restricted to the official HTTPS API origin and path, and bank-sync responses cannot be cached.
 - Shared shop and category configuration can be changed only by a manually approved bank-admin device.
 - Production responses include clickjacking, MIME-sniffing, referrer, transport, and browser-permission protections.

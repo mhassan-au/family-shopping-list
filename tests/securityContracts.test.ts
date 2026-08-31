@@ -34,6 +34,9 @@ test("bank collections require bank-admin devices", () => {
   assert.match(ruleBlock("pending_bank_transactions/{transactionId}"), /bankAdminDevice\(\)/);
   assert.match(ruleBlock("processed_bank_transactions/{transactionId}"), /bankAdminDevice\(\)/);
   assert.match(ruleBlock("bank_sync/{accountKey}"), /bankAdminDevice\(\)/);
+  assert.match(ruleBlock("bank_sync_audit/{auditId}"), /bankAdminDevice\(\)/);
+  assert.match(ruleBlock("bank_sync_audit/{auditId}"), /allow update, delete: if false/);
+  assert.match(ruleBlock("bank_sync_audit/{auditId}"), /request\.resource\.data\.occurredAt == request\.time/);
 });
 
 test("forecast collections are owner-only and historical ledgers are append-only", () => {

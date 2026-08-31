@@ -78,19 +78,41 @@ export async function POST(request: Request) {
     return jsonResponse({ error: "Invalid UP account" }, 400);
   }
   const account = ACCOUNT_CONFIG[accountKey];
+  const syncedAtMs = Date.now();
   if (!account.token) {
+    await writeBankSyncAudit(idToken, firebaseProjectId, authenticatedUid, accountKey, account.label, "failed", syncedAtMs);
     return jsonResponse({ error: `${account.label} is not configured` }, 503);
   }
 
-  const syncedAtMs = Date.now();
   const sinceMs = getBankSyncSince(requestedSince, syncedAtMs);
 
   try {
     const transactions = await fetchTransactions(account.token, sinceMs, syncedAtMs);
+    const auditStored = await writeBankSyncAudit(idToken, firebaseProjectId, authenticatedUid, accountKey, account.label, "success", syncedAtMs);
+    if (!auditStored) return jsonResponse({ error: "Bank sync audit could not be recorded" }, 503);
     return jsonResponse({ accountKey, accountLabel: account.label, syncedAtMs, sinceMs, transactions });
   } catch (error) {
     console.error("UP transaction sync failed", error);
+    await writeBankSyncAudit(idToken, firebaseProjectId, authenticatedUid, accountKey, account.label, "failed", syncedAtMs);
     return jsonResponse({ error: "UP Bank sync failed" }, 502);
+  }
+}
+
+async function writeBankSyncAudit(idToken: string, projectId: string, deviceUid: string, accountKey: BankAccountKey, accountLabel: string, status: "success" | "failed", occurredAtMs: number) {
+  try {
+    const auditId = `${occurredAtMs}_${crypto.randomUUID()}`;
+    const documentName = `projects/${projectId}/databases/(default)/documents/bank_sync_audit/${auditId}`;
+    const response = await fetch(`https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/(default)/documents:commit`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${idToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ writes: [{ update: { name: documentName, fields: { accountKey: { stringValue: accountKey }, accountLabel: { stringValue: accountLabel }, status: { stringValue: status }, occurredAtMs: { integerValue: String(occurredAtMs) }, deviceUid: { stringValue: deviceUid } } }, updateTransforms: [{ fieldPath: "occurredAt", setToServerValue: "REQUEST_TIME" }], currentDocument: { exists: false } }] }),
+      cache: "no-store",
+    });
+    if (!response.ok) console.error("Bank sync audit write failed", response.status);
+    return response.ok;
+  } catch (error) {
+    console.error("Bank sync audit request failed", error);
+    return false;
   }
 }
 

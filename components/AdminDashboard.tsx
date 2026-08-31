@@ -1,13 +1,13 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { FiArrowLeft, FiClock, FiEdit3, FiPlus, FiRefreshCw, FiSettings, FiTrash2, FiTrendingDown, FiTrendingUp, FiX } from "react-icons/fi";
+import { FiArrowLeft, FiClock, FiEdit3, FiFileText, FiPlus, FiRefreshCw, FiSettings, FiTrash2, FiTrendingDown, FiTrendingUp, FiX } from "react-icons/fi";
 import { getDeviceLogin } from "@/lib/device";
 import { UI_TEXT } from "@/lib/uiText";
 import { CategoryKind, useCategoryConfig } from "@/hooks/useCategoryConfig";
 import { useBankSync } from "@/hooks/useBankSync";
 import { BANK_ACCOUNTS, runManualBankSync } from "@/lib/bankSync";
-import { BankAccountKey } from "@/lib/types";
+import { BankAccountKey, BankSyncAuditRecord } from "@/lib/types";
 import type { ForecastAuditRecord, ForecastSchedule } from "@/lib/types";
 import { useForecast } from "@/hooks/useForecast";
 import { addForecastSchedule, inactivateForecastSchedule } from "@/lib/forecastStore";
@@ -79,6 +79,7 @@ export default function AdminDashboard({
   const [scheduleReason, setScheduleReason] = useState("");
   const [inactiveReason, setInactiveReason] = useState("");
   const [showForecastAudit, setShowForecastAudit] = useState(false);
+  const [showBankSyncReport, setShowBankSyncReport] = useState(false);
   const mockSchedules = forecast.schedules;
 
   if (login?.role !== "owner") return null;
@@ -264,9 +265,9 @@ export default function AdminDashboard({
         </div>
         <div className="mt-3 grid grid-cols-2 gap-1 rounded-xl bg-white/70 p-1 dark:bg-slate-950/40">
           {(["income", "expense"] as const).map((kind) => (
-            <div key={kind} className={`flex overflow-hidden rounded-lg ${scheduleTab === kind ? kind === "income" ? "bg-emerald-600 text-white shadow-sm" : "bg-rose-600 text-white shadow-sm" : "text-slate-600 dark:text-slate-300"}`}>
+            <div key={kind} className={`flex overflow-hidden rounded-lg ${scheduleTab === kind ? "bg-emerald-100 text-emerald-900 shadow-sm dark:bg-emerald-950 dark:text-emerald-100" : "text-slate-600 dark:text-slate-300"}`}>
               <button type="button" onClick={() => setScheduleTab(kind)} className="flex min-w-0 flex-1 items-center justify-center gap-1.5 px-2 py-2 text-xs font-semibold">{kind === "income" ? <FiTrendingUp size={16} aria-hidden="true" /> : <FiTrendingDown size={16} aria-hidden="true" />}{kind === "income" ? UI_TEXT.admin.recurringIncomeTab : UI_TEXT.admin.recurringExpenseTab}</button>
-              <button type="button" onClick={() => openScheduleDialog(kind)} className="flex w-9 shrink-0 items-center justify-center border-l border-current/20 hover:bg-white/15" aria-label={kind === "income" ? UI_TEXT.admin.addRecurringIncome : UI_TEXT.admin.addRecurringExpense} title={kind === "income" ? UI_TEXT.admin.addRecurringIncome : UI_TEXT.admin.addRecurringExpense}><FiPlus size={17} aria-hidden="true" /></button>
+              <button type="button" onClick={() => openScheduleDialog(kind)} className={`flex w-9 shrink-0 items-center justify-center border-l border-current/20 ${scheduleTab === kind ? "bg-emerald-600 text-white hover:bg-emerald-700" : "hover:bg-slate-100 dark:hover:bg-slate-800"}`} aria-label={kind === "income" ? UI_TEXT.admin.addRecurringIncome : UI_TEXT.admin.addRecurringExpense} title={kind === "income" ? UI_TEXT.admin.addRecurringIncome : UI_TEXT.admin.addRecurringExpense}><FiPlus size={17} aria-hidden="true" /></button>
             </div>
           ))}
         </div>
@@ -316,8 +317,7 @@ export default function AdminDashboard({
       </section>
 
       <section className="rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-indigo-50 p-4 shadow-sm dark:border-violet-900 dark:from-violet-950/60 dark:to-indigo-950/60">
-        <h2 className="font-bold">{UI_TEXT.admin.bankSync}</h2>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{UI_TEXT.admin.bankSyncDescription}</p>
+        <div className="flex items-start justify-between gap-3"><div><h2 className="font-bold">{UI_TEXT.admin.bankSync}</h2><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{UI_TEXT.admin.bankSyncDescription}</p></div><button type="button" onClick={() => setShowBankSyncReport(true)} className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-violet-300 bg-white/80 text-violet-800 hover:bg-white dark:border-violet-800 dark:bg-slate-900/70 dark:text-violet-200" aria-label={UI_TEXT.admin.openBankSyncReport} title={UI_TEXT.admin.openBankSyncReport}><FiFileText aria-hidden="true" /></button></div>
         <div className="mt-3 space-y-2">
           {BANK_ACCOUNTS.map((account) => {
             const status = bankSync.statuses[account.key];
@@ -407,8 +407,14 @@ export default function AdminDashboard({
       )}
 
       {showForecastAudit && <ForecastAuditPage records={forecast.audit} onClose={() => setShowForecastAudit(false)} />}
+      {showBankSyncReport && <BankSyncReport records={bankSync.audit} onClose={() => setShowBankSyncReport(false)} />}
     </main>
   );
+}
+
+function BankSyncReport({ records, onClose }: { records: BankSyncAuditRecord[]; onClose: () => void }) {
+  const dateTime = new Intl.DateTimeFormat("en-AU", { dateStyle: "medium", timeStyle: "short" });
+  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-3 backdrop-blur-sm" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section role="dialog" aria-modal="true" aria-labelledby="bank-sync-report-title" className="flex max-h-[88vh] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-900"><header className="flex items-start justify-between gap-3 border-b border-violet-200 bg-violet-50 p-4 dark:border-violet-900 dark:bg-violet-950"><div><h2 id="bank-sync-report-title" className="font-bold">{UI_TEXT.admin.bankSyncReportTitle}</h2><p className="text-xs text-slate-600 dark:text-slate-300">{UI_TEXT.admin.bankSyncReportHelp}</p></div><button type="button" onClick={onClose} className="flex size-9 shrink-0 items-center justify-center rounded-lg hover:bg-violet-100 dark:hover:bg-violet-900" aria-label={UI_TEXT.common.close}><FiX aria-hidden="true" /></button></header><div className="overflow-y-auto p-4"><div className="mb-3 flex items-center justify-between"><p className="text-sm font-semibold">{UI_TEXT.admin.bankSyncAuditAll}</p><span className="rounded-full bg-violet-100 px-2 py-1 text-xs font-bold text-violet-800 dark:bg-violet-950 dark:text-violet-200">{records.length}</span></div>{records.length === 0 ? <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500 dark:bg-slate-800">{UI_TEXT.admin.bankSyncAuditEmpty}</p> : <ol className="space-y-3">{records.map((record) => <li key={record.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"><div className="flex items-start gap-3"><span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${record.status === "success" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300"}`}><FiRefreshCw size={15} aria-hidden="true" /></span><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-2"><p className="font-semibold">{record.accountLabel}</p><span className={`rounded-full px-2 py-0.5 text-xs font-bold ${record.status === "success" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300"}`}>{record.status === "success" ? UI_TEXT.admin.bankSyncSuccess : UI_TEXT.admin.bankSyncFailure}</span></div><p className="mt-1 text-xs text-slate-500">{dateTime.format(new Date(record.occurredAtMs))}</p><p className="mt-1 text-xs text-slate-500">{UI_TEXT.admin.bankSyncDevice(record.deviceUid.slice(-6))}</p></div></div></li>)}</ol>}</div></section></div>;
 }
 
 function ForecastAuditPage({ records: sourceRecords, onClose }: { records: ForecastAuditRecord[]; onClose: () => void }) {

@@ -27,6 +27,7 @@ Publish the repository's updated `firestore.rules` before using sync. The app th
 - `pending_bank_transactions`: awaiting owner Accept/Reject review; new document IDs combine account key and UP transaction ID
 - `processed_bank_transactions`: permanent per-account deduplication decisions
 - `bank_sync/peu` and `bank_sync/shamir`: independent successful-sync checkpoints
+- `bank_sync_audit`: append-only success/failure history for authorized manual sync attempts; history begins after this collection's Rules are published
 
 ## Collections
 

@@ -77,6 +77,15 @@ export interface BankSyncStatus {
   accountKey: BankAccountKey;
 }
 
+export interface BankSyncAuditRecord {
+  id: string;
+  accountKey: BankAccountKey;
+  accountLabel: string;
+  status: "success" | "failed";
+  occurredAtMs: number;
+  deviceUid: string;
+}
+
 export type ForecastDirection = "income" | "expense";
 export type ForecastFrequency = "weekly" | "fortnightly" | "monthly" | "yearly";
 

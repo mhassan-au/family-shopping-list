@@ -14,7 +14,7 @@ import {
 import { auth, db } from "./firebase";
 import { getCurrentUsername } from "./currentUser";
 import { isExpenseAmountUnusual } from "./config";
-import { BankAccountKey, BankSyncStatus, PendingBankTransaction } from "./types";
+import { BankAccountKey, BankSyncAuditRecord, BankSyncStatus, PendingBankTransaction } from "./types";
 import { bankTransactionDocumentId } from "./bankSyncPolicy";
 
 export const BANK_ACCOUNTS: ReadonlyArray<{ key: BankAccountKey; label: string }> = [
@@ -23,6 +23,7 @@ export const BANK_ACCOUNTS: ReadonlyArray<{ key: BankAccountKey; label: string }
 ];
 
 const pendingCollection = collection(db, "pending_bank_transactions");
+const auditCollection = collection(db, "bank_sync_audit");
 const statusRef = (accountKey: BankAccountKey) => doc(db, "bank_sync", accountKey);
 
 export function subscribeToPendingBankTransactions(
@@ -47,6 +48,20 @@ export function subscribeToBankSyncStatus(
   return onSnapshot(
     statusRef(accountKey),
     (snapshot) => onData(snapshot.exists() ? snapshot.data() as BankSyncStatus : null),
+    (error) => onError(error.message),
+  );
+}
+
+export function subscribeToBankSyncAudit(
+  onData: (records: BankSyncAuditRecord[]) => void,
+  onError: (message: string) => void,
+) {
+  return onSnapshot(
+    query(auditCollection, orderBy("occurredAtMs", "desc"), limit(500)),
+    (snapshot) => onData(snapshot.docs.map((item) => ({
+      id: item.id,
+      ...(item.data() as Omit<BankSyncAuditRecord, "id">),
+    }))),
     (error) => onError(error.message),
   );
 }

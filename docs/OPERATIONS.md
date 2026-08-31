@@ -74,6 +74,7 @@ Run `npm run dev` and open `http://localhost:3000`.
 - Restart the local server or redeploy Vercel after changing environment variables.
 - Confirm the current device has `bank_admin_devices/{uid}.approved` set to boolean `true`.
 - Each account records its own checkpoint under `bank_sync`; a 48-hour overlap is queried automatically.
+- Confirm the published Rules include `bank_sync_audit`; successful sync responses are withheld if their audit event cannot be recorded.
 
 ### Duplicate expense warning
 

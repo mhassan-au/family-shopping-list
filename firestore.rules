@@ -213,6 +213,31 @@ service cloud.firestore {
         && request.resource.data.accountKey == accountKey
         && validBankSyncStatus();
     }
+    function validBankSyncAudit() {
+      let data = request.resource.data;
+      return data.keys().hasOnly([
+          'accountKey', 'accountLabel', 'status', 'occurredAt',
+          'occurredAtMs', 'deviceUid'
+        ])
+        && data.keys().hasAll([
+          'accountKey', 'accountLabel', 'status', 'occurredAt',
+          'occurredAtMs', 'deviceUid'
+        ])
+        && data.accountKey in ['peu', 'shamir']
+        && validText(data.accountLabel, 40)
+        && data.status in ['success', 'failed']
+        && data.occurredAt is timestamp
+        && data.occurredAtMs is number
+        && data.occurredAtMs > 0
+        && data.deviceUid == request.auth.uid;
+    }
+    match /bank_sync_audit/{auditId} {
+      allow read: if bankAdminDevice();
+      allow create: if bankAdminDevice()
+        && validBankSyncAudit()
+        && request.resource.data.occurredAt == request.time;
+      allow update, delete: if false;
+    }
     match /bank_admin_devices/{uid} {
       allow get: if signedIn() && request.auth.uid == uid;
       allow list, create, update, delete: if false;
