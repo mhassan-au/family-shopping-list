@@ -12,6 +12,7 @@ import {
     requestDeviceApproval,
 } from "@/lib/deviceApproval";
 import { UI_TEXT } from "@/lib/uiText";
+import DeviceDebugId from "./DeviceDebugId";
 import {
     INPUT_LIMITS,
     isValidFamilyCode,
@@ -145,6 +146,8 @@ export default function FamilyCodeScreen() {
                 <p className="text-center text-sm text-gray-500">
                     {UI_TEXT.login.subtitle}
                 </p>
+
+                <DeviceDebugId />
 
                 {/* Family Code */}
 

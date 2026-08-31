@@ -7,9 +7,10 @@
 3. Unknown UIDs create a `pending_devices` request.
 4. `DeviceApprovalScreen` waits for manual approval.
 5. Approved devices render `HouseholdApp`.
-6. The bottom menu switches between `ShoppingList` and `Expenses` without a page reload.
+6. The bottom menu switches between `ShoppingList`, `Expenses`, and the staged `Forecast` section without a page reload.
 7. The expense banner opens `ExpenseReport`, while the Expenses navigation tab stays active.
-8. The shopping and expense hooks maintain their real-time Firestore listeners.
+8. Owner-only administration opens from the top menu without occupying a primary navigation tab.
+9. The shopping and expense hooks maintain their real-time Firestore listeners.
 
 ## Key files
 
@@ -19,6 +20,10 @@
 | `components/HouseholdApp.tsx` | Bottom navigation and section switching |
 | `components/Expenses.tsx` | Expense form and weekly expense list |
 | `components/ExpenseReport.tsx` | Day/week/month/year insights and category comparisons |
+| `components/Forecast.tsx` | Owner-only monthly cash-flow projection starting in September 2026, opening balance, daily overrides, and one-off entry UI |
+| `hooks/useForecast.ts` | Live Forecast schedules, months, overrides, one-offs, audit, and immutable Expenses aggregation |
+| `lib/forecastStore.ts` | Atomic Forecast writes paired with append-only audit events |
+| `lib/forecast.ts` | Daily projection and recurring occurrence calculations |
 | `hooks/useShoppingList.ts` | Real-time state, optimistic updates, reconnects |
 | `hooks/useExpenses.ts` | Real-time expense state |
 | `lib/shopping.ts` | Firestore shopping-item and price-history operations |
@@ -72,6 +77,6 @@ Shopping duplicate detection checks active items only. A completed item may be a
 
 The completed-items popup has two separate flows. **Clear completed** deletes only shopping items. **Transfer to Expenses & Clear** uses one Firestore batch to create a `Grocery` expense with `source: shopping-transfer` and delete the completed items atomically. The expense list displays this source with an Auto added tag.
 
-UP Bank sync is deliberately manual and separate for Peu and Shamir. The browser sends its Firebase ID token and selected account key to a server-only route; the route verifies the token and confirms that the matching `bank_admin_devices/{uid}` document is approved before selecting that account's server-only token. Every UP pagination link is revalidated against the official HTTPS API origin and path before the server follows it. Each account has an independent checkpoint. Later syncs query from 48 hours before that checkpoint so late settlement is not missed, while account-key-plus-transaction-ID deduplication prevents repeat review. Both HELD and SETTLED outgoing AUD purchases enter the pending queue, except descriptions that identify transfers, Afterpay, Zip, BPAY/bill payments, credit-card payments, or payments to another account. All available UP description fields participate in this exclusion. An existing pending item is refreshed when its bank status or amount changes. Accepting atomically creates an immutable expense, records the account and external transaction as processed, and removes it from the queue. Rejecting records the same identity and removes it without creating an expense.
+UP Bank sync is deliberately manual and separate for Peu and Shamir. The browser sends its Firebase ID token and selected account key to a server-only route; the route verifies the token and confirms that the matching `bank_admin_devices/{uid}` document is approved before selecting that account's server-only token. Every UP pagination link is revalidated against the official HTTPS API origin and path before the server follows it. Each account has an independent checkpoint. Later syncs query from 48 hours before that checkpoint so late settlement is not missed, while account-key-plus-transaction-ID deduplication prevents repeat review. Both HELD and SETTLED outgoing AUD purchases enter the pending queue, except descriptions that identify transfers, Afterpay, Zip, BPAY/bill payments, credit-card payments, or payments to another account. All available UP description fields participate in this exclusion. An existing pending item is refreshed when its bank status or amount changes. Accepting atomically creates an immutable expense, records the account and external transaction as processed, and removes it from the queue. Rejecting records the same identity and removes it without creating an expense. Each authorized sync attempt appends a success or failure event to `bank_sync_audit`; Settings shows that permanent history without transaction details.
 
 Whole-number money input remains optimized for cents, but can be ambiguous: `12` may mean `$0.12` or `$12.00`. Shopping completion and new-expense entry show the two-choice confirmation only when the cents-first result is unusual—below $1 or above $1,000. Values from $1 through $1,000 save normally; entering a decimal or using the `>>` action also removes the ambiguity.

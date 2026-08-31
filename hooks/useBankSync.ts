@@ -3,16 +3,18 @@
 import { useEffect, useState } from "react";
 import {
   BANK_ACCOUNTS,
+  subscribeToBankSyncAudit,
   subscribeToBankSyncStatus,
   subscribeToPendingBankTransactions,
 } from "@/lib/bankSync";
-import { BankAccountKey, BankSyncStatus, PendingBankTransaction } from "@/lib/types";
+import { BankAccountKey, BankSyncAuditRecord, BankSyncStatus, PendingBankTransaction } from "@/lib/types";
 
 type BankStatuses = Record<BankAccountKey, BankSyncStatus | null>;
 
 export function useBankSync(enabled: boolean) {
   const [pending, setPending] = useState<PendingBankTransaction[]>([]);
   const [statuses, setStatuses] = useState<BankStatuses>({ peu: null, shamir: null });
+  const [audit, setAudit] = useState<BankSyncAuditRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,9 +24,10 @@ export function useBankSync(enabled: boolean) {
     }
 
     let pendingReady = false;
+    let auditReady = false;
     const readyAccounts = new Set<BankAccountKey>();
     const markReady = () => {
-      if (pendingReady && readyAccounts.size === BANK_ACCOUNTS.length) setLoading(false);
+      if (pendingReady && auditReady && readyAccounts.size === BANK_ACCOUNTS.length) setLoading(false);
     };
     const handleError = (message: string) => {
       setError(message);
@@ -34,6 +37,14 @@ export function useBankSync(enabled: boolean) {
       (transactions) => {
         pendingReady = true;
         setPending(transactions);
+        markReady();
+      },
+      handleError,
+    );
+    const unsubscribeAudit = subscribeToBankSyncAudit(
+      (records) => {
+        auditReady = true;
+        setAudit(records);
         markReady();
       },
       handleError,
@@ -52,11 +63,12 @@ export function useBankSync(enabled: boolean) {
 
     return () => {
       unsubscribePending();
+      unsubscribeAudit();
       unsubscribeStatuses.forEach((unsubscribe) => unsubscribe());
     };
   }, [enabled]);
 
   return enabled
-    ? { pending, statuses, loading, error }
-    : { pending: [], statuses: { peu: null, shamir: null }, loading: false, error: null };
+    ? { pending, statuses, audit, loading, error }
+    : { pending: [], statuses: { peu: null, shamir: null }, audit: [], loading: false, error: null };
 }

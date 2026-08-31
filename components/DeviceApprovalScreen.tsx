@@ -4,6 +4,7 @@ import { useState } from "react";
 import { clearDeviceLogin, getDeviceLogin } from "@/lib/device";
 import { isDeviceApproved } from "@/lib/deviceApproval";
 import { UI_TEXT } from "@/lib/uiText";
+import DeviceDebugId from "./DeviceDebugId";
 
 interface Props {
   onApproved: () => void;
@@ -44,6 +45,7 @@ export default function DeviceApprovalScreen({ onApproved }: Props) {
         <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
           {UI_TEXT.approval.description}
         </p>
+        <DeviceDebugId />
         {message && (
           <p className="mt-3 text-sm text-amber-700 dark:text-amber-300">
             {message}

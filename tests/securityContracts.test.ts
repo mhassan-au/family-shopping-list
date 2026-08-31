@@ -34,6 +34,16 @@ test("bank collections require bank-admin devices", () => {
   assert.match(ruleBlock("pending_bank_transactions/{transactionId}"), /bankAdminDevice\(\)/);
   assert.match(ruleBlock("processed_bank_transactions/{transactionId}"), /bankAdminDevice\(\)/);
   assert.match(ruleBlock("bank_sync/{accountKey}"), /bankAdminDevice\(\)/);
+  assert.match(ruleBlock("bank_sync_audit/{auditId}"), /bankAdminDevice\(\)/);
+  assert.match(ruleBlock("bank_sync_audit/{auditId}"), /allow update, delete: if false/);
+  assert.match(ruleBlock("bank_sync_audit/{auditId}"), /request\.resource\.data\.occurredAt == request\.time/);
+});
+
+test("forecast collections are owner-only and historical ledgers are append-only", () => {
+  for (const collection of ["forecast_schedules/{scheduleId}", "forecast_one_offs/{entryId}", "forecast_months/{monthId}", "forecast_overrides/{overrideId}", "forecast_audit/{auditId}"]) assert.match(ruleBlock(collection), /bankAdminDevice\(\)/);
+  assert.match(ruleBlock("forecast_one_offs/{entryId}"), /allow update, delete: if false/);
+  assert.match(ruleBlock("forecast_audit/{auditId}"), /allow update, delete: if false/);
+  assert.match(ruleBlock("forecast_schedules/{scheduleId}"), /resource\.data\.active == true && request\.resource\.data\.active == false/);
 });
 
 test("production responses declare the core browser security headers", () => {
