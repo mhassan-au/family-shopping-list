@@ -126,6 +126,12 @@ Created when the owner first adds or renames a category in the Admin dashboard. 
 
 The Admin settings icon is shown only in the shopping header when the locally saved household role is `owner`. All approved devices can read this shared configuration, but Rules require the device UID to have an approved `bank_admin_devices/{uid}` document before it can create or update the configuration. Configuration deletion remains denied.
 
+### Forecast collections
+
+Forecast data is owner-only and uses the same manually controlled `bank_admin_devices/{uid}` boundary as bank administration. `forecast_schedules` stores recurring income and expenses; records may only transition from active to inactive and cannot be deleted. `forecast_one_offs` stores append-only unusual income and unexpected expenses. `forecast_months/{YYYY-MM}` stores the manually adjustable opening balance. `forecast_overrides/{YYYY-MM-DD}` stores a forecast-only daily Expenses total and inclusion state without changing `expenses`. `forecast_audit` is append-only and records every creation, adjustment, exclusion, and inactivation with its reason, actor, values, and timestamp.
+
+Publish `firestore.rules` before opening Forecast. Every owner device needs both `approved_devices/{uid}` and `bank_admin_devices/{uid}` with boolean `approved: true`.
+
 ## Approving a device
 
 1. User enters home code, username, and password.

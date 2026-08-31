@@ -76,3 +76,57 @@ export interface BankSyncStatus {
   updatedBy: string;
   accountKey: BankAccountKey;
 }
+
+export type ForecastDirection = "income" | "expense";
+export type ForecastFrequency = "weekly" | "fortnightly" | "monthly" | "yearly";
+
+export interface ForecastSchedule {
+  id: string;
+  kind: ForecastDirection;
+  name: string;
+  amount: number;
+  frequency: ForecastFrequency;
+  firstDate: string;
+  active: boolean;
+  createdAtMs: number;
+  createdBy: string;
+  inactiveAt?: string;
+  inactiveReason?: string;
+}
+
+export interface ForecastOneOff {
+  id: string;
+  kind: ForecastDirection;
+  description: string;
+  amount: number;
+  dateKey: string;
+  createdAtMs: number;
+  createdBy: string;
+}
+
+export interface ForecastMonth {
+  id: string;
+  openingBalance: number;
+  updatedAtMs: number;
+  updatedBy: string;
+}
+
+export interface ForecastOverride {
+  id: string;
+  dateKey: string;
+  amount: number;
+  excluded: boolean;
+  updatedAtMs: number;
+  updatedBy: string;
+}
+
+export interface ForecastAuditRecord {
+  id: string;
+  action: "opening_balance_changed" | "daily_expense_adjusted" | "daily_expense_excluded" | "schedule_created" | "schedule_inactivated" | "one_off_created";
+  subject: string;
+  oldValue: string;
+  newValue: string;
+  reason: string;
+  createdAtMs: number;
+  createdBy: string;
+}

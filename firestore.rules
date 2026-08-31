@@ -253,6 +253,89 @@ service cloud.firestore {
       allow create, update: if bankAdminDevice() && validCategoryConfig();
       allow delete: if false;
     }
+    function validDateKey(value) {
+      return value is string && value.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+    function validForecastAmount(value) {
+      return value is number && value >= 0 && value <= 9999999.99;
+    }
+    function validForecastSchedule() {
+      let data = request.resource.data;
+      return data.keys().hasOnly(['kind', 'name', 'amount', 'frequency', 'firstDate', 'active', 'createdAt', 'createdAtMs', 'createdBy', 'inactiveAt', 'inactiveReason'])
+        && data.keys().hasAll(['kind', 'name', 'amount', 'frequency', 'firstDate', 'active', 'createdAt', 'createdAtMs', 'createdBy'])
+        && data.kind in ['income', 'expense']
+        && validText(data.name, 80)
+        && validForecastAmount(data.amount) && data.amount > 0
+        && data.frequency in ['weekly', 'fortnightly', 'monthly', 'yearly']
+        && validDateKey(data.firstDate)
+        && data.active is bool
+        && data.createdAt is timestamp && data.createdAtMs is number
+        && validText(data.createdBy, 40)
+        && (data.active
+          ? !('inactiveAt' in data) && !('inactiveReason' in data)
+          : validDateKey(data.inactiveAt) && validText(data.inactiveReason, 160));
+    }
+    match /forecast_schedules/{scheduleId} {
+      allow read: if bankAdminDevice();
+      allow create: if bankAdminDevice() && validForecastSchedule() && request.resource.data.active == true && request.resource.data.createdAt == request.time;
+      allow update: if bankAdminDevice()
+        && resource.data.active == true && request.resource.data.active == false
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active', 'inactiveAt', 'inactiveReason'])
+        && validForecastSchedule();
+      allow delete: if false;
+    }
+    function validForecastOneOff() {
+      let data = request.resource.data;
+      return data.keys().hasOnly(['kind', 'description', 'amount', 'dateKey', 'createdAt', 'createdAtMs', 'createdBy'])
+        && data.keys().hasAll(['kind', 'description', 'amount', 'dateKey', 'createdAt', 'createdAtMs', 'createdBy'])
+        && data.kind in ['income', 'expense'] && validText(data.description, 80)
+        && validForecastAmount(data.amount) && data.amount > 0 && validDateKey(data.dateKey)
+        && data.createdAt is timestamp && data.createdAtMs is number && validText(data.createdBy, 40);
+    }
+    match /forecast_one_offs/{entryId} {
+      allow read: if bankAdminDevice();
+      allow create: if bankAdminDevice() && validForecastOneOff() && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+    function validForecastMonth(monthId) {
+      let data = request.resource.data;
+      return monthId.matches('^[0-9]{4}-[0-9]{2}$')
+        && data.keys().hasOnly(['openingBalance', 'updatedAt', 'updatedAtMs', 'updatedBy'])
+        && data.keys().hasAll(['openingBalance', 'updatedAt', 'updatedAtMs', 'updatedBy'])
+        && data.openingBalance is number && data.openingBalance >= -9999999.99 && data.openingBalance <= 9999999.99
+        && data.updatedAt is timestamp && data.updatedAtMs is number && validText(data.updatedBy, 40);
+    }
+    match /forecast_months/{monthId} {
+      allow read: if bankAdminDevice();
+      allow create, update: if bankAdminDevice() && validForecastMonth(monthId) && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+    function validForecastOverride(overrideId) {
+      let data = request.resource.data;
+      return overrideId == data.dateKey && validDateKey(data.dateKey)
+        && data.keys().hasOnly(['dateKey', 'amount', 'excluded', 'updatedAt', 'updatedAtMs', 'updatedBy'])
+        && data.keys().hasAll(['dateKey', 'amount', 'excluded', 'updatedAt', 'updatedAtMs', 'updatedBy'])
+        && validForecastAmount(data.amount) && data.excluded is bool
+        && data.updatedAt is timestamp && data.updatedAtMs is number && validText(data.updatedBy, 40);
+    }
+    match /forecast_overrides/{overrideId} {
+      allow read: if bankAdminDevice();
+      allow create, update: if bankAdminDevice() && validForecastOverride(overrideId) && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+    function validForecastAudit() {
+      let data = request.resource.data;
+      return data.keys().hasOnly(['action', 'subject', 'oldValue', 'newValue', 'reason', 'createdAt', 'createdAtMs', 'createdBy'])
+        && data.keys().hasAll(['action', 'subject', 'oldValue', 'newValue', 'reason', 'createdAt', 'createdAtMs', 'createdBy'])
+        && data.action in ['opening_balance_changed', 'daily_expense_adjusted', 'daily_expense_excluded', 'schedule_created', 'schedule_inactivated', 'one_off_created']
+        && validText(data.subject, 120) && validOptionalText(data.oldValue, 120) && validOptionalText(data.newValue, 120)
+        && validText(data.reason, 160) && data.createdAt is timestamp && data.createdAtMs is number && validText(data.createdBy, 40);
+    }
+    match /forecast_audit/{auditId} {
+      allow read: if bankAdminDevice();
+      allow create: if bankAdminDevice() && validForecastAudit() && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
     // Login needs to read the selected household user after anonymous auth.
     // User profiles cannot be changed from the app.
     match /families/{familyId}/users/{userId} {

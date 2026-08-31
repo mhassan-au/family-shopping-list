@@ -26,6 +26,7 @@ export default function HouseholdApp() {
   const [section, setSection] = useState<AppSection>("shopping");
   const [adminReturnSection, setAdminReturnSection] = useState<Exclude<AppSection, "admin">>("shopping");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
   const isOwner = useSyncExternalStore(subscribeToLogin, getOwnerSnapshot, () => false);
   const device = getDeviceLogin();
 
@@ -39,7 +40,11 @@ export default function HouseholdApp() {
   }, [menuOpen]);
 
   function handleLogout() {
-    if (!window.confirm(UI_TEXT.logout.confirm)) return;
+    setMenuOpen(false);
+    setLogoutOpen(true);
+  }
+
+  function confirmLogout() {
     clearDeviceLogin();
     window.location.reload();
   }
@@ -116,6 +121,8 @@ export default function HouseholdApp() {
           </div>
         </>
       )}
+
+      {logoutOpen && <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm" onMouseDown={(event) => { if (event.target === event.currentTarget) setLogoutOpen(false); }}><section role="dialog" aria-modal="true" aria-labelledby="logout-title" className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl dark:bg-slate-900"><div className="flex items-start justify-between gap-3"><div><h2 id="logout-title" className="text-lg font-bold">{UI_TEXT.logout.title}</h2><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{UI_TEXT.logout.confirm}</p></div><button type="button" onClick={() => setLogoutOpen(false)} className="flex size-9 shrink-0 items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" aria-label={UI_TEXT.common.close}><FiX aria-hidden="true" /></button></div><div className="mt-5 grid grid-cols-2 gap-2"><button type="button" onClick={() => setLogoutOpen(false)} className="rounded-lg border border-slate-300 px-4 py-2 font-semibold dark:border-slate-700">{UI_TEXT.common.cancel}</button><button type="button" onClick={confirmLogout} className="rounded-lg bg-rose-600 px-4 py-2 font-semibold text-white hover:bg-rose-700"><FiLogOut className="mr-2 inline" aria-hidden="true" />{UI_TEXT.logout.confirmAction}</button></div></section></div>}
 
       {section !== "admin" && <nav
         className="fixed inset-x-0 bottom-0 z-40 border-t border-blue-200 bg-white/95 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-4px_18px_rgba(15,23,42,0.08)] backdrop-blur dark:border-blue-900 dark:bg-slate-950/95"

@@ -8,20 +8,15 @@ import { CategoryKind, useCategoryConfig } from "@/hooks/useCategoryConfig";
 import { useBankSync } from "@/hooks/useBankSync";
 import { BANK_ACCOUNTS, runManualBankSync } from "@/lib/bankSync";
 import { BankAccountKey } from "@/lib/types";
+import type { ForecastAuditRecord, ForecastSchedule } from "@/lib/types";
+import { useForecast } from "@/hooks/useForecast";
+import { addForecastSchedule, inactivateForecastSchedule } from "@/lib/forecastStore";
+import DeviceDebugId from "./DeviceDebugId";
 
 const CATEGORY_PATTERN = /^[\p{L}\p{N}][\p{L}\p{N} &'/.&()-]{0,39}$/u;
+const recurringDate = new Intl.DateTimeFormat("en-AU", { day: "2-digit", month: "2-digit", year: "2-digit" });
 
-type MockSchedule = {
-  id: number;
-  kind: "income" | "expense";
-  name: string;
-  amount: number;
-  frequency: "weekly" | "fortnightly" | "monthly" | "yearly";
-  firstDate: string;
-  active: boolean;
-  inactiveAt?: string;
-  inactiveReason?: string;
-};
+type MockSchedule = ForecastSchedule;
 
 const TAB_THEMES: Record<CategoryKind, {
   active: string;
@@ -59,6 +54,7 @@ export default function AdminDashboard({
   const login = getDeviceLogin();
   const config = useCategoryConfig();
   const bankSync = useBankSync(login?.role === "owner");
+  const forecast = useForecast();
   const [activeTab, setActiveTab] = useState<CategoryKind>("shops");
   const [dialog, setDialog] = useState<{
     mode: "add" | "edit";
@@ -74,19 +70,16 @@ export default function AdminDashboard({
   } | null>(null);
   const [syncingBank, setSyncingBank] = useState<BankAccountKey | null>(null);
   const [scheduleDialog, setScheduleDialog] = useState<MockSchedule["kind"] | null>(null);
-  const [historyScheduleId, setHistoryScheduleId] = useState<number | null>(null);
+  const [historyScheduleId, setHistoryScheduleId] = useState<string | null>(null);
   const [scheduleTab, setScheduleTab] = useState<MockSchedule["kind"]>("income");
   const [scheduleName, setScheduleName] = useState("");
   const [scheduleAmount, setScheduleAmount] = useState("");
   const [scheduleFrequency, setScheduleFrequency] = useState<MockSchedule["frequency"]>("fortnightly");
   const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleReason, setScheduleReason] = useState("");
   const [inactiveReason, setInactiveReason] = useState("");
   const [showForecastAudit, setShowForecastAudit] = useState(false);
-  const [mockSchedules, setMockSchedules] = useState<MockSchedule[]>([
-    { id: 0, kind: "income", name: "Salary", amount: 2650, frequency: "fortnightly", firstDate: "2026-05-13", active: false, inactiveAt: "2026-09-01", inactiveReason: "Pay amount changed; replaced by a new schedule." },
-    { id: 1, kind: "income", name: "Salary", amount: 2800, frequency: "fortnightly", firstDate: "2026-09-02", active: true },
-    { id: 2, kind: "expense", name: "Mortgage", amount: 2000, frequency: "monthly", firstDate: "2026-09-27", active: true },
-  ]);
+  const mockSchedules = forecast.schedules;
 
   if (login?.role !== "owner") return null;
 
@@ -194,6 +187,7 @@ export default function AdminDashboard({
     setScheduleAmount("");
     setScheduleFrequency(kind === "income" ? "fortnightly" : "monthly");
     setScheduleDate("");
+    setScheduleReason("");
   }
 
   function closeScheduleDialog() {
@@ -204,28 +198,16 @@ export default function AdminDashboard({
     event.preventDefault();
     if (!scheduleDialog) return;
     const amount = Number(scheduleAmount);
-    if (!scheduleName.trim() || !Number.isFinite(amount) || amount <= 0 || !scheduleDate) return;
-    setMockSchedules((current) => [...current, {
-      id: Date.now(),
-      kind: scheduleDialog,
-      name: scheduleName.trim(),
-      amount,
-      frequency: scheduleFrequency,
-      firstDate: scheduleDate,
-      active: true,
-    }]);
-    closeScheduleDialog();
+    const firstDate = scheduleDate;
+    if (!scheduleName.trim() || !Number.isFinite(amount) || amount <= 0 || !firstDate || !scheduleReason.trim()) return;
+    void addForecastSchedule({ kind: scheduleDialog, name: scheduleName, amount, frequency: scheduleFrequency, firstDate, reason: scheduleReason }).then(closeScheduleDialog);
   }
 
-  function makeMockScheduleInactive(id: number) {
+  function makeMockScheduleInactive(id: string) {
     if (!inactiveReason.trim()) return;
-    setMockSchedules((current) => current.map((schedule) =>
-      schedule.id === id
-        ? { ...schedule, active: false, inactiveAt: new Date().toISOString().slice(0, 10), inactiveReason: inactiveReason.trim() }
-        : schedule,
-    ));
-    setInactiveReason("");
-    setHistoryScheduleId(null);
+    const schedule = mockSchedules.find((item) => item.id === id);
+    if (!schedule) return;
+    void inactivateForecastSchedule(schedule, inactiveReason).then(() => { setInactiveReason(""); setHistoryScheduleId(null); });
   }
 
   const historySchedule = historyScheduleId === null
@@ -252,6 +234,7 @@ export default function AdminDashboard({
         </div>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{UI_TEXT.admin.subtitle}</p>
       </header>
+      <DeviceDebugId />
 
       {message && (
         message.openTransactions ? (
@@ -292,7 +275,7 @@ export default function AdminDashboard({
           {mockSchedules.filter((schedule) => schedule.kind === scheduleTab).map((schedule) => (
             <div key={schedule.id} className={`rounded-xl border border-white/80 bg-white/80 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900/70 ${schedule.active ? "" : "opacity-55 grayscale"}`}>
               <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0"><div className="flex items-center gap-2"><p className="truncate font-semibold">{schedule.name}</p><span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${schedule.active ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}>{schedule.active ? UI_TEXT.admin.active : UI_TEXT.admin.inactive}</span></div><p className="text-xs capitalize text-slate-500 dark:text-slate-400">{schedule.frequency} · {UI_TEXT.admin.starts(new Intl.DateTimeFormat("en-AU", { dateStyle: "medium" }).format(new Date(`${schedule.firstDate}T00:00:00`)))}</p></div>
+                <div className="min-w-0"><div className="flex items-center gap-2"><p className="truncate font-semibold">{schedule.name}</p><span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${schedule.active ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}>{schedule.active ? UI_TEXT.admin.active : UI_TEXT.admin.inactive}</span></div><p className="text-xs capitalize text-slate-500 dark:text-slate-400">{schedule.frequency} · {UI_TEXT.admin.starts(recurringDate.format(new Date(`${schedule.firstDate}T00:00:00`)))}</p></div>
                 <div className="flex shrink-0 items-center gap-2"><p className={`font-bold ${schedule.kind === "income" ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"}`}>{schedule.kind === "income" ? "+" : "−"}{new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" }).format(schedule.amount)}</p><button type="button" onClick={() => setHistoryScheduleId(schedule.id)} className="flex size-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800" aria-label={UI_TEXT.admin.manageSchedule(schedule.name)} title={UI_TEXT.admin.manageSchedule(schedule.name)}><FiEdit3 size={15} aria-hidden="true" /></button></div>
               </div>
             </div>
@@ -394,7 +377,8 @@ export default function AdminDashboard({
               <label className="block text-sm font-semibold">{UI_TEXT.admin.scheduleName}<input value={scheduleName} onChange={(event) => setScheduleName(event.target.value)} className="input mt-1 w-full px-3 py-2" placeholder={scheduleDialog === "income" ? UI_TEXT.admin.incomePlaceholder : UI_TEXT.admin.expensePlaceholder} maxLength={40} required autoFocus /></label>
               <label className="block text-sm font-semibold">{UI_TEXT.admin.scheduleAmount}<input value={scheduleAmount} onChange={(event) => setScheduleAmount(event.target.value)} className="input mt-1 w-full px-3 py-2" type="number" min="0.01" step="0.01" inputMode="decimal" placeholder="0.00" required /></label>
               <label className="block text-sm font-semibold">{UI_TEXT.admin.frequency}<select value={scheduleFrequency} onChange={(event) => setScheduleFrequency(event.target.value as MockSchedule["frequency"])} className="input mt-1 w-full px-3 py-2"><option value="weekly">{UI_TEXT.admin.weekly}</option><option value="fortnightly">{UI_TEXT.admin.fortnightly}</option><option value="monthly">{UI_TEXT.admin.monthly}</option><option value="yearly">{UI_TEXT.admin.yearly}</option></select></label>
-              <label className="block text-sm font-semibold">{UI_TEXT.admin.firstDate}<input value={scheduleDate} onChange={(event) => setScheduleDate(event.target.value)} className="input mt-1 w-full px-3 py-2" type="date" required /></label>
+              <label className="block text-sm font-semibold">{UI_TEXT.admin.firstDate}<input value={scheduleDate} onChange={(event) => setScheduleDate(event.target.value)} className="input mt-1 w-full px-3 py-2" type="date" lang="en-AU" required /></label>
+              <label className="block text-sm font-semibold">{UI_TEXT.forecast.changeReason}<textarea value={scheduleReason} onChange={(event) => setScheduleReason(event.target.value)} className="input mt-1 w-full resize-none px-3 py-2" rows={2} maxLength={160} required /></label>
             </div>
             <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">{UI_TEXT.admin.previewNotSaved}</p>
             <div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={closeScheduleDialog} className="rounded-lg border border-slate-300 px-3 py-2 font-semibold dark:border-slate-700">{UI_TEXT.common.cancel}</button><button type="submit" className={`rounded-lg px-3 py-2 font-semibold text-white ${scheduleDialog === "income" ? "bg-emerald-600" : "bg-rose-600"}`}>{UI_TEXT.common.add}</button></div>
@@ -410,7 +394,7 @@ export default function AdminDashboard({
               {scheduleHistory.map((record) => (
                 <div key={record.id} className={`rounded-xl border p-3 ${record.id === historySchedule.id ? "border-violet-300 bg-violet-50 dark:border-violet-800 dark:bg-violet-950/50" : "border-slate-200 dark:border-slate-700"}`}>
                   <div className="flex items-center justify-between gap-3"><p className="font-bold">{new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" }).format(record.amount)}</p><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${record.active ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}>{record.active ? UI_TEXT.admin.active : UI_TEXT.admin.inactive}</span></div>
-                  <p className="mt-1 text-xs capitalize text-slate-500 dark:text-slate-400">{record.frequency} · {UI_TEXT.admin.starts(new Intl.DateTimeFormat("en-AU", { dateStyle: "medium" }).format(new Date(`${record.firstDate}T00:00:00`)))}</p>
+                  <p className="mt-1 text-xs capitalize text-slate-500 dark:text-slate-400">{record.frequency} · {UI_TEXT.admin.starts(recurringDate.format(new Date(`${record.firstDate}T00:00:00`)))}</p>
                   {record.inactiveAt && <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{UI_TEXT.admin.inactiveSince(new Intl.DateTimeFormat("en-AU", { dateStyle: "medium" }).format(new Date(`${record.inactiveAt}T00:00:00`)))}</p>}
                   {record.inactiveReason && <p className="mt-1 rounded-md bg-slate-100 px-2 py-1 text-xs dark:bg-slate-800">{UI_TEXT.admin.auditReason(record.inactiveReason)}</p>}
                 </div>
@@ -422,18 +406,13 @@ export default function AdminDashboard({
         </div>
       )}
 
-      {showForecastAudit && <ForecastAuditPage schedules={mockSchedules} onClose={() => setShowForecastAudit(false)} />}
+      {showForecastAudit && <ForecastAuditPage records={forecast.audit} onClose={() => setShowForecastAudit(false)} />}
     </main>
   );
 }
 
-function ForecastAuditPage({ schedules, onClose }: { schedules: MockSchedule[]; onClose: () => void }) {
-  const scheduleRecords = schedules.filter((schedule) => schedule.inactiveAt && schedule.inactiveReason).map((schedule) => ({ id: `schedule-${schedule.id}`, title: UI_TEXT.admin.auditScheduleInactive, subject: `${schedule.name} · ${new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" }).format(schedule.amount)}`, date: new Intl.DateTimeFormat("en-AU", { dateStyle: "medium" }).format(new Date(`${schedule.inactiveAt}T00:00:00`)), reason: schedule.inactiveReason ?? "" }));
-  const records = [
-    { id: "opening", title: UI_TEXT.admin.auditOpeningBalance, subject: "$1,800.00 → $1,650.00", date: "31 Aug 2026, 8:42 pm", reason: "Matched the current bank account balance." },
-    { id: "expense", title: UI_TEXT.admin.auditDailyExpense, subject: "$186.40 → $126.40 · 8 Sep", date: "31 Aug 2026, 8:35 pm", reason: "Removed expenses paid from my wife's income." },
-    { id: "excluded", title: UI_TEXT.admin.auditExcluded, subject: "Expenses section total · 18 Aug", date: "31 Aug 2026, 8:31 pm", reason: "Paid from my wife's account." },
-    ...scheduleRecords,
-  ];
+function ForecastAuditPage({ records: sourceRecords, onClose }: { records: ForecastAuditRecord[]; onClose: () => void }) {
+  const titles: Record<ForecastAuditRecord["action"], string> = { opening_balance_changed: UI_TEXT.admin.auditOpeningBalance, daily_expense_adjusted: UI_TEXT.admin.auditDailyExpense, daily_expense_excluded: UI_TEXT.admin.auditExcluded, schedule_created: UI_TEXT.admin.auditScheduleCreated, schedule_inactivated: UI_TEXT.admin.auditScheduleInactive, one_off_created: UI_TEXT.admin.auditOneOffCreated };
+  const records = sourceRecords.map((record) => ({ id: record.id, title: titles[record.action], subject: `${record.subject} · ${record.oldValue} → ${record.newValue}`, date: new Date(record.createdAtMs).toLocaleString("en-AU"), reason: record.reason }));
   return <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-3 backdrop-blur-sm" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section role="dialog" aria-modal="true" aria-labelledby="forecast-audit-title" className="flex max-h-[88vh] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-900"><header className="flex items-start justify-between gap-3 border-b border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950"><div><h2 id="forecast-audit-title" className="font-bold">{UI_TEXT.admin.forecastAuditTitle}</h2><p className="text-xs text-slate-600 dark:text-slate-300">{UI_TEXT.admin.forecastAuditHelp}</p></div><button type="button" onClick={onClose} className="flex size-9 shrink-0 items-center justify-center rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900" aria-label={UI_TEXT.common.close}><FiX aria-hidden="true" /></button></header><div className="overflow-y-auto p-4"><div className="mb-3 flex items-center justify-between"><p className="text-sm font-semibold">{UI_TEXT.admin.auditAll}</p><span className="rounded-full bg-slate-200 px-2 py-1 text-xs font-bold dark:bg-slate-800">{records.length}</span></div>{records.length === 0 ? <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500 dark:bg-slate-800">{UI_TEXT.admin.auditEmpty}</p> : <ol className="space-y-3">{records.map((record) => <li key={record.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"><div className="flex items-start gap-3"><span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"><FiClock size={15} aria-hidden="true" /></span><div className="min-w-0"><p className="font-semibold">{record.title}</p><p className="mt-0.5 text-sm text-slate-700 dark:text-slate-200">{record.subject}</p><p className="mt-2 text-xs text-slate-500">{UI_TEXT.admin.auditByOwner} · {record.date}</p><p className="mt-1 rounded-lg bg-slate-50 px-2 py-1.5 text-xs dark:bg-slate-800">{UI_TEXT.admin.auditReason(record.reason)}</p></div></div></li>)}</ol>}</div></section></div>;
 }
