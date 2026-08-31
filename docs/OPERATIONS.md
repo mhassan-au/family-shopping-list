@@ -15,6 +15,8 @@ The build script runs the tests before invoking Next.js, which makes the normal 
 
 Security reviews should also run `npm audit` without automatically applying dependency changes. Firestore Rules publication remains a separate Firebase Console action and is not performed by Vercel.
 
+After publishing Rules that introduce the Personal Loan Ledger, verify one owner-only loan and partial repayment, then confirm a contributor device cannot open the page or access `personal_loans` and `personal_loan_repayments` directly.
+
 ## Device lifecycle
 
 ### Add

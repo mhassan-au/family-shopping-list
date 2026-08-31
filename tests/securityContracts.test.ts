@@ -47,6 +47,15 @@ test("forecast collections are owner-only and historical ledgers are append-only
   assert.match(rules, /data\.frequency in \['weekly', 'fortnightly', 'monthly', 'quarterly', 'yearly'\]/);
 });
 
+test("personal loan and repayment ledgers are owner-only and append-only", () => {
+  for (const collection of ["personal_loans/{loanId}", "personal_loan_repayments/{repaymentId}"]) {
+    assert.match(ruleBlock(collection), /allow read: if bankAdminDevice\(\)/);
+    assert.match(ruleBlock(collection), /allow create: if bankAdminDevice\(\)/);
+    assert.match(ruleBlock(collection), /allow update, delete: if false/);
+  }
+  assert.match(rules, /exists\(\/databases\/\$\(database\)\/documents\/personal_loans\/\$\(data\.loanId\)\)/);
+});
+
 test("production responses declare the core browser security headers", () => {
   for (const header of [
     "Content-Security-Policy",

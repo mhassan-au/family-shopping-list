@@ -1,17 +1,18 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { FiDollarSign, FiLogOut, FiMenu, FiSettings, FiShoppingCart, FiTrendingUp, FiX } from "react-icons/fi";
+import { FiCreditCard, FiDollarSign, FiLogOut, FiMenu, FiSettings, FiShoppingCart, FiTrendingUp, FiX } from "react-icons/fi";
 import ShoppingList from "./ShoppingList";
 import Expenses from "./Expenses";
 import ExpenseReport from "./ExpenseReport";
 import AdminDashboard from "./AdminDashboard";
 import Forecast from "./Forecast";
+import PersonalLoans from "./PersonalLoans";
 import { UI_TEXT } from "@/lib/uiText";
 import { clearDeviceLogin, getDeviceLogin } from "@/lib/device";
 import { CategoryConfigProvider } from "@/hooks/useCategoryConfig";
 
-type AppSection = "shopping" | "expenses" | "expense-report" | "forecast" | "admin";
+type AppSection = "shopping" | "expenses" | "expense-report" | "forecast" | "admin" | "loans";
 
 function subscribeToLogin(callback: () => void) {
   window.addEventListener("storage", callback);
@@ -25,6 +26,7 @@ function getOwnerSnapshot() {
 export default function HouseholdApp() {
   const [section, setSection] = useState<AppSection>("shopping");
   const [adminReturnSection, setAdminReturnSection] = useState<Exclude<AppSection, "admin">>("shopping");
+  const [loanReturnSection, setLoanReturnSection] = useState<Exclude<AppSection, "admin" | "loans">>("shopping");
   const [menuOpen, setMenuOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const isOwner = useSyncExternalStore(subscribeToLogin, getOwnerSnapshot, () => false);
@@ -54,6 +56,11 @@ export default function HouseholdApp() {
     setSection("admin");
   }
 
+  function openLoans() {
+    if (section !== "admin" && section !== "loans") setLoanReturnSection(section);
+    setSection("loans");
+  }
+
   const bannerTheme = section === "expenses" || section === "expense-report"
     ? "border-rose-200 from-rose-100 to-orange-50 dark:border-rose-900 dark:from-rose-950 dark:to-slate-900"
     : section === "forecast"
@@ -78,7 +85,7 @@ export default function HouseholdApp() {
 
   return (
     <CategoryConfigProvider>
-      {section !== "admin" && section !== "expense-report" && <div className="mx-auto w-full max-w-md px-4 pt-4 sm:px-5 sm:pt-5">
+      {section !== "admin" && section !== "expense-report" && section !== "loans" && <div className="mx-auto w-full max-w-md px-4 pt-4 sm:px-5 sm:pt-5">
         <header className={`flex w-full items-center justify-between rounded-xl border bg-gradient-to-r px-3 py-2 shadow-sm ${bannerTheme}`}>
           <h1 className="flex items-center gap-1.5 text-xl font-bold">{bannerTitle}</h1>
           <div className="flex items-center gap-1">
@@ -99,6 +106,7 @@ export default function HouseholdApp() {
           <ExpenseReport onClose={() => setSection("expenses")} />
         )}
         {section === "forecast" && isOwner && <Forecast />}
+        {section === "loans" && isOwner && <PersonalLoans onBack={() => setSection(loanReturnSection)} />}
         {section === "admin" && isOwner && (
           <AdminDashboard
             onBack={() => setSection(adminReturnSection)}
@@ -120,6 +128,7 @@ export default function HouseholdApp() {
                 <button type="button" onClick={() => setMenuOpen(false)} className="flex size-9 items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" aria-label={UI_TEXT.navigation.closeMenu}><FiX size={20} aria-hidden="true" /></button>
               </div>
               <div className="mt-3 space-y-1 border-t border-slate-100 pt-3 dark:border-slate-800">
+                {isOwner && <button type="button" onClick={() => { setMenuOpen(false); openLoans(); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-semibold text-indigo-800 hover:bg-indigo-50 dark:text-indigo-200 dark:hover:bg-indigo-950"><FiCreditCard size={19} aria-hidden="true" />{UI_TEXT.personalLoans.menu}</button>}
                 {isOwner && <button type="button" onClick={() => { setMenuOpen(false); openAdmin(); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-semibold text-violet-800 hover:bg-violet-50 dark:text-violet-200 dark:hover:bg-violet-950"><FiSettings size={19} aria-hidden="true" />{UI_TEXT.navigation.settings}</button>}
                 <button type="button" onClick={handleLogout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-semibold text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950"><FiLogOut size={19} aria-hidden="true" />{UI_TEXT.logout.label}</button>
               </div>
@@ -130,7 +139,7 @@ export default function HouseholdApp() {
 
       {logoutOpen && <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm" onMouseDown={(event) => { if (event.target === event.currentTarget) setLogoutOpen(false); }}><section role="dialog" aria-modal="true" aria-labelledby="logout-title" className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl dark:bg-slate-900"><div className="flex items-start justify-between gap-3"><div><h2 id="logout-title" className="text-lg font-bold">{UI_TEXT.logout.title}</h2><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{UI_TEXT.logout.confirm}</p></div><button type="button" onClick={() => setLogoutOpen(false)} className="flex size-9 shrink-0 items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" aria-label={UI_TEXT.common.close}><FiX aria-hidden="true" /></button></div><div className="mt-5 grid grid-cols-2 gap-2"><button type="button" onClick={() => setLogoutOpen(false)} className="rounded-lg border border-slate-300 px-4 py-2 font-semibold dark:border-slate-700">{UI_TEXT.common.cancel}</button><button type="button" onClick={confirmLogout} className="rounded-lg bg-rose-600 px-4 py-2 font-semibold text-white hover:bg-rose-700"><FiLogOut className="mr-2 inline" aria-hidden="true" />{UI_TEXT.logout.confirmAction}</button></div></section></div>}
 
-      {section !== "admin" && <nav
+      {section !== "admin" && section !== "loans" && <nav
         className="fixed inset-x-0 bottom-0 z-40 border-t border-blue-200 bg-white/95 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-4px_18px_rgba(15,23,42,0.08)] backdrop-blur dark:border-blue-900 dark:bg-slate-950/95"
         aria-label="Main navigation"
       >

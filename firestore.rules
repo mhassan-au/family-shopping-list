@@ -361,6 +361,38 @@ service cloud.firestore {
       allow create: if bankAdminDevice() && validForecastAudit() && request.resource.data.createdAt == request.time;
       allow update, delete: if false;
     }
+    function validPersonalLoan() {
+      let data = request.resource.data;
+      return data.keys().hasOnly(['lender', 'reason', 'originalAmount', 'takenDate', 'createdAt', 'createdAtMs', 'createdBy'])
+        && data.keys().hasAll(['lender', 'reason', 'originalAmount', 'takenDate', 'createdAt', 'createdAtMs', 'createdBy'])
+        && validText(data.lender, 80)
+        && validText(data.reason, 160)
+        && validForecastAmount(data.originalAmount) && data.originalAmount > 0
+        && validDateKey(data.takenDate)
+        && data.createdAt is timestamp && data.createdAtMs is number
+        && validText(data.createdBy, 40);
+    }
+    match /personal_loans/{loanId} {
+      allow read: if bankAdminDevice();
+      allow create: if bankAdminDevice() && validPersonalLoan() && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+    function validPersonalLoanRepayment() {
+      let data = request.resource.data;
+      return data.keys().hasOnly(['loanId', 'amount', 'repaidDate', 'createdAt', 'createdAtMs', 'createdBy'])
+        && data.keys().hasAll(['loanId', 'amount', 'repaidDate', 'createdAt', 'createdAtMs', 'createdBy'])
+        && validText(data.loanId, 120)
+        && exists(/databases/$(database)/documents/personal_loans/$(data.loanId))
+        && validForecastAmount(data.amount) && data.amount > 0
+        && validDateKey(data.repaidDate)
+        && data.createdAt is timestamp && data.createdAtMs is number
+        && validText(data.createdBy, 40);
+    }
+    match /personal_loan_repayments/{repaymentId} {
+      allow read: if bankAdminDevice();
+      allow create: if bankAdminDevice() && validPersonalLoanRepayment() && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
     // Login needs to read the selected household user after anonymous auth.
     // User profiles cannot be changed from the app.
     match /families/{familyId}/users/{userId} {
