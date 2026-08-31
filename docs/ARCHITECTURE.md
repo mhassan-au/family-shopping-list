@@ -8,7 +8,7 @@
 4. `DeviceApprovalScreen` waits for manual approval.
 5. Approved devices render `HouseholdApp`.
 6. The bottom menu switches between `ShoppingList`, `Expenses`, and the staged `Forecast` section without a page reload.
-7. A single shared top banner changes identity by section: MyGrocery for Shopping, MyExpenses for Expenses, and MyCashFlow for Forecast. `ExpenseReport` opens from the shared banner menu while the Expenses navigation tab stays active; secondary Settings and report views hide the shared banner.
+7. A single shared top banner changes identity by section: MyGrocery for Shopping, MyExpenses for Expenses, and MyCashFlow for Forecast. `ExpenseReport` opens from the report icon in the weekly Expenses summary while the Expenses navigation tab stays active; secondary Settings and report views hide the shared banner.
 8. Owner-only administration opens from the top menu without occupying a primary navigation tab.
 9. The shopping and expense hooks maintain their real-time Firestore listeners.
 

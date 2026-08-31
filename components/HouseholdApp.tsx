@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { FiBarChart2, FiDollarSign, FiLogOut, FiMenu, FiSettings, FiShoppingCart, FiTrendingUp, FiX } from "react-icons/fi";
+import { FiDollarSign, FiLogOut, FiMenu, FiSettings, FiShoppingCart, FiTrendingUp, FiX } from "react-icons/fi";
 import ShoppingList from "./ShoppingList";
 import Expenses from "./Expenses";
 import ExpenseReport from "./ExpenseReport";
@@ -93,7 +93,7 @@ export default function HouseholdApp() {
       <div>
         {section === "shopping" && <ShoppingList />}
         {section === "expenses" && (
-          <Expenses />
+          <Expenses onOpenReport={() => setSection("expense-report")} />
         )}
         {section === "expense-report" && (
           <ExpenseReport onClose={() => setSection("expenses")} />
@@ -120,7 +120,6 @@ export default function HouseholdApp() {
                 <button type="button" onClick={() => setMenuOpen(false)} className="flex size-9 items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" aria-label={UI_TEXT.navigation.closeMenu}><FiX size={20} aria-hidden="true" /></button>
               </div>
               <div className="mt-3 space-y-1 border-t border-slate-100 pt-3 dark:border-slate-800">
-                <button type="button" onClick={() => { setMenuOpen(false); setSection("expense-report"); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-semibold text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950"><FiBarChart2 size={19} aria-hidden="true" />{UI_TEXT.expenseReport.title}</button>
                 {isOwner && <button type="button" onClick={() => { setMenuOpen(false); openAdmin(); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-semibold text-violet-800 hover:bg-violet-50 dark:text-violet-200 dark:hover:bg-violet-950"><FiSettings size={19} aria-hidden="true" />{UI_TEXT.navigation.settings}</button>}
                 <button type="button" onClick={handleLogout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-semibold text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950"><FiLogOut size={19} aria-hidden="true" />{UI_TEXT.logout.label}</button>
               </div>

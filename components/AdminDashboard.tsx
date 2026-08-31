@@ -273,7 +273,7 @@ export default function AdminDashboard({
         </div>
         <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{UI_TEXT.admin.scheduleLifecycleHelp}</p>
         <div className="mt-3 space-y-2">
-          {mockSchedules.filter((schedule) => schedule.kind === scheduleTab).map((schedule) => (
+          {mockSchedules.filter((schedule) => schedule.kind === scheduleTab).sort((left, right) => left.name.localeCompare(right.name, "en-AU", { sensitivity: "base" })).map((schedule) => (
             <div key={schedule.id} className={`rounded-xl border border-white/80 bg-white/80 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900/70 ${schedule.active ? "" : "opacity-55 grayscale"}`}>
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0"><div className="flex items-center gap-2"><p className="truncate font-semibold">{schedule.name}</p><span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${schedule.active ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}>{schedule.active ? UI_TEXT.admin.active : UI_TEXT.admin.inactive}</span></div><p className="text-xs capitalize text-slate-500 dark:text-slate-400">{schedule.frequency} · {UI_TEXT.admin.starts(recurringDate.format(new Date(`${schedule.firstDate}T00:00:00`)))}</p></div>

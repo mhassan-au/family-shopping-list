@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FiCheck, FiChevronsRight, FiPlus, FiSliders, FiX } from "react-icons/fi";
+import { FiBarChart2, FiCheck, FiChevronsRight, FiPlus, FiSliders, FiX } from "react-icons/fi";
 import {
   EXPENSE_AUTO_TRANSFER_STYLE,
   EXPENSE_UNUSUAL_STYLE,
@@ -100,7 +100,7 @@ function formatWeekRange(weekStart: Date) {
     : `${startDay} ${startMonth}–${endDay} ${endMonth}`;
 }
 
-export default function Expenses() {
+export default function Expenses({ onOpenReport }: { onOpenReport: () => void }) {
   const { expenses, loading, error } = useExpenses();
   const isOwner = getDeviceLogin()?.role === "owner";
   const bankSync = useBankSync(isOwner);
@@ -408,6 +408,13 @@ export default function Expenses() {
 
   return (
     <main className="mx-auto w-full max-w-md p-4 pb-24 sm:p-5 sm:pb-24">
+      <div className="mb-4 flex items-center gap-2 rounded-xl border border-rose-200 bg-gradient-to-r from-rose-50 to-pink-50 px-3 py-2 text-sm shadow-sm dark:border-rose-900 dark:from-rose-950 dark:to-pink-950">
+        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto whitespace-nowrap">
+          <span className="font-bold text-rose-800 dark:text-rose-200">{UI_TEXT.expenses.thisWeekBreakdown}:</span>
+          {visibleCurrentWeekStats.map((stat, index) => <span key={stat.name} className="text-slate-700 dark:text-slate-200">{index > 0 && <span className="mr-2 text-rose-300">•</span>}<strong className="text-rose-700 dark:text-rose-300">{stat.percentage}%</strong>{" "}{stat.name}</span>)}
+        </div>
+        <button type="button" onClick={onOpenReport} className="flex size-9 shrink-0 items-center justify-center rounded-lg text-rose-700 hover:bg-rose-100 dark:text-rose-300 dark:hover:bg-rose-900" aria-label={UI_TEXT.expenseReport.title} title={UI_TEXT.expenseReport.title}><FiBarChart2 size={19} aria-hidden="true" /></button>
+      </div>
       <form
           onSubmit={handleSubmit}
           className="mb-5 space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
@@ -601,21 +608,6 @@ export default function Expenses() {
         <p className="py-8 text-center text-slate-500">
           {categoryFilter ? UI_TEXT.expenses.noMatching : UI_TEXT.expenses.empty}
         </p>
-      )}
-
-      {visibleCurrentWeekStats.length > 0 && (
-        <div className="mb-4 flex items-center gap-2 overflow-x-auto whitespace-nowrap rounded-xl border border-rose-200 bg-gradient-to-r from-rose-50 to-pink-50 px-4 py-2.5 text-sm shadow-sm dark:border-rose-900 dark:from-rose-950 dark:to-pink-950">
-          <span className="font-bold text-rose-800 dark:text-rose-200">
-            {UI_TEXT.expenses.thisWeekBreakdown}:
-          </span>
-          {visibleCurrentWeekStats.map((stat, index) => (
-            <span key={stat.name} className="text-slate-700 dark:text-slate-200">
-              {index > 0 && <span className="mr-2 text-rose-300">•</span>}
-              <strong className="text-rose-700 dark:text-rose-300">{stat.percentage}%</strong>{" "}
-              {stat.name}
-            </span>
-          ))}
-        </div>
       )}
 
       <div className="space-y-4">
