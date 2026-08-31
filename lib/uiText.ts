@@ -18,6 +18,7 @@ export const UI_TEXT = {
     shopping: "Shopping",
     expenses: "Expenses",
     forecast: "Forecast",
+    cashFlow: "Cash-Flow",
     admin: "Admin",
     settings: "Settings",
     menu: "Open menu",

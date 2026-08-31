@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FiBarChart2, FiCheck, FiChevronsRight, FiDollarSign, FiPlus, FiSliders, FiX } from "react-icons/fi";
+import { FiCheck, FiChevronsRight, FiPlus, FiSliders, FiX } from "react-icons/fi";
 import {
   EXPENSE_AUTO_TRANSFER_STYLE,
   EXPENSE_UNUSUAL_STYLE,
@@ -100,7 +100,7 @@ function formatWeekRange(weekStart: Date) {
     : `${startDay} ${startMonth}–${endDay} ${endMonth}`;
 }
 
-export default function Expenses({ onOpenReport }: { onOpenReport: () => void }) {
+export default function Expenses() {
   const { expenses, loading, error } = useExpenses();
   const isOwner = getDeviceLogin()?.role === "owner";
   const bankSync = useBankSync(isOwner);
@@ -408,27 +408,6 @@ export default function Expenses({ onOpenReport }: { onOpenReport: () => void })
 
   return (
     <main className="mx-auto w-full max-w-md p-4 pb-24 sm:p-5 sm:pb-24">
-      <header className="mb-4 rounded-xl border border-rose-200 bg-gradient-to-r from-rose-100 via-pink-50 to-orange-50 px-4 py-3 shadow-sm dark:border-rose-900 dark:from-rose-950 dark:via-pink-950 dark:to-slate-900">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <FiDollarSign className="text-rose-700 dark:text-rose-300" size={24} />
-            <h1 className="text-xl font-bold">{UI_TEXT.expenses.title}</h1>
-          </div>
-          <button
-            type="button"
-            onClick={onOpenReport}
-            className="flex size-10 items-center justify-center rounded-xl border border-rose-200 bg-white/70 text-rose-700 shadow-sm transition hover:bg-white active:scale-95 dark:border-rose-800 dark:bg-slate-900/60 dark:text-rose-200"
-            aria-label={UI_TEXT.expenseReport.open}
-            title={UI_TEXT.expenseReport.open}
-          >
-            <FiBarChart2 size={20} aria-hidden="true" />
-          </button>
-        </div>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-          {UI_TEXT.expenses.subtitle}
-        </p>
-      </header>
-
       <form
           onSubmit={handleSubmit}
           className="mb-5 space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"

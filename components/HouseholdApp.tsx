@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { FiDollarSign, FiLogOut, FiMenu, FiSettings, FiShoppingCart, FiTrendingUp, FiX } from "react-icons/fi";
+import { FiBarChart2, FiDollarSign, FiLogOut, FiMenu, FiSettings, FiShoppingCart, FiTrendingUp, FiX } from "react-icons/fi";
 import ShoppingList from "./ShoppingList";
 import Expenses from "./Expenses";
 import ExpenseReport from "./ExpenseReport";
@@ -70,11 +70,17 @@ export default function HouseholdApp() {
         ? "hover:bg-violet-100 dark:hover:bg-violet-900"
         : "hover:bg-blue-100 dark:hover:bg-blue-900";
 
+  const bannerTitle = section === "expenses" || section === "expense-report"
+    ? <><FiDollarSign aria-hidden="true" />{UI_TEXT.expenses.title}</>
+    : section === "forecast"
+      ? <><FiTrendingUp aria-hidden="true" />{UI_TEXT.navigation.cashFlow}</>
+      : <>🛒 {UI_TEXT.appName}</>;
+
   return (
     <CategoryConfigProvider>
       <div className="mx-auto w-full max-w-md px-4 pt-4 sm:px-5 sm:pt-5">
         <header className={`flex w-full items-center justify-between rounded-xl border bg-gradient-to-r px-3 py-2 shadow-sm ${bannerTheme}`}>
-          <h1 className="text-xl font-bold">🛒 {UI_TEXT.appName}</h1>
+          <h1 className="flex items-center gap-1.5 text-xl font-bold">{bannerTitle}</h1>
           <div className="flex items-center gap-1">
             <span className="max-w-28 truncate text-sm font-medium text-gray-700 dark:text-gray-200">{device?.username}</span>
             <button type="button" onClick={() => setMenuOpen(true)} className={`rounded-lg p-2 text-gray-700 transition dark:text-gray-200 ${menuHoverTheme}`} aria-label={UI_TEXT.navigation.menu} title={UI_TEXT.navigation.menu}>
@@ -87,7 +93,7 @@ export default function HouseholdApp() {
       <div>
         {section === "shopping" && <ShoppingList />}
         {section === "expenses" && (
-          <Expenses onOpenReport={() => setSection("expense-report")} />
+          <Expenses />
         )}
         {section === "expense-report" && (
           <ExpenseReport onClose={() => setSection("expenses")} />
@@ -114,6 +120,7 @@ export default function HouseholdApp() {
                 <button type="button" onClick={() => setMenuOpen(false)} className="flex size-9 items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" aria-label={UI_TEXT.navigation.closeMenu}><FiX size={20} aria-hidden="true" /></button>
               </div>
               <div className="mt-3 space-y-1 border-t border-slate-100 pt-3 dark:border-slate-800">
+                <button type="button" onClick={() => { setMenuOpen(false); setSection("expense-report"); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-semibold text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950"><FiBarChart2 size={19} aria-hidden="true" />{UI_TEXT.expenseReport.title}</button>
                 {isOwner && <button type="button" onClick={() => { setMenuOpen(false); openAdmin(); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-semibold text-violet-800 hover:bg-violet-50 dark:text-violet-200 dark:hover:bg-violet-950"><FiSettings size={19} aria-hidden="true" />{UI_TEXT.navigation.settings}</button>}
                 <button type="button" onClick={handleLogout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left font-semibold text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950"><FiLogOut size={19} aria-hidden="true" />{UI_TEXT.logout.label}</button>
               </div>
