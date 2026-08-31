@@ -143,6 +143,7 @@ export const UI_TEXT = {
     weekly: "Weekly",
     fortnightly: "Fortnightly",
     monthly: "Monthly",
+    quarterly: "Every 3 months",
     yearly: "Yearly",
     firstDate: "First payment date",
     previewNotSaved: "Saved securely for approved owner devices.",

@@ -87,7 +87,7 @@ function nextOccurrence(date: Date, frequency: ForecastFrequency, preferredDay: 
     next.setDate(next.getDate() + (frequency === "weekly" ? 7 : 14));
     return next;
   }
-  return addCalendarMonths(date, frequency === "monthly" ? 1 : 12, preferredDay);
+  return addCalendarMonths(date, frequency === "monthly" ? 1 : frequency === "quarterly" ? 3 : 12, preferredDay);
 }
 
 export function scheduleOccurrences(schedule: ForecastSchedule, year: number, monthIndex: number): ForecastEntry[] {

@@ -291,7 +291,7 @@ service cloud.firestore {
         && data.kind in ['income', 'expense']
         && validText(data.name, 80)
         && validForecastAmount(data.amount) && data.amount > 0
-        && data.frequency in ['weekly', 'fortnightly', 'monthly', 'yearly']
+        && data.frequency in ['weekly', 'fortnightly', 'monthly', 'quarterly', 'yearly']
         && validDateKey(data.firstDate)
         && data.active is bool
         && data.createdAt is timestamp && data.createdAtMs is number

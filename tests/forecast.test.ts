@@ -37,6 +37,11 @@ test("monthly schedules clamp the 31st to a short month end", () => {
   assert.deepEqual(scheduleOccurrences(schedule({ frequency: "monthly", firstDate: "2026-01-31" }), 2026, 1).map((entry) => entry.dateKey), ["2026-02-28"]);
 });
 
+test("quarterly schedules recur every three calendar months", () => {
+  assert.deepEqual(scheduleOccurrences(schedule({ frequency: "quarterly", firstDate: "2026-01-31" }), 2026, 3).map((entry) => entry.dateKey), ["2026-04-30"]);
+  assert.deepEqual(scheduleOccurrences(schedule({ frequency: "quarterly", firstDate: "2026-01-31" }), 2026, 6).map((entry) => entry.dateKey), ["2026-07-31"]);
+});
+
 test("inactive schedules retain occurrences before the inactive date", () => {
   assert.deepEqual(scheduleOccurrences(schedule({ active: false, inactiveAt: "2026-09-20", inactiveReason: "Changed" }), 2026, 8).map((entry) => entry.dateKey), ["2026-09-02", "2026-09-16"]);
 });

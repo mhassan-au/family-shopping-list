@@ -44,6 +44,7 @@ test("forecast collections are owner-only and historical ledgers are append-only
   assert.match(ruleBlock("forecast_one_offs/{entryId}"), /allow update, delete: if false/);
   assert.match(ruleBlock("forecast_audit/{auditId}"), /allow update, delete: if false/);
   assert.match(ruleBlock("forecast_schedules/{scheduleId}"), /resource\.data\.active == true && request\.resource\.data\.active == false/);
+  assert.match(rules, /data\.frequency in \['weekly', 'fortnightly', 'monthly', 'quarterly', 'yearly'\]/);
 });
 
 test("production responses declare the core browser security headers", () => {

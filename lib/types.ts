@@ -87,7 +87,7 @@ export interface BankSyncAuditRecord {
 }
 
 export type ForecastDirection = "income" | "expense";
-export type ForecastFrequency = "weekly" | "fortnightly" | "monthly" | "yearly";
+export type ForecastFrequency = "weekly" | "fortnightly" | "monthly" | "quarterly" | "yearly";
 
 export interface ForecastSchedule {
   id: string;
