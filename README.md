@@ -22,8 +22,8 @@ MyGrocery is a private, real-time household shopping and expense tracker built w
 - Creator color indicators and user display names
 - Centralized UI copy in `lib/uiText.ts`
 - Client validation plus matching Firestore Security Rules
-- Separate manual UP sync for Peu and Shamir, including HELD and SETTLED transactions with a 48-hour overlap
-- Amount-choice confirmation when whole-number input could mean dollars or cents
+- Separate manual UP sync for Peu and Shamir, including HELD and SETTLED purchases with a 48-hour overlap, transfer/debt-payment filtering, and pending Accept/Reject review
+- Amount-choice confirmation only when cents-first whole-number input produces an unusual value below $1 or above $1,000
 
 ## Technology
 
@@ -123,6 +123,7 @@ The repository's `firestore.rules` file is not automatically deployed by Vercel.
 - [Security model](docs/SECURITY.md)
 - [Operations and troubleshooting](docs/OPERATIONS.md)
 - [Architecture and customization](docs/ARCHITECTURE.md)
+- [Expense-tracker continuation handoff](docs/EXPENSE_TRACKER_HANDOFF.md)
 
 ## Privacy
 
