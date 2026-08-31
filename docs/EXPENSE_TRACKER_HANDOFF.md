@@ -82,6 +82,63 @@ Agree on these points first because they affect data shape and reporting:
 
 If the section stores data, update `docs/FIREBASE.md`, `docs/SECURITY.md`, `firestore.rules`, shared TypeScript types, and automated security/data-shape tests together.
 
+## Forecast milestone record
+
+The next section has now been defined as an owner-only cash-flow **Forecast**. Its purpose is to answer: “How much money am I projected to have on each day, and will I have enough for upcoming commitments?” The current implementation is a UI mockup only; do not treat its sample values or local component state as the production data model.
+
+### Approved UI and behavior
+
+- Keep the shared MyGrocery banner visible in every section, with a section-specific theme.
+- Keep Shopping, Expenses, and Forecast in the bottom navigation. Forecast and Settings are owner-only.
+- Put Settings and Logout in the banner menu. Settings must return to the section from which it was opened; use the generic label **Back**, not **Back to shopping**.
+- Forecast is monthly and scrolls day by day. Past days are greyed, today is bold, and future values use a lighter projected style.
+- Show carried forward, opening balance, difference, projected closing, lowest balance, and the safety-buffer gap.
+- Opening balance is the only editable monthly summary value. Carried forward, difference, lowest balance, and projected closing are calculated and read-only.
+- The floating plus icon adds an unexpected expense or one-off income for a selected date.
+- Existing Expenses contribute one combined total per day, not individual expense lines.
+- A daily Expenses total may be overridden or excluded from this personal forecast without modifying the immutable source expense records. This supports costs paid from another household member's income.
+- Recurring income and expenses are configured in Settings using Income and Expenses tabs with compact add icons.
+- Recurring records cannot be deleted or overwritten. When a value changes, make the old record inactive with a required reason and create a new record.
+- Schedule history displays active and inactive versions, dates, amounts, and inactivation reasons.
+- The Forecast settings header contains a history icon that opens a centered, read-only audit popup.
+- Month-end transactions stay on their actual date. The resulting closing value flows into the next month's carry forward; transactions themselves are not shifted.
+
+### Required implementation corrections
+
+Complete every item below before calling Forecast production-ready:
+
+- [ ] Replace fixed mock values with one shared Forecast data flow and typed persisted records.
+- [ ] Connect recurring schedules to generated calendar occurrences, including patterns such as every second Wednesday and monthly dates such as the 27th.
+- [ ] Define and test recurrence behavior for short months, leap years, time zones, inactive dates, and schedules starting partway through a month.
+- [ ] Aggregate the existing immutable Expenses records into one total per calendar day.
+- [ ] Keep future actual Expenses totals at zero until their transaction date while still applying future scheduled income and expenses to projections.
+- [ ] Persist one-off income and unexpected expenses and include them in the selected month's projection.
+- [ ] Persist a separate forecast override for a daily Expenses total; never update or delete the underlying expense transactions.
+- [ ] Make include/exclude and amount adjustments transactional in the UI: Cancel must discard changes and Save must apply them together.
+- [ ] Calculate each month's carried forward from the preceding month's closing result.
+- [ ] Store an independently editable opening balance for each month and preserve the calculated difference from carry forward.
+- [ ] Ensure a late-month transaction remains in that month and is reflected in the following month's carry forward.
+- [ ] Replace the static audit samples with a single append-only audit source shared by Forecast and Settings.
+- [ ] Audit opening-balance changes, daily-total overrides, include/exclude changes, recurring schedule creation/inactivation, and one-off entry creation.
+- [ ] Require a reason for every edit or inactivation and record action type, old value, new value, owner/device identity, and server timestamp.
+- [ ] Never allow audit records or historical recurring records to be edited or deleted from the client.
+- [ ] Keep Forecast, Forecast settings, and its audit trail inaccessible to contributors in both UI and Firestore Rules.
+- [ ] Add validation, Firestore Rules, Rules tests, calculation tests, recurrence tests, month-boundary tests, and audit tests before release.
+
+### Final review checklist
+
+At the next UI/data review, explicitly verify:
+
+- [ ] Settings returns to Shopping, Expenses, Expense Report, or Forecast according to its origin.
+- [ ] Only Opening balance is editable among monthly summary figures.
+- [ ] Cancel in every dialog leaves values and inclusion state unchanged.
+- [ ] Saving any change without a reason is blocked.
+- [ ] Saved changes recalculate all later daily balances, the lowest balance, projected closing, and the next month's carry forward.
+- [ ] The audit popup immediately shows real changes made in Forecast or Settings in correct chronological order.
+- [ ] Recurring records remain historically visible after being made inactive.
+- [ ] Contributor devices cannot see or reach Forecast, Settings, or audit data.
+- [ ] Refreshing, offline use, and later synchronization do not lose or duplicate one-off entries, overrides, schedules, or audit events.
+
 ## Verification baseline
 
 The project currently uses build-gated Node tests. Before handing off an implementation, run:
