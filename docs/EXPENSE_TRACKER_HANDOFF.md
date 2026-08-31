@@ -152,6 +152,10 @@ npm run build
 
 Vercel runs `npm run build`, which runs `npm test` first. Firestore Rules still require separate manual publication in Firebase Console.
 
+## MVP2 branch and merge reminder
+
+Keep `mvp2/forecast-ui` as the testing branch until the owner is satisfied with the Forecast implementation. When the owner asks for merge commands, first remind them to run the final review checklist above, the full verification baseline, and the Firestore Rules/security check. Then provide the commands to update `main`, merge `mvp2/forecast-ui`, and push `main`. Do not merge or delete the testing branch automatically.
+
 ## Copy-ready prompt for a new chat
 
 ```text
