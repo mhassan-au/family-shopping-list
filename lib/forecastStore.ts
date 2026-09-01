@@ -37,11 +37,12 @@ export async function addForecastOneOff(input: { kind: ForecastDirection; descri
   await batch.commit();
 }
 
-export async function saveForecastOverride(dateKey: string, oldAmount: number, amount: number, oldExcluded: boolean, excluded: boolean, reason: string) {
+export async function saveForecastOverride(input: { dateKey: string; oldAmount: number; amount: number; oldExcludedExpenseIds: string[]; excludedExpenseIds: string[]; oldLocked: boolean; locked: boolean; reason: string }) {
   const batch = writeBatch(db); const now = Date.now(); const by = getCurrentUsername();
-  batch.set(doc(overrides, dateKey), { dateKey, amount, excluded, updatedAt: serverTimestamp(), updatedAtMs: now, updatedBy: by });
-  if (oldAmount !== amount) batch.set(doc(audit), auditData("daily_expense_adjusted", `Expenses total ${dateKey}`, String(oldAmount), String(amount), reason));
-  if (oldExcluded !== excluded) batch.set(doc(audit), auditData("daily_expense_excluded", `Expenses total ${dateKey}`, oldExcluded ? "Excluded" : "Included", excluded ? "Excluded" : "Included", reason));
+  batch.set(doc(overrides, input.dateKey), { dateKey: input.dateKey, amount: input.amount, excluded: false, excludedExpenseIds: input.excludedExpenseIds, locked: input.locked, updatedAt: serverTimestamp(), updatedAtMs: now, updatedBy: by });
+  if (input.oldAmount !== input.amount) batch.set(doc(audit), auditData("daily_expense_adjusted", `Expenses total ${input.dateKey}`, String(input.oldAmount), String(input.amount), input.reason));
+  if (input.oldExcludedExpenseIds.join("|") !== input.excludedExpenseIds.join("|")) batch.set(doc(audit), auditData("daily_expense_selection_changed", `Expense selection ${input.dateKey}`, `${input.oldExcludedExpenseIds.length} excluded`, `${input.excludedExpenseIds.length} excluded`, input.reason));
+  if (input.oldLocked !== input.locked) batch.set(doc(audit), auditData("daily_expense_amount_locked", `Expenses total ${input.dateKey}`, input.oldLocked ? "Locked" : "Automatic", input.locked ? "Locked" : "Automatic", input.reason));
   await batch.commit();
 }
 

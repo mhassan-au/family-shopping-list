@@ -338,9 +338,11 @@ service cloud.firestore {
     function validForecastOverride(overrideId) {
       let data = request.resource.data;
       return overrideId == data.dateKey && validDateKey(data.dateKey)
-        && data.keys().hasOnly(['dateKey', 'amount', 'excluded', 'updatedAt', 'updatedAtMs', 'updatedBy'])
+        && data.keys().hasOnly(['dateKey', 'amount', 'excluded', 'excludedExpenseIds', 'locked', 'updatedAt', 'updatedAtMs', 'updatedBy'])
         && data.keys().hasAll(['dateKey', 'amount', 'excluded', 'updatedAt', 'updatedAtMs', 'updatedBy'])
         && validForecastAmount(data.amount) && data.excluded is bool
+        && (!('excludedExpenseIds' in data) || (data.excludedExpenseIds is list && data.excludedExpenseIds.size() <= 200))
+        && (!('locked' in data) || data.locked is bool)
         && data.updatedAt is timestamp && data.updatedAtMs is number && validText(data.updatedBy, 40);
     }
     match /forecast_overrides/{overrideId} {
@@ -352,7 +354,7 @@ service cloud.firestore {
       let data = request.resource.data;
       return data.keys().hasOnly(['action', 'subject', 'oldValue', 'newValue', 'reason', 'createdAt', 'createdAtMs', 'createdBy'])
         && data.keys().hasAll(['action', 'subject', 'oldValue', 'newValue', 'reason', 'createdAt', 'createdAtMs', 'createdBy'])
-        && data.action in ['opening_balance_changed', 'daily_expense_adjusted', 'daily_expense_excluded', 'schedule_created', 'schedule_inactivated', 'one_off_created']
+        && data.action in ['opening_balance_changed', 'daily_expense_adjusted', 'daily_expense_excluded', 'daily_expense_selection_changed', 'daily_expense_amount_locked', 'schedule_created', 'schedule_inactivated', 'one_off_created']
         && validText(data.subject, 120) && validOptionalText(data.oldValue, 120) && validOptionalText(data.newValue, 120)
         && validText(data.reason, 160) && data.createdAt is timestamp && data.createdAtMs is number && validText(data.createdBy, 40);
     }

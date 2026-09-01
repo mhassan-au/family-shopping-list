@@ -9,6 +9,8 @@ export const FAMILY_MEMBER_COLORS: Record<string, string> = {
   izhaar: "#f97316",
 };
 
+export const FORECAST_SAFETY_BUFFER = 500;
+
 export const SHOPS: TagOption[] = [
   { label: "", color: "" },
 

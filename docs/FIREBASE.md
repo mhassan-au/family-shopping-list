@@ -129,7 +129,7 @@ The Admin settings icon is shown only in the shopping header when the locally sa
 
 ### Forecast collections
 
-Forecast data is owner-only and uses the same manually controlled `bank_admin_devices/{uid}` boundary as bank administration. `forecast_schedules` stores recurring income and expenses with weekly, fortnightly, monthly, every-three-months (`quarterly`), and yearly frequencies; records may only transition from active to inactive and cannot be deleted. `forecast_one_offs` stores append-only unusual income and unexpected expenses. `forecast_months/{YYYY-MM}` stores the manually adjustable opening balance. `forecast_overrides/{YYYY-MM-DD}` stores a forecast-only daily Expenses total and inclusion state without changing `expenses`. `forecast_audit` is append-only and records every creation, adjustment, exclusion, and inactivation with its reason, actor, values, and timestamp.
+Forecast data is owner-only and uses the same manually controlled `bank_admin_devices/{uid}` boundary as bank administration. `forecast_schedules` stores recurring income and expenses with weekly, fortnightly, monthly, every-three-months (`quarterly`), and yearly frequencies; records may only transition from active to inactive and cannot be deleted. `forecast_one_offs` stores append-only unusual income and unexpected expenses. `forecast_months/{YYYY-MM}` stores the manually adjustable opening balance. `forecast_overrides/{YYYY-MM-DD}` stores excluded immutable Expense transaction IDs and an optional locked daily total without changing `expenses`; unlocked days automatically include later Expense transactions. `forecast_audit` is append-only and records every creation, adjustment, selection change, manual lock, exclusion, and inactivation with its reason, actor, values, and timestamp.
 
 Publish `firestore.rules` before opening Forecast. Every owner device needs both `approved_devices/{uid}` and `bank_admin_devices/{uid}` with boolean `approved: true`.
 
@@ -174,6 +174,7 @@ To publish manually:
 7. Confirm an unapproved browser remains on the approval screen
 8. Confirm an owner device can create a Personal Loan and partial repayment
 9. Confirm an approved contributor cannot read or write either Personal Loan collection
+10. Confirm an owner can save a transaction-level Forecast exclusion and manual lock, and that a contributor cannot read or write `forecast_overrides`
 
 Vercel does not deploy Firestore Rules.
 

@@ -271,11 +271,6 @@ export default function ShoppingList() {
           {!isOnline && <div className="mt-1 text-xs font-normal text-amber-700 dark:text-amber-300">{UI_TEXT.sync.offlineMode}</div>}
         </div>
         {expectedTotal > 0 && <div className="px-2 pb-1 text-xs font-medium text-slate-400 dark:text-slate-500">{UI_TEXT.items.expectedTotal(expectedTotal)}</div>}
-        {completedItems.length > 0 && (
-          <button type="button" onClick={() => setShowClearConfirm(true)} className="mt-1 w-full rounded-lg border border-blue-300 bg-gradient-to-r from-blue-50 to-cyan-100 px-4 py-2 text-lg font-bold text-red-600 shadow-sm transition hover:from-blue-100 hover:to-cyan-200 active:scale-[0.99] dark:border-blue-700 dark:from-blue-900 dark:to-cyan-950 dark:text-red-400 dark:hover:from-blue-800 dark:hover:to-cyan-900">
-            {UI_TEXT.items.total(completedTotal)}
-          </button>
-        )}
       </section>
 
       {/* Grocery Input */}
@@ -404,6 +399,12 @@ export default function ShoppingList() {
 
         </div>
       </section>
+
+      {completedItems.length > 0 && (
+        <button type="button" onClick={() => setShowClearConfirm(true)} className="mt-3 w-full rounded-lg border border-blue-300 bg-gradient-to-r from-blue-50 to-cyan-100 px-4 py-2 text-lg font-bold text-red-600 shadow-sm transition hover:from-blue-100 hover:to-cyan-200 active:scale-[0.99] dark:border-blue-700 dark:from-blue-900 dark:to-cyan-950 dark:text-red-400 dark:hover:from-blue-800 dark:hover:to-cyan-900">
+          {UI_TEXT.items.total(completedTotal)}
+        </button>
+      )}
 
       {!loading && items.length === 0 && (
         <p className="text-gray-500 text-center mt-5">

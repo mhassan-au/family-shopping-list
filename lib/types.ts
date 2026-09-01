@@ -125,13 +125,15 @@ export interface ForecastOverride {
   dateKey: string;
   amount: number;
   excluded: boolean;
+  excludedExpenseIds?: string[];
+  locked?: boolean;
   updatedAtMs: number;
   updatedBy: string;
 }
 
 export interface ForecastAuditRecord {
   id: string;
-  action: "opening_balance_changed" | "daily_expense_adjusted" | "daily_expense_excluded" | "schedule_created" | "schedule_inactivated" | "one_off_created";
+  action: "opening_balance_changed" | "daily_expense_adjusted" | "daily_expense_excluded" | "daily_expense_selection_changed" | "daily_expense_amount_locked" | "schedule_created" | "schedule_inactivated" | "one_off_created";
   subject: string;
   oldValue: string;
   newValue: string;

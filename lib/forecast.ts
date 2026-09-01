@@ -8,7 +8,18 @@ export type ForecastEntry = {
   excluded?: boolean;
 };
 
-import type { ForecastFrequency, ForecastSchedule } from "./types";
+import type { Expense, ForecastFrequency, ForecastOverride, ForecastSchedule } from "./types";
+
+export function calculateForecastExpenseTotal(expenses: Pick<Expense, "id" | "amount">[], override?: ForecastOverride) {
+  const sourceTotal = Math.round(expenses.reduce((total, expense) => total + expense.amount, 0) * 100) / 100;
+  if (!override) return { sourceTotal, includedTotal: sourceTotal, finalTotal: sourceTotal };
+  if (!override.excludedExpenseIds) {
+    return { sourceTotal, includedTotal: override.excluded ? 0 : override.amount, finalTotal: override.excluded ? 0 : override.amount };
+  }
+  const excludedIds = new Set(override.excludedExpenseIds);
+  const includedTotal = Math.round(expenses.filter((expense) => !excludedIds.has(expense.id)).reduce((total, expense) => total + expense.amount, 0) * 100) / 100;
+  return { sourceTotal, includedTotal, finalTotal: override.locked ? override.amount : includedTotal };
+}
 
 export type ForecastDay = {
   dateKey: string;

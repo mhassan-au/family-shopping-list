@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildMonthlyProjection, ForecastEntry, nextScheduleOccurrence, parseAustralianDate, scheduleOccurrences, scheduleOccurrencesBetween } from "../lib/forecast";
-import { ForecastSchedule } from "../lib/types";
+import { buildMonthlyProjection, calculateForecastExpenseTotal, ForecastEntry, nextScheduleOccurrence, parseAustralianDate, scheduleOccurrences, scheduleOccurrencesBetween } from "../lib/forecast";
+import { ForecastOverride, ForecastSchedule } from "../lib/types";
 
 const entries: ForecastEntry[] = [
   { id: "salary", dateKey: "2026-09-16", description: "Salary", amount: 2800, direction: "income", source: "scheduled" },
@@ -55,4 +55,16 @@ test("inactive schedules retain occurrences before the inactive date", () => {
 test("Australian recurring-date input converts to an ISO date key", () => {
   assert.equal(parseAustralianDate("2/9/26"), "2026-09-02");
   assert.equal(parseAustralianDate("31/02/26"), null);
+});
+
+const override = (values: Partial<ForecastOverride>): ForecastOverride => ({ id: "2026-09-01", dateKey: "2026-09-01", amount: 0, excluded: false, updatedAtMs: 1, updatedBy: "Owner", ...values });
+
+test("transaction exclusions still include new daily expenses automatically", () => {
+  const result = calculateForecastExpenseTotal([{ id: "wife", amount: 30 }, { id: "mine", amount: 12.5 }, { id: "new", amount: 10 }], override({ excludedExpenseIds: ["wife"], amount: 12.5, locked: false }));
+  assert.deepEqual(result, { sourceTotal: 52.5, includedTotal: 22.5, finalTotal: 22.5 });
+});
+
+test("a locked daily total does not change when a new expense arrives", () => {
+  const result = calculateForecastExpenseTotal([{ id: "mine", amount: 12.5 }, { id: "new", amount: 10 }], override({ excludedExpenseIds: [], amount: 15, locked: true }));
+  assert.equal(result.finalTotal, 15);
 });

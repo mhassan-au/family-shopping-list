@@ -49,7 +49,7 @@
 - Shared shop and category configuration can be changed only by a manually approved bank-admin device.
 - Production responses include clickjacking, MIME-sniffing, referrer, transport, and browser-permission protections.
 - Unknown collections and notification requests are denied.
-- Forecast collections require the owner `bank_admin_devices` boundary. One-off entries and audit events are append-only; schedules can only transition from active to inactive; source Expenses remain immutable.
+- Forecast collections require the owner `bank_admin_devices` boundary. One-off entries and audit events are append-only; schedules can only transition from active to inactive; transaction selections and manual daily-total locks are audited; source Expenses remain immutable.
 - Personal Loan and repayment collections require the owner `bank_admin_devices` boundary and are append-only. Contributors cannot read loan balances or repayment history.
 - Shopping documents have an allowed-field list and size/range validation.
 - Shopping price-history reads and validated writes require an approved device; app-side deletion is denied.
