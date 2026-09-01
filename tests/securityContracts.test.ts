@@ -40,13 +40,15 @@ test("bank collections require bank-admin devices", () => {
 });
 
 test("forecast collections are owner-only and historical ledgers are append-only", () => {
-  for (const collection of ["forecast_schedules/{scheduleId}", "forecast_one_offs/{entryId}", "forecast_months/{monthId}", "forecast_overrides/{overrideId}", "forecast_audit/{auditId}"]) assert.match(ruleBlock(collection), /bankAdminDevice\(\)/);
+  for (const collection of ["forecast_schedules/{scheduleId}", "forecast_one_offs/{entryId}", "forecast_months/{monthId}", "forecast_overrides/{overrideId}", "forecast_occurrence_overrides/{occurrenceId}", "forecast_audit/{auditId}"]) assert.match(ruleBlock(collection), /bankAdminDevice\(\)/);
   assert.match(ruleBlock("forecast_one_offs/{entryId}"), /allow update, delete: if false/);
   assert.match(ruleBlock("forecast_audit/{auditId}"), /allow update, delete: if false/);
   assert.match(ruleBlock("forecast_schedules/{scheduleId}"), /resource\.data\.active == true && request\.resource\.data\.active == false/);
   assert.match(rules, /data\.frequency in \['weekly', 'fortnightly', 'monthly', 'quarterly', 'yearly'\]/);
   assert.match(rules, /data\.excludedExpenseIds is list && data\.excludedExpenseIds\.size\(\) <= 200/);
   assert.match(rules, /'daily_expense_selection_changed', 'daily_expense_amount_locked'/);
+  assert.match(ruleBlock("forecast_occurrence_overrides/{occurrenceId}"), /allow update, delete: if false/);
+  assert.match(rules, /'recurring_occurrence_excluded'/);
 });
 
 test("personal loan and repayment ledgers are owner-only and append-only", () => {

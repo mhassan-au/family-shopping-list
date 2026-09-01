@@ -6,6 +6,7 @@ export type ForecastEntry = {
   direction: "income" | "expense";
   source: "scheduled" | "recurring" | "one-off" | "actual";
   excluded?: boolean;
+  scheduleId?: string;
 };
 
 import type { Expense, ForecastFrequency, ForecastOverride, ForecastSchedule } from "./types";
@@ -109,7 +110,7 @@ export function scheduleOccurrencesBetween(schedule: ForecastSchedule, startDate
   while (true) {
     const dateKey = toDateKey(occurrence.getFullYear(), occurrence.getMonth(), occurrence.getDate());
     if (dateKey > endDateKey) break;
-    if (schedule.active || !schedule.inactiveAt || dateKey < schedule.inactiveAt) entries.push({ id: `${schedule.id}-${dateKey}`, dateKey, description: schedule.name, amount: schedule.amount, direction: schedule.kind, source: "recurring" });
+    if (schedule.active || !schedule.inactiveAt || dateKey < schedule.inactiveAt) entries.push({ id: `${schedule.id}-${dateKey}`, scheduleId: schedule.id, dateKey, description: schedule.name, amount: schedule.amount, direction: schedule.kind, source: "recurring" });
     occurrence = nextOccurrence(occurrence, schedule.frequency, startDay);
   }
   return entries;
@@ -132,7 +133,7 @@ export function scheduleOccurrences(schedule: ForecastSchedule, year: number, mo
   const entries: ForecastEntry[] = [];
   while (occurrence <= monthEnd) {
     const dateKey = toDateKey(occurrence.getFullYear(), occurrence.getMonth(), occurrence.getDate());
-    if (schedule.active || !schedule.inactiveAt || dateKey < schedule.inactiveAt) entries.push({ id: `${schedule.id}-${dateKey}`, dateKey, description: schedule.name, amount: schedule.amount, direction: schedule.kind, source: "recurring" });
+    if (schedule.active || !schedule.inactiveAt || dateKey < schedule.inactiveAt) entries.push({ id: `${schedule.id}-${dateKey}`, scheduleId: schedule.id, dateKey, description: schedule.name, amount: schedule.amount, direction: schedule.kind, source: "recurring" });
     occurrence = nextOccurrence(occurrence, schedule.frequency, startDay);
   }
   return entries;

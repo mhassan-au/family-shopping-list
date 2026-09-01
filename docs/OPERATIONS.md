@@ -19,6 +19,8 @@ After publishing Rules that introduce the Personal Loan Ledger, verify one owner
 
 After publishing Rules that add transaction-level Forecast overrides, open one actual daily Expenses total, exclude a transaction with a reason, and confirm the Forecast total and audit entry update. Add another Expense on that date and confirm it is included automatically. Also verify that a manually locked total remains unchanged until switched back to selected transactions.
 
+After publishing Rules that add recurring occurrence exclusions, exclude one recurring expense on today’s row with a reason. Confirm that only that occurrence disappears, its audit record appears, the recurring Settings entry remains active, and future occurrences remain visible.
+
 ## Device lifecycle
 
 ### Add

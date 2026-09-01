@@ -20,7 +20,7 @@
 | `components/HouseholdApp.tsx` | Bottom navigation and section switching |
 | `components/Expenses.tsx` | Expense form and weekly expense list |
 | `components/ExpenseReport.tsx` | Day/week/month/year insights and category comparisons |
-| `components/Forecast.tsx` | Owner-only monthly cash-flow projection starting in September 2026, capped at 12 months ahead, with actionable dated lowest-balance warnings, opening adjustment, a viewport-constrained scrollable daily activity list, jump-to-today navigation, transaction-level daily Expense inclusion, optional audited manual locks, and an inline one-off entry control |
+| `components/Forecast.tsx` | Owner-only monthly cash-flow projection starting in September 2026, capped at 12 months ahead, with actionable dated lowest-balance warnings, opening adjustment, a viewport-constrained scrollable daily activity list, jump-to-today navigation, transaction-level daily Expense inclusion, optional audited manual locks, audited past/current recurring-expense occurrence exclusions, and an inline one-off entry control |
 | `components/AdminDashboard.tsx` | Owner settings, exact next-30-day recurring totals and occurrence dates, forecast audit, and manual bank-sync controls with local status feedback |
 | `hooks/useForecast.ts` | Live Forecast schedules, months, overrides, one-offs, audit, and immutable Expenses aggregation |
 | `lib/forecastStore.ts` | Atomic Forecast writes paired with append-only audit events |

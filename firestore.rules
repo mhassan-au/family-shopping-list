@@ -350,11 +350,29 @@ service cloud.firestore {
       allow create, update: if bankAdminDevice() && validForecastOverride(overrideId) && request.resource.data.updatedAt == request.time;
       allow delete: if false;
     }
+    function validForecastOccurrenceOverride(occurrenceId) {
+      let data = request.resource.data;
+      return occurrenceId == data.occurrenceId
+        && data.keys().hasOnly(['occurrenceId', 'scheduleId', 'dateKey', 'name', 'amount', 'excluded', 'createdAt', 'createdAtMs', 'createdBy'])
+        && data.keys().hasAll(['occurrenceId', 'scheduleId', 'dateKey', 'name', 'amount', 'excluded', 'createdAt', 'createdAtMs', 'createdBy'])
+        && validText(data.occurrenceId, 160) && validText(data.scheduleId, 120) && validDateKey(data.dateKey)
+        && validText(data.name, 80) && validForecastAmount(data.amount) && data.amount > 0 && data.excluded == true
+        && exists(/databases/$(database)/documents/forecast_schedules/$(data.scheduleId))
+        && get(/databases/$(database)/documents/forecast_schedules/$(data.scheduleId)).data.kind == 'expense'
+        && get(/databases/$(database)/documents/forecast_schedules/$(data.scheduleId)).data.name == data.name
+        && get(/databases/$(database)/documents/forecast_schedules/$(data.scheduleId)).data.amount == data.amount
+        && data.createdAt is timestamp && data.createdAtMs is number && validText(data.createdBy, 40);
+    }
+    match /forecast_occurrence_overrides/{occurrenceId} {
+      allow read: if bankAdminDevice();
+      allow create: if bankAdminDevice() && validForecastOccurrenceOverride(occurrenceId) && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
     function validForecastAudit() {
       let data = request.resource.data;
       return data.keys().hasOnly(['action', 'subject', 'oldValue', 'newValue', 'reason', 'createdAt', 'createdAtMs', 'createdBy'])
         && data.keys().hasAll(['action', 'subject', 'oldValue', 'newValue', 'reason', 'createdAt', 'createdAtMs', 'createdBy'])
-        && data.action in ['opening_balance_changed', 'daily_expense_adjusted', 'daily_expense_excluded', 'daily_expense_selection_changed', 'daily_expense_amount_locked', 'schedule_created', 'schedule_inactivated', 'one_off_created']
+        && data.action in ['opening_balance_changed', 'daily_expense_adjusted', 'daily_expense_excluded', 'daily_expense_selection_changed', 'daily_expense_amount_locked', 'recurring_occurrence_excluded', 'schedule_created', 'schedule_inactivated', 'one_off_created']
         && validText(data.subject, 120) && validOptionalText(data.oldValue, 120) && validOptionalText(data.newValue, 120)
         && validText(data.reason, 160) && data.createdAt is timestamp && data.createdAtMs is number && validText(data.createdBy, 40);
     }
