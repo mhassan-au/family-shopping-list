@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildMonthlyProjection, ForecastEntry, parseAustralianDate, scheduleOccurrences } from "../lib/forecast";
+import { buildMonthlyProjection, ForecastEntry, nextScheduleOccurrence, parseAustralianDate, scheduleOccurrences, scheduleOccurrencesBetween } from "../lib/forecast";
 import { ForecastSchedule } from "../lib/types";
 
 const entries: ForecastEntry[] = [
@@ -40,6 +40,12 @@ test("monthly schedules clamp the 31st to a short month end", () => {
 test("quarterly schedules recur every three calendar months", () => {
   assert.deepEqual(scheduleOccurrences(schedule({ frequency: "quarterly", firstDate: "2026-01-31" }), 2026, 3).map((entry) => entry.dateKey), ["2026-04-30"]);
   assert.deepEqual(scheduleOccurrences(schedule({ frequency: "quarterly", firstDate: "2026-01-31" }), 2026, 6).map((entry) => entry.dateKey), ["2026-07-31"]);
+});
+
+test("upcoming schedule helpers return the next date and exact window occurrences", () => {
+  const fortnightly = schedule({ frequency: "fortnightly", firstDate: "2026-09-02" });
+  assert.equal(nextScheduleOccurrence(fortnightly, "2026-09-03"), "2026-09-16");
+  assert.deepEqual(scheduleOccurrencesBetween(fortnightly, "2026-09-01", "2026-09-30").map((entry) => entry.dateKey), ["2026-09-02", "2026-09-16", "2026-09-30"]);
 });
 
 test("inactive schedules retain occurrences before the inactive date", () => {

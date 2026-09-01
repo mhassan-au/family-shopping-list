@@ -11,10 +11,16 @@ import { BankAccountKey, BankSyncAuditRecord } from "@/lib/types";
 import type { ForecastAuditRecord, ForecastSchedule } from "@/lib/types";
 import { useForecast } from "@/hooks/useForecast";
 import { addForecastSchedule, inactivateForecastSchedule } from "@/lib/forecastStore";
+import { nextScheduleOccurrence, scheduleOccurrencesBetween, toDateKey } from "@/lib/forecast";
 import DeviceDebugId from "./DeviceDebugId";
 
 const CATEGORY_PATTERN = /^[\p{L}\p{N}][\p{L}\p{N} &'/.&()-]{0,39}$/u;
 const recurringDate = new Intl.DateTimeFormat("en-AU", { day: "2-digit", month: "2-digit", year: "2-digit" });
+const recurringMoney = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
+const upcomingWeekday = new Intl.DateTimeFormat("en-AU", { weekday: "short" });
+const upcomingMonth = new Intl.DateTimeFormat("en-AU", { month: "short" });
+function ordinal(day: number) { const remainder = day % 100; if (remainder >= 11 && remainder <= 13) return `${day}th`; return `${day}${day % 10 === 1 ? "st" : day % 10 === 2 ? "nd" : day % 10 === 3 ? "rd" : "th"}`; }
+function formatUpcomingDate(dateKey: string) { const date = new Date(`${dateKey}T00:00:00`); return `${upcomingWeekday.format(date)} ${ordinal(date.getDate())} ${upcomingMonth.format(date)}`; }
 
 type MockSchedule = ForecastSchedule;
 
@@ -67,6 +73,7 @@ export default function AdminDashboard({
     text: string;
     error: boolean;
     openTransactions?: boolean;
+    source?: "bank";
   } | null>(null);
   const [syncingBank, setSyncingBank] = useState<BankAccountKey | null>(null);
   const [scheduleDialog, setScheduleDialog] = useState<MockSchedule["kind"] | null>(null);
@@ -84,6 +91,12 @@ export default function AdminDashboard({
 
   if (login?.role !== "owner") return null;
 
+  const todayDate = new Date();
+  const todayKey = toDateKey(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
+  const upcomingEnd = new Date(todayDate);
+  upcomingEnd.setDate(upcomingEnd.getDate() + 29);
+  const upcomingEndKey = toDateKey(upcomingEnd.getFullYear(), upcomingEnd.getMonth(), upcomingEnd.getDate());
+  const upcomingScheduleTotal = mockSchedules.flatMap((schedule) => scheduleOccurrencesBetween(schedule, todayKey, upcomingEndKey)).filter((entry) => entry.direction === scheduleTab).reduce((total, entry) => total + entry.amount, 0);
   const categories = config[activeTab];
   const activeTheme = TAB_THEMES[activeTab];
   const tabs: Array<{ kind: CategoryKind; label: string }> = [
@@ -172,10 +185,11 @@ export default function AdminDashboard({
         text: UI_TEXT.admin.bankSyncResult(result.importedCount, result.fetchedCount),
         error: false,
         openTransactions: result.importedCount > 0,
+        source: "bank",
       });
     } catch (syncError) {
       console.error("Manual UP sync failed", syncError);
-      setMessage({ text: UI_TEXT.admin.bankSyncFailed, error: true });
+      setMessage({ text: UI_TEXT.admin.bankSyncFailed, error: true, source: "bank" });
     } finally {
       setSyncingBank(null);
     }
@@ -237,7 +251,7 @@ export default function AdminDashboard({
       </header>
       <DeviceDebugId />
 
-      {message && (
+      {message && message.source !== "bank" && (
         message.openTransactions ? (
           <button
             type="button"
@@ -272,11 +286,12 @@ export default function AdminDashboard({
           ))}
         </div>
         <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{UI_TEXT.admin.scheduleLifecycleHelp}</p>
+        <p className={`mt-2 rounded-lg px-3 py-2 text-sm font-bold ${scheduleTab === "income" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200" : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200"}`}>{UI_TEXT.admin.nextThirtyDays(`${scheduleTab === "income" ? "+" : "−"}${recurringMoney.format(upcomingScheduleTotal)}`)}</p>
         <div className="mt-3 space-y-2">
           {mockSchedules.filter((schedule) => schedule.kind === scheduleTab).sort((left, right) => left.name.localeCompare(right.name, "en-AU", { sensitivity: "base" })).map((schedule) => (
             <div key={schedule.id} className={`rounded-xl border border-white/80 bg-white/80 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900/70 ${schedule.active ? "" : "opacity-55 grayscale"}`}>
               <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0"><div className="flex items-center gap-2"><p className="truncate font-semibold">{schedule.name}</p><span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${schedule.active ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}>{schedule.active ? UI_TEXT.admin.active : UI_TEXT.admin.inactive}</span></div><p className="text-xs capitalize text-slate-500 dark:text-slate-400">{schedule.frequency} · {UI_TEXT.admin.starts(recurringDate.format(new Date(`${schedule.firstDate}T00:00:00`)))}</p></div>
+                <div className="min-w-0"><div className="flex items-center gap-2"><p className="truncate font-semibold">{schedule.name}</p><span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${schedule.active ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}>{schedule.active ? UI_TEXT.admin.active : UI_TEXT.admin.inactive}</span></div><p className="text-xs capitalize text-slate-500 dark:text-slate-400">{schedule.frequency} · {UI_TEXT.admin.starts(recurringDate.format(new Date(`${schedule.firstDate}T00:00:00`)))}</p><p className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">{nextScheduleOccurrence(schedule,todayKey) ? UI_TEXT.admin.nextOccurrence(formatUpcomingDate(nextScheduleOccurrence(schedule,todayKey)!)) : UI_TEXT.admin.noUpcomingOccurrence}</p></div>
                 <div className="flex shrink-0 items-center gap-2"><p className={`font-bold ${schedule.kind === "income" ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"}`}>{schedule.kind === "income" ? "+" : "−"}{new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" }).format(schedule.amount)}</p><button type="button" onClick={() => setHistoryScheduleId(schedule.id)} className="flex size-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800" aria-label={UI_TEXT.admin.manageSchedule(schedule.name)} title={UI_TEXT.admin.manageSchedule(schedule.name)}><FiEdit3 size={15} aria-hidden="true" /></button></div>
               </div>
             </div>
@@ -318,6 +333,7 @@ export default function AdminDashboard({
 
       <section className="rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-indigo-50 p-4 shadow-sm dark:border-violet-900 dark:from-violet-950/60 dark:to-indigo-950/60">
         <div className="flex items-start justify-between gap-3"><div><h2 className="font-bold">{UI_TEXT.admin.bankSync}</h2><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{UI_TEXT.admin.bankSyncDescription}</p></div><button type="button" onClick={() => setShowBankSyncReport(true)} className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-violet-300 bg-white/80 text-violet-800 hover:bg-white dark:border-violet-800 dark:bg-slate-900/70 dark:text-violet-200" aria-label={UI_TEXT.admin.openBankSyncReport} title={UI_TEXT.admin.openBankSyncReport}><FiFileText aria-hidden="true" /></button></div>
+        {message?.source === "bank" && (message.openTransactions ? <button type="button" onClick={onOpenTransactions} className="mt-3 w-full rounded-lg bg-emerald-100 px-3 py-2 text-left text-sm text-emerald-800 transition hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-200 dark:hover:bg-emerald-900" aria-label={UI_TEXT.admin.openSyncedTransactions}>{message.text}</button> : <p className={`mt-3 rounded-lg px-3 py-2 text-sm ${message.error ? "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"}`} role={message.error ? "alert" : "status"}>{message.text}</p>)}
         <div className="mt-3 space-y-2">
           {BANK_ACCOUNTS.map((account) => {
             const status = bankSync.statuses[account.key];

@@ -90,6 +90,28 @@ function nextOccurrence(date: Date, frequency: ForecastFrequency, preferredDay: 
   return addCalendarMonths(date, frequency === "monthly" ? 1 : frequency === "quarterly" ? 3 : 12, preferredDay);
 }
 
+export function scheduleOccurrencesBetween(schedule: ForecastSchedule, startDateKey: string, endDateKey: string): ForecastEntry[] {
+  const [startYear, startMonth, startDay] = schedule.firstDate.split("-").map(Number);
+  let occurrence = new Date(startYear, startMonth - 1, startDay);
+  while (toDateKey(occurrence.getFullYear(), occurrence.getMonth(), occurrence.getDate()) < startDateKey) occurrence = nextOccurrence(occurrence, schedule.frequency, startDay);
+  const entries: ForecastEntry[] = [];
+  while (true) {
+    const dateKey = toDateKey(occurrence.getFullYear(), occurrence.getMonth(), occurrence.getDate());
+    if (dateKey > endDateKey) break;
+    if (schedule.active || !schedule.inactiveAt || dateKey < schedule.inactiveAt) entries.push({ id: `${schedule.id}-${dateKey}`, dateKey, description: schedule.name, amount: schedule.amount, direction: schedule.kind, source: "recurring" });
+    occurrence = nextOccurrence(occurrence, schedule.frequency, startDay);
+  }
+  return entries;
+}
+
+export function nextScheduleOccurrence(schedule: ForecastSchedule, fromDateKey: string) {
+  const [startYear, startMonth, startDay] = schedule.firstDate.split("-").map(Number);
+  let occurrence = new Date(startYear, startMonth - 1, startDay);
+  while (toDateKey(occurrence.getFullYear(), occurrence.getMonth(), occurrence.getDate()) < fromDateKey) occurrence = nextOccurrence(occurrence, schedule.frequency, startDay);
+  const dateKey = toDateKey(occurrence.getFullYear(), occurrence.getMonth(), occurrence.getDate());
+  return schedule.active || !schedule.inactiveAt || dateKey < schedule.inactiveAt ? dateKey : null;
+}
+
 export function scheduleOccurrences(schedule: ForecastSchedule, year: number, monthIndex: number): ForecastEntry[] {
   const [startYear, startMonth, startDay] = schedule.firstDate.split("-").map(Number);
   let occurrence = new Date(startYear, startMonth - 1, startDay);
