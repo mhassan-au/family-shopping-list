@@ -21,7 +21,10 @@
 | `components/Expenses.tsx` | Expense form and weekly expense list |
 | `components/ExpenseReport.tsx` | Day/week/month/year insights and category comparisons |
 | `components/Forecast.tsx` | Owner-only monthly cash-flow projection starting in September 2026, capped at 12 months ahead, with actionable dated lowest-balance warnings, opening adjustment, a viewport-constrained scrollable daily activity list, jump-to-today navigation, transaction-level daily Expense inclusion, optional audited manual locks, audited past/current recurring-expense occurrence exclusions, and an inline one-off entry control |
-| `components/AdminDashboard.tsx` | Owner settings, exact next-30-day recurring totals and occurrence dates, forecast audit, and manual bank-sync controls with local status feedback |
+| `components/AdminDashboard.tsx` | Owner settings, Improvement Log entry point, exact next-30-day recurring totals and occurrence dates, forecast audit, and manual bank-sync controls with local status feedback |
+| `components/ImprovementLog.tsx` | Owner-only current/history backlog with lifecycle controls, pagination, and permanent resolution summaries |
+| `hooks/useImprovementLog.ts` | Live owner-only Improvement Log listener |
+| `lib/improvementLogStore.ts` | Improvement Log creation, inbox editing/removal, lifecycle, and resolution writes |
 | `hooks/useForecast.ts` | Live Forecast schedules, months, overrides, one-offs, audit, and immutable Expenses aggregation |
 | `lib/forecastStore.ts` | Atomic Forecast writes paired with append-only audit events |
 | `lib/forecast.ts` | Daily projection and recurring occurrence calculations |
@@ -87,3 +90,5 @@ UP Bank sync is deliberately manual and separate for Peu and Shamir. The browser
 Whole-number money input remains optimized for cents, but can be ambiguous: `12` may mean `$0.12` or `$12.00`. Shopping completion and new-expense entry show the two-choice confirmation only when the cents-first result is unusual—below $1 or above $1,000. Values from $1 through $1,000 save normally; entering a decimal or using the `>>` action also removes the ambiguity.
 
 Personal loans are an owner-only ledger separate from Expenses and Forecast. Each `personal_loans` record preserves the original lender, reason, amount, and borrowing date. Partial or full returns are appended to `personal_loan_repayments`; future repayment dates are rejected, and the UI derives repaid and outstanding totals without updating or deleting historical records. Unpaid loans are listed first, while fully paid loans move to the bottom, use a muted grey treatment, and collapse by default.
+
+The owner-only Improvement Log records bugs, UI changes, and small feature ideas in `improvement_logs`. Unreviewed entries may be edited or deleted before Codex begins work. After explicit approval in the Codex conversation, the selected entry moves directly to in-progress; there is no separate in-app Agree action. In-progress entries preserve their original description, while done, not-doing, and duplicate outcomes move to immutable history with a required resolution summary. Current and history lists are paginated in the UI, and history is retained to prevent later duplicate work.

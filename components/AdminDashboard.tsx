@@ -13,6 +13,7 @@ import { useForecast } from "@/hooks/useForecast";
 import { addForecastSchedule, inactivateForecastSchedule } from "@/lib/forecastStore";
 import { nextScheduleOccurrence, scheduleOccurrencesBetween, toDateKey } from "@/lib/forecast";
 import DeviceDebugId from "./DeviceDebugId";
+import ImprovementLog from "./ImprovementLog";
 
 const CATEGORY_PATTERN = /^[\p{L}\p{N}][\p{L}\p{N} &'/.&()-]{0,39}$/u;
 const recurringDate = new Intl.DateTimeFormat("en-AU", { day: "2-digit", month: "2-digit", year: "2-digit" });
@@ -87,9 +88,11 @@ export default function AdminDashboard({
   const [inactiveReason, setInactiveReason] = useState("");
   const [showForecastAudit, setShowForecastAudit] = useState(false);
   const [showBankSyncReport, setShowBankSyncReport] = useState(false);
+  const [showImprovementLog, setShowImprovementLog] = useState(false);
   const mockSchedules = forecast.schedules;
 
   if (login?.role !== "owner") return null;
+  if (showImprovementLog) return <ImprovementLog onBack={() => setShowImprovementLog(false)} />;
 
   const todayDate = new Date();
   const todayKey = toDateKey(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
@@ -250,6 +253,10 @@ export default function AdminDashboard({
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{UI_TEXT.admin.subtitle}</p>
       </header>
       <DeviceDebugId />
+
+      <section className="mb-4 rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-4 shadow-sm dark:border-amber-900 dark:from-amber-950/60 dark:to-orange-950/60">
+        <div className="flex items-start justify-between gap-3"><div><h2 className="font-bold">{UI_TEXT.improvementLog.adminTitle}</h2><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{UI_TEXT.improvementLog.adminDescription}</p></div><button type="button" onClick={() => setShowImprovementLog(true)} className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-600 text-white shadow-sm hover:bg-amber-700" aria-label={UI_TEXT.improvementLog.open} title={UI_TEXT.improvementLog.open}><FiFileText size={18} aria-hidden="true" /></button></div>
+      </section>
 
       {message && message.source !== "bank" && (
         message.openTransactions ? (

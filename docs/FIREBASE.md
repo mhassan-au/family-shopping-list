@@ -142,6 +142,12 @@ Personal Loan data is owner-only and uses the same `bank_admin_devices/{uid}` bo
 
 Outstanding balances are calculated from the original loan minus all linked repayment records. Neither collection permits client updates or deletes. Publish the updated `firestore.rules` before opening the Personal Loan Ledger or recording data.
 
+### `improvement_logs/{entryId}`
+
+Owner-only private backlog entries use the same `bank_admin_devices/{uid}` boundary as the Admin dashboard. Each entry stores its type, title, optional notes, lifecycle status, actor, and timestamps. Only `inbox` entries may have their description edited or be deleted. After the owner approves work in Codex, the entry moves directly to `in_progress`; the legacy `agreed` value remains accepted for compatibility but is not produced by the UI. `in_progress` entries preserve their recorded description. `done`, `not_doing`, and `duplicate` entries require a fix/implementation summary and become immutable, non-deletable history.
+
+Publish `firestore.rules` before using the Improvement Log. Existing collections are unchanged.
+
 ## Approving a device
 
 1. User enters home code, username, and password.
@@ -176,6 +182,8 @@ To publish manually:
 9. Confirm an approved contributor cannot read or write either Personal Loan collection
 10. Confirm an owner can save a transaction-level Forecast exclusion and manual lock, and that a contributor cannot read or write `forecast_overrides`
 11. Confirm an owner can exclude today’s recurring expense occurrence without changing the recurring schedule or a future occurrence
+12. Confirm an owner can add, edit, and remove an Inbox improvement, then move another entry to History with a summary
+13. Confirm History improvements cannot be edited or deleted and a contributor cannot read `improvement_logs`
 
 Vercel does not deploy Firestore Rules.
 

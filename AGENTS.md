@@ -23,6 +23,13 @@
 
 Ask before proceeding only when a routine request unexpectedly requires Release mode; data may be deleted, replaced, or irreversibly migrated; a production dependency, permission, backend, recurring service, or cost is introduced; a product boundary above would be crossed; the safe implementation is materially broader than requested; or materially different product choices exist. Explain the reason briefly and wait. Do not ask for ordinary in-scope coding and testing.
 
+## Improvement Log workflow
+
+- When the owner asks to review the Improvement Log, use the running signed-in local app and inspect the owner-only **Improvement log** menu. Treat `Unreviewed` entries as the pending review queue and check History before proposing work so completed or duplicate items are not repeated.
+- Investigate and propose an implementation plan, but do not change code or advance an entry until the owner explicitly approves that work in the Codex conversation.
+- After approval, use the app to mark the entry **In progress**, implement and verify the change, then use **Finish / archive** with outcome **Done** and a concise fix/implementation summary. Use **Not doing** or **Duplicate** with an explanatory summary only when the owner agrees with that outcome.
+- Keep Firebase access inside the signed-in app session. Do not expose Firebase credentials, service-account material, household data, or a public management endpoint for agent convenience.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

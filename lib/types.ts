@@ -172,3 +172,20 @@ export interface PersonalLoanRepayment {
   createdAtMs: number;
   createdBy: string;
 }
+
+export type ImprovementType = "bug" | "ui_change" | "feature";
+export type ImprovementStatus = "inbox" | "agreed" | "in_progress" | "done" | "not_doing" | "duplicate";
+
+export interface ImprovementLogEntry {
+  id: string;
+  type: ImprovementType;
+  title: string;
+  notes: string;
+  status: ImprovementStatus;
+  createdAtMs: number;
+  createdBy: string;
+  updatedAtMs: number;
+  updatedBy: string;
+  resolutionSummary?: string;
+  resolvedAtMs?: number;
+}

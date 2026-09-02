@@ -51,6 +51,7 @@
 - Unknown collections and notification requests are denied.
 - Forecast collections require the owner `bank_admin_devices` boundary. One-off entries, single-occurrence exclusions, and audit events are append-only; schedules can only transition from active to inactive; transaction selections and manual daily-total locks are audited; source Expenses remain immutable.
 - Personal Loan and repayment collections require the owner `bank_admin_devices` boundary and are append-only. Contributors cannot read loan balances or repayment history.
+- Improvement Log records require the owner `bank_admin_devices` boundary. Only unreviewed Inbox entries may be edited or deleted; completed/archived history is immutable and requires a resolution summary.
 - Shopping documents have an allowed-field list and size/range validation.
 - Shopping price-history reads and validated writes require an approved device; app-side deletion is denied.
 - Expense reads and append-only writes require an approved authenticated UID.

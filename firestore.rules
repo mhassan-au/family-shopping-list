@@ -413,6 +413,51 @@ service cloud.firestore {
       allow create: if bankAdminDevice() && validPersonalLoanRepayment() && request.resource.data.createdAt == request.time;
       allow update, delete: if false;
     }
+    function isImprovementHistory(status) {
+      return status in ['done', 'not_doing', 'duplicate'];
+    }
+    function validImprovementLog() {
+      let data = request.resource.data;
+      return data.keys().hasOnly([
+          'type', 'title', 'notes', 'status', 'createdAt', 'createdAtMs', 'createdBy',
+          'updatedAt', 'updatedAtMs', 'updatedBy', 'resolutionSummary', 'resolvedAt', 'resolvedAtMs'
+        ])
+        && data.keys().hasAll([
+          'type', 'title', 'notes', 'status', 'createdAt', 'createdAtMs', 'createdBy',
+          'updatedAt', 'updatedAtMs', 'updatedBy'
+        ])
+        && data.type in ['bug', 'ui_change', 'feature']
+        && validText(data.title, 120)
+        && validOptionalText(data.notes, 1200)
+        && data.status in ['inbox', 'agreed', 'in_progress', 'done', 'not_doing', 'duplicate']
+        && data.createdAt is timestamp && data.createdAtMs is number && validText(data.createdBy, 40)
+        && data.updatedAt is timestamp && data.updatedAtMs is number && validText(data.updatedBy, 40)
+        && (isImprovementHistory(data.status)
+          ? validText(data.resolutionSummary, 1200) && data.resolvedAt is timestamp && data.resolvedAtMs is number
+          : !('resolutionSummary' in data) && !('resolvedAt' in data) && !('resolvedAtMs' in data));
+    }
+    match /improvement_logs/{entryId} {
+      allow read: if bankAdminDevice();
+      allow create: if bankAdminDevice()
+        && validImprovementLog()
+        && request.resource.data.status == 'inbox'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow update: if bankAdminDevice()
+        && !isImprovementHistory(resource.data.status)
+        && validImprovementLog()
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.createdAtMs == resource.data.createdAtMs
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.updatedAt == request.time
+        && (resource.data.status == 'inbox'
+          || request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'status', 'updatedAt', 'updatedAtMs', 'updatedBy',
+            'resolutionSummary', 'resolvedAt', 'resolvedAtMs'
+          ]))
+        && (!isImprovementHistory(request.resource.data.status) || request.resource.data.resolvedAt == request.time);
+      allow delete: if bankAdminDevice() && resource.data.status == 'inbox';
+    }
     // Login needs to read the selected household user after anonymous auth.
     // User profiles cannot be changed from the app.
     match /families/{familyId}/users/{userId} {

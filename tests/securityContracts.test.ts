@@ -60,6 +60,16 @@ test("personal loan and repayment ledgers are owner-only and append-only", () =>
   assert.match(rules, /exists\(\/databases\/\$\(database\)\/documents\/personal_loans\/\$\(data\.loanId\)\)/);
 });
 
+test("improvement log history is owner-only and cannot be edited or deleted", () => {
+  const block = ruleBlock("improvement_logs/{entryId}");
+  assert.match(block, /allow read: if bankAdminDevice\(\)/);
+  assert.match(block, /request\.resource\.data\.status == 'inbox'/);
+  assert.match(block, /!isImprovementHistory\(resource\.data\.status\)/);
+  assert.match(block, /allow delete: if bankAdminDevice\(\) && resource\.data\.status == 'inbox'/);
+  assert.match(rules, /\['done', 'not_doing', 'duplicate'\]/);
+  assert.match(rules, /validText\(data\.resolutionSummary, 1200\)/);
+});
+
 test("production responses declare the core browser security headers", () => {
   for (const header of [
     "Content-Security-Policy",
