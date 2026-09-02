@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildMonthlyProjection, calculateForecastExpenseTotal, ForecastEntry, nextScheduleOccurrence, parseAustralianDate, scheduleOccurrences, scheduleOccurrencesBetween } from "../lib/forecast";
+import { buildMonthlyProjection, calculateForecastExpenseTotal, forecastOneOffEntry, ForecastEntry, nextScheduleOccurrence, parseAustralianDate, scheduleOccurrences, scheduleOccurrencesBetween } from "../lib/forecast";
 import { ForecastOverride, ForecastSchedule } from "../lib/types";
 
 const entries: ForecastEntry[] = [
@@ -35,6 +35,16 @@ test("fortnightly schedules preserve the weekday", () => {
 
 test("monthly schedules clamp the 31st to a short month end", () => {
   assert.deepEqual(scheduleOccurrences(schedule({ frequency: "monthly", firstDate: "2026-01-31" }), 2026, 1).map((entry) => entry.dateKey), ["2026-02-28"]);
+});
+
+test("signed one-off adjustments increase or decrease the projected balance", () => {
+  const adjustments = [
+    forecastOneOffEntry({ id: "plus", kind: "adjustment", description: "Correction", amount: 100, dateKey: "2026-09-05", createdAtMs: 1, createdBy: "Owner" }),
+    forecastOneOffEntry({ id: "minus", kind: "adjustment", description: "Correction", amount: -40, dateKey: "2026-09-06", createdAtMs: 2, createdBy: "Owner" }),
+  ];
+  const projection = buildMonthlyProjection({ year: 2026, monthIndex: 8, openingBalance: 1000, entries: adjustments, todayKey: "2026-09-30" });
+  assert.equal(projection.closingBalance, 1060);
+  assert.deepEqual(adjustments.map((entry) => [entry.direction, entry.amount]), [["income", 100], ["expense", 40]]);
 });
 
 test("quarterly schedules recur every three calendar months", () => {

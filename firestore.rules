@@ -313,8 +313,11 @@ service cloud.firestore {
       let data = request.resource.data;
       return data.keys().hasOnly(['kind', 'description', 'amount', 'dateKey', 'createdAt', 'createdAtMs', 'createdBy'])
         && data.keys().hasAll(['kind', 'description', 'amount', 'dateKey', 'createdAt', 'createdAtMs', 'createdBy'])
-        && data.kind in ['income', 'expense'] && validText(data.description, 80)
-        && validForecastAmount(data.amount) && data.amount > 0 && validDateKey(data.dateKey)
+        && data.kind in ['income', 'expense', 'adjustment'] && validText(data.description, 80)
+        && (data.kind == 'adjustment'
+          ? data.amount is number && data.amount >= -9999999.99 && data.amount <= 9999999.99 && data.amount != 0
+          : validForecastAmount(data.amount) && data.amount > 0)
+        && validDateKey(data.dateKey)
         && data.createdAt is timestamp && data.createdAtMs is number && validText(data.createdBy, 40);
     }
     match /forecast_one_offs/{entryId} {

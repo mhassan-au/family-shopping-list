@@ -1,7 +1,7 @@
 import { collection, doc, onSnapshot, serverTimestamp, writeBatch } from "firebase/firestore";
 import { db } from "./firebase";
 import { getCurrentUsername } from "./currentUser";
-import type { ForecastAuditRecord, ForecastDirection, ForecastFrequency, ForecastMonth, ForecastOccurrenceOverride, ForecastOneOff, ForecastOverride, ForecastSchedule } from "./types";
+import type { ForecastAuditRecord, ForecastDirection, ForecastFrequency, ForecastMonth, ForecastOccurrenceOverride, ForecastOneOff, ForecastOneOffKind, ForecastOverride, ForecastSchedule } from "./types";
 
 const schedules = collection(db, "forecast_schedules");
 const oneOffs = collection(db, "forecast_one_offs");
@@ -32,7 +32,7 @@ export async function saveOpeningBalance(id: string, oldValue: number | null, op
   await batch.commit();
 }
 
-export async function addForecastOneOff(input: { kind: ForecastDirection; description: string; amount: number; dateKey: string; reason: string }) {
+export async function addForecastOneOff(input: { kind: ForecastOneOffKind; description: string; amount: number; dateKey: string; reason: string }) {
   const batch = writeBatch(db); const ref = doc(oneOffs); const now = Date.now(); const by = getCurrentUsername();
   batch.set(ref, { kind: input.kind, description: input.description.trim(), amount: input.amount, dateKey: input.dateKey, createdAt: serverTimestamp(), createdAtMs: now, createdBy: by });
   batch.set(doc(audit), auditData("one_off_created", input.description, "Not set", `${input.kind}:${input.amount}@${input.dateKey}`, input.reason));

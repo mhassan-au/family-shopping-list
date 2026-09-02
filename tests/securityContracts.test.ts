@@ -45,6 +45,8 @@ test("forecast collections are owner-only and historical ledgers are append-only
   assert.match(ruleBlock("forecast_audit/{auditId}"), /allow update, delete: if false/);
   assert.match(ruleBlock("forecast_schedules/{scheduleId}"), /resource\.data\.active == true && request\.resource\.data\.active == false/);
   assert.match(rules, /data\.frequency in \['weekly', 'fortnightly', 'monthly', 'quarterly', 'yearly'\]/);
+  assert.match(rules, /data\.kind in \['income', 'expense', 'adjustment'\]/);
+  assert.match(rules, /data\.amount != 0/);
   assert.match(rules, /data\.excludedExpenseIds is list && data\.excludedExpenseIds\.size\(\) <= 200/);
   assert.match(rules, /'daily_expense_selection_changed', 'daily_expense_amount_locked'/);
   assert.match(ruleBlock("forecast_occurrence_overrides/{occurrenceId}"), /allow update, delete: if false/);

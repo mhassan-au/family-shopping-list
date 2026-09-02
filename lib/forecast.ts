@@ -9,7 +9,19 @@ export type ForecastEntry = {
   scheduleId?: string;
 };
 
-import type { Expense, ForecastFrequency, ForecastOverride, ForecastSchedule } from "./types";
+import type { Expense, ForecastFrequency, ForecastOneOff, ForecastOverride, ForecastSchedule } from "./types";
+
+export function forecastOneOffEntry(entry: ForecastOneOff): ForecastEntry {
+  const adjustment = entry.kind === "adjustment";
+  return {
+    id: entry.id,
+    dateKey: entry.dateKey,
+    description: entry.description,
+    amount: adjustment ? Math.abs(entry.amount) : entry.amount,
+    direction: entry.kind === "adjustment" ? (entry.amount >= 0 ? "income" : "expense") : entry.kind,
+    source: "one-off",
+  };
+}
 
 export function calculateForecastExpenseTotal(expenses: Pick<Expense, "id" | "amount">[], override?: ForecastOverride) {
   const sourceTotal = Math.round(expenses.reduce((total, expense) => total + expense.amount, 0) * 100) / 100;

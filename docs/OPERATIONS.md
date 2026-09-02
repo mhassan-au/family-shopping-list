@@ -23,6 +23,8 @@ After publishing Rules that add transaction-level Forecast overrides, open one a
 
 After publishing Rules that add recurring occurrence exclusions, exclude one recurring expense on today’s row with a reason. Confirm that only that occurrence disappears, its audit record appears, the recurring Settings entry remains active, and future occurrences remain visible.
 
+After publishing Rules that add signed Forecast adjustments, create a `100` Adjustment and confirm the projected balance increases by $100. Create a `-100` Adjustment and confirm it decreases by $100. Confirm ordinary one-off income and expense entries still reject negative values.
+
 ## Device lifecycle
 
 ### Add

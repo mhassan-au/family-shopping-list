@@ -87,6 +87,8 @@ export const UI_TEXT = {
     addOneOffTitle: "Add a one-off entry",
     oneOffIncome: "One-off income",
     unexpectedExpense: "Unexpected expense",
+    adjustment: "Adjustment",
+    invalidOneOffAmount: "Enter a non-zero amount. Only Adjustment can use a negative value.",
     entryType: "Entry type",
     entryDate: "Date",
     entryDescription: "Description",
