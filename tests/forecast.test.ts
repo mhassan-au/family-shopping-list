@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildMonthlyProjection, calculateForecastExpenseTotal, forecastOneOffEntry, ForecastEntry, nextScheduleOccurrence, parseAustralianDate, scheduleOccurrences, scheduleOccurrencesBetween } from "../lib/forecast";
+import { buildMonthlyProjection, calculateForecastExpenseTotal, forecastOneOffEntry, ForecastEntry, nextScheduleOccurrence, parseAustralianDate, personalLoanRepaymentEntry, scheduleOccurrences, scheduleOccurrencesBetween } from "../lib/forecast";
 import { ForecastOverride, ForecastSchedule } from "../lib/types";
 
 const entries: ForecastEntry[] = [
@@ -45,6 +45,17 @@ test("signed one-off adjustments increase or decrease the projected balance", ()
   const projection = buildMonthlyProjection({ year: 2026, monthIndex: 8, openingBalance: 1000, entries: adjustments, todayKey: "2026-09-30" });
   assert.equal(projection.closingBalance, 1060);
   assert.deepEqual(adjustments.map((entry) => [entry.direction, entry.amount]), [["income", 100], ["expense", 40]]);
+});
+
+test("personal loan repayments appear once as dated projection expenses", () => {
+  const entry = personalLoanRepaymentEntry(
+    { id: "repayment", loanId: "loan", amount: 75, repaidDate: "2026-09-12", createdAtMs: 2, createdBy: "Owner" },
+    { id: "loan", lender: "Family", reason: "Help", originalAmount: 200, takenDate: "2026-09-01", createdAtMs: 1, createdBy: "Owner" },
+  );
+  const projection = buildMonthlyProjection({ year: 2026, monthIndex: 8, openingBalance: 500, entries: [entry], todayKey: "2026-09-30" });
+  assert.equal(projection.closingBalance, 425);
+  assert.equal(entry.description, "Loan repayment: Family");
+  assert.equal(entry.id, "loan-repayment-repayment");
 });
 
 test("quarterly schedules recur every three calendar months", () => {

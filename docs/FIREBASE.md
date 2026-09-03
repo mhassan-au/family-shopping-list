@@ -142,6 +142,8 @@ Personal Loan data is owner-only and uses the same `bank_admin_devices/{uid}` bo
 
 Outstanding balances are calculated from the original loan minus all linked repayment records. Neither collection permits client updates or deletes. Publish the updated `firestore.rules` before opening the Personal Loan Ledger or recording data.
 
+Forecast reads these existing owner-only collections and derives one outgoing entry for every repayment on its `repaidDate`. It does not create a duplicate Expense or Forecast document.
+
 ### `improvement_logs/{entryId}`
 
 Owner-only private backlog entries use the same `bank_admin_devices/{uid}` boundary as the Admin dashboard. Each entry stores its type, title, optional notes, lifecycle status, actor, and timestamps. Only `inbox` entries may have their description edited or be deleted. After the owner approves work in Codex, the entry moves directly to `in_progress`; the legacy `agreed` value remains accepted for compatibility but is not produced by the UI. `in_progress` entries preserve their recorded description. `done`, `not_doing`, and `duplicate` entries require a fix/implementation summary and become immutable, non-deletable history.

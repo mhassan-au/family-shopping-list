@@ -36,6 +36,7 @@ interface CategoryConfigContextValue extends CategoryConfig {
     newName: string,
   ) => Promise<void>;
   deleteCategory: (kind: CategoryKind, name: string) => Promise<void>;
+  reorderCategory: (kind: CategoryKind, fromIndex: number, toIndex: number) => Promise<void>;
 }
 
 const CategoryConfigContext = createContext<CategoryConfigContextValue | null>(null);
@@ -136,6 +137,13 @@ export function CategoryConfigProvider({ children }: { children: ReactNode }) {
         [kind]: config[kind].filter((category) => category !== name),
       };
       await saveConfig(nextConfig);
+    },
+    async reorderCategory(kind: CategoryKind, fromIndex: number, toIndex: number) {
+      if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= config[kind].length || toIndex >= config[kind].length) return;
+      const reordered = [...config[kind]];
+      const [moved] = reordered.splice(fromIndex, 1);
+      reordered.splice(toIndex, 0, moved);
+      await saveConfig({ ...config, [kind]: reordered });
     },
   }), [config]);
 

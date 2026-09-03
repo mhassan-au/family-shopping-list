@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { FiArrowLeft, FiClock, FiEdit3, FiFileText, FiPlus, FiRefreshCw, FiSettings, FiTrash2, FiTrendingDown, FiTrendingUp, FiX } from "react-icons/fi";
+import { FiArrowLeft, FiChevronDown, FiChevronUp, FiClock, FiEdit3, FiFileText, FiMove, FiPlus, FiRefreshCw, FiSettings, FiTrash2, FiTrendingDown, FiTrendingUp, FiX } from "react-icons/fi";
 import { getDeviceLogin } from "@/lib/device";
 import { UI_TEXT } from "@/lib/uiText";
 import { CategoryKind, useCategoryConfig } from "@/hooks/useCategoryConfig";
@@ -89,6 +89,7 @@ export default function AdminDashboard({
   const [showForecastAudit, setShowForecastAudit] = useState(false);
   const [showBankSyncReport, setShowBankSyncReport] = useState(false);
   const [showImprovementLog, setShowImprovementLog] = useState(false);
+  const [draggedCategoryIndex, setDraggedCategoryIndex] = useState<number | null>(null);
   const mockSchedules = forecast.schedules;
 
   if (login?.role !== "owner") return null;
@@ -173,6 +174,18 @@ export default function AdminDashboard({
       setMessage({ text: UI_TEXT.admin.saveFailed, error: true });
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function moveCategory(fromIndex: number, toIndex: number) {
+    if (fromIndex === toIndex || toIndex < 0 || toIndex >= categories.length) return;
+    setMessage(null);
+    try {
+      await config.reorderCategory(activeTab, fromIndex, toIndex);
+      setMessage({ text: UI_TEXT.admin.orderSaved, error: false });
+    } catch (moveError) {
+      console.error("Reordering shared options failed", moveError);
+      setMessage({ text: UI_TEXT.admin.orderSaveFailed, error: true });
     }
   }
 
@@ -319,7 +332,7 @@ export default function AdminDashboard({
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <h2 className="font-bold">{tabs.find((tab) => tab.kind === activeTab)?.label}</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{UI_TEXT.admin.tapToEdit}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{UI_TEXT.admin.reorderHelp}</p>
             </div>
             <button type="button" onClick={openAdd} className={`flex size-10 shrink-0 items-center justify-center rounded-full text-white shadow-sm ${activeTheme.action}`} aria-label={UI_TEXT.admin.addCategory}>
               <FiPlus size={20} aria-hidden="true" />
@@ -327,11 +340,14 @@ export default function AdminDashboard({
           </div>
 
           {config.loading ? <p className="text-sm">{UI_TEXT.loading}</p> : (
-            <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <button key={category} type="button" onClick={() => openEdit(category)} className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-sm font-semibold transition ${activeTheme.tag}`}>
-                  {category}<FiEdit3 size={13} aria-hidden="true" />
-                </button>
+            <div className="space-y-2">
+              {categories.map((category, index) => (
+                <div key={category} draggable onDragStart={() => setDraggedCategoryIndex(index)} onDragOver={(event) => event.preventDefault()} onDrop={() => { if (draggedCategoryIndex !== null) void moveCategory(draggedCategoryIndex, index); setDraggedCategoryIndex(null); }} onDragEnd={() => setDraggedCategoryIndex(null)} className={`flex items-center gap-1 rounded-xl border p-1 transition ${draggedCategoryIndex === index ? "opacity-45" : ""} ${activeTheme.tag}`}>
+                  <span className="flex size-8 shrink-0 cursor-grab items-center justify-center touch-none" aria-hidden="true"><FiMove size={15} /></span>
+                  <button type="button" onClick={() => openEdit(category)} className="flex min-w-0 flex-1 items-center gap-1.5 px-1 py-1.5 text-left text-sm font-semibold"><span className="truncate">{category}</span><FiEdit3 className="shrink-0" size={13} aria-hidden="true" /></button>
+                  <button type="button" disabled={index === 0} onClick={() => void moveCategory(index, index - 1)} className="flex size-8 shrink-0 items-center justify-center rounded-lg hover:bg-white/70 disabled:opacity-25 dark:hover:bg-slate-800" aria-label={UI_TEXT.admin.moveUp(category)} title={UI_TEXT.admin.moveUp(category)}><FiChevronUp size={15} /></button>
+                  <button type="button" disabled={index === categories.length - 1} onClick={() => void moveCategory(index, index + 1)} className="flex size-8 shrink-0 items-center justify-center rounded-lg hover:bg-white/70 disabled:opacity-25 dark:hover:bg-slate-800" aria-label={UI_TEXT.admin.moveDown(category)} title={UI_TEXT.admin.moveDown(category)}><FiChevronDown size={15} /></button>
+                </div>
               ))}
             </div>
           )}

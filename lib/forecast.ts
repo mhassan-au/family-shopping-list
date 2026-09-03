@@ -4,12 +4,12 @@ export type ForecastEntry = {
   description: string;
   amount: number;
   direction: "income" | "expense";
-  source: "scheduled" | "recurring" | "one-off" | "actual";
+  source: "scheduled" | "recurring" | "one-off" | "actual" | "loan-repayment";
   excluded?: boolean;
   scheduleId?: string;
 };
 
-import type { Expense, ForecastFrequency, ForecastOneOff, ForecastOverride, ForecastSchedule } from "./types";
+import type { Expense, ForecastFrequency, ForecastOneOff, ForecastOverride, ForecastSchedule, PersonalLoan, PersonalLoanRepayment } from "./types";
 
 export function forecastOneOffEntry(entry: ForecastOneOff): ForecastEntry {
   const adjustment = entry.kind === "adjustment";
@@ -20,6 +20,17 @@ export function forecastOneOffEntry(entry: ForecastOneOff): ForecastEntry {
     amount: adjustment ? Math.abs(entry.amount) : entry.amount,
     direction: entry.kind === "adjustment" ? (entry.amount >= 0 ? "income" : "expense") : entry.kind,
     source: "one-off",
+  };
+}
+
+export function personalLoanRepaymentEntry(repayment: PersonalLoanRepayment, loan?: PersonalLoan): ForecastEntry {
+  return {
+    id: `loan-repayment-${repayment.id}`,
+    dateKey: repayment.repaidDate,
+    description: loan ? `Loan repayment: ${loan.lender}` : "Loan repayment",
+    amount: repayment.amount,
+    direction: "expense",
+    source: "loan-repayment",
   };
 }
 
