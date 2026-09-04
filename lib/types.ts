@@ -174,6 +174,36 @@ export interface PersonalLoanRepayment {
   createdBy: string;
 }
 
+export type WishStatus = "active" | "terminated";
+export type WishTransactionType = "contribution" | "withdrawal" | "termination_refund";
+
+export interface Wish {
+  id: string;
+  name: string;
+  targetCents: number;
+  balanceCents: number;
+  deadlineDate: string;
+  eventDate: string;
+  status: WishStatus;
+  createdAtMs: number;
+  createdBy: string;
+  updatedAtMs: number;
+  updatedBy: string;
+  lastTransactionId?: string;
+  terminatedAtMs?: number;
+}
+
+export interface WishTransaction {
+  id: string;
+  wishId: string;
+  type: WishTransactionType;
+  amountCents: number;
+  dateKey: string;
+  note: string;
+  createdAtMs: number;
+  createdBy: string;
+}
+
 export type ImprovementType = "bug" | "ui_change" | "feature";
 export type ImprovementStatus = "inbox" | "agreed" | "in_progress" | "done" | "not_doing" | "duplicate";
 

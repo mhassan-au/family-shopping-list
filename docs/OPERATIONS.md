@@ -19,6 +19,8 @@ After publishing Rules that introduce the Personal Loan Ledger, verify one owner
 
 After recording a Personal Loan repayment, open Forecast for that month and confirm exactly one `Loan repayment: <lender>` outgoing entry appears on the repayment date with the recorded amount.
 
+After publishing Rules that introduce Wish List, create a Wish and add a partial saving. Confirm the saving appears once as an outgoing Daily Projection entry. Withdraw part of it and confirm an incoming entry appears, an over-withdrawal is rejected, termination refunds the remaining balance, and neither the Wish nor its transaction history can be deleted. Confirm a contributor cannot read `wishes` or `wish_transactions`.
+
 After publishing Rules that introduce the Improvement Log, add and edit one Inbox entry, remove it, then complete another entry with a resolution summary. Confirm the History entry cannot be edited or deleted and a contributor device cannot read `improvement_logs` directly.
 
 After publishing Rules that add transaction-level Forecast overrides, open one actual daily Expenses total, exclude a transaction with a reason, and confirm the Forecast total and audit entry update. Add another Expense on that date and confirm it is included automatically. Also verify that a manually locked total remains unchanged until switched back to selected transactions.

@@ -416,6 +416,92 @@ service cloud.firestore {
       allow create: if bankAdminDevice() && validPersonalLoanRepayment() && request.resource.data.createdAt == request.time;
       allow update, delete: if false;
     }
+    function validWish() {
+      let data = request.resource.data;
+      return data.keys().hasOnly([
+          'name', 'targetCents', 'balanceCents', 'deadlineDate', 'eventDate', 'status',
+          'createdAt', 'createdAtMs', 'createdBy', 'updatedAt', 'updatedAtMs', 'updatedBy',
+          'lastTransactionId', 'terminatedAt', 'terminatedAtMs'
+        ])
+        && data.keys().hasAll([
+          'name', 'targetCents', 'balanceCents', 'deadlineDate', 'eventDate', 'status',
+          'createdAt', 'createdAtMs', 'createdBy', 'updatedAt', 'updatedAtMs', 'updatedBy'
+        ])
+        && validText(data.name, 80)
+        && data.targetCents is int && data.targetCents > 0 && data.targetCents <= 999999999
+        && data.balanceCents is int && data.balanceCents >= 0 && data.balanceCents <= 999999999
+        && validDateKey(data.deadlineDate) && validDateKey(data.eventDate)
+        && data.deadlineDate <= data.eventDate
+        && data.status in ['active', 'terminated']
+        && data.createdAt is timestamp && data.createdAtMs is number && validText(data.createdBy, 40)
+        && data.updatedAt is timestamp && data.updatedAtMs is number && validText(data.updatedBy, 40)
+        && (!('lastTransactionId' in data) || validText(data.lastTransactionId, 120))
+        && (data.status == 'terminated'
+          ? data.balanceCents == 0 && data.terminatedAt is timestamp && data.terminatedAtMs is number
+          : !('terminatedAt' in data) && !('terminatedAtMs' in data));
+    }
+    function validWishTransaction() {
+      let data = request.resource.data;
+      return data.keys().hasOnly(['wishId', 'type', 'amountCents', 'dateKey', 'note', 'createdAt', 'createdAtMs', 'createdBy'])
+        && data.keys().hasAll(['wishId', 'type', 'amountCents', 'dateKey', 'note', 'createdAt', 'createdAtMs', 'createdBy'])
+        && validText(data.wishId, 120)
+        && data.type in ['contribution', 'withdrawal', 'termination_refund']
+        && data.amountCents is int && data.amountCents >= 0 && data.amountCents <= 999999999
+        && (data.type == 'termination_refund' || data.amountCents > 0)
+        && validDateKey(data.dateKey)
+        && validOptionalText(data.note, 160)
+        && data.createdAt is timestamp && data.createdAtMs is number && validText(data.createdBy, 40);
+    }
+    function validWishTransition(wishId) {
+      let transactionId = request.resource.data.lastTransactionId;
+      let entry = getAfter(/databases/$(database)/documents/wish_transactions/$(transactionId)).data;
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'balanceCents', 'status', 'lastTransactionId', 'terminatedAt', 'terminatedAtMs',
+          'updatedAt', 'updatedAtMs', 'updatedBy'
+        ])
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.createdAtMs == resource.data.createdAtMs
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.updatedAt == request.time
+        && entry.wishId == wishId
+        && ((entry.type == 'contribution'
+            && request.resource.data.status == 'active'
+            && request.resource.data.balanceCents == resource.data.balanceCents + entry.amountCents)
+          || (entry.type == 'withdrawal'
+            && request.resource.data.status == 'active'
+            && entry.amountCents <= resource.data.balanceCents
+            && request.resource.data.balanceCents == resource.data.balanceCents - entry.amountCents)
+          || (entry.type == 'termination_refund'
+            && request.resource.data.status == 'terminated'
+            && request.resource.data.balanceCents == 0
+            && entry.amountCents == resource.data.balanceCents
+            && request.resource.data.terminatedAt == request.time));
+    }
+    match /wishes/{wishId} {
+      allow read: if bankAdminDevice();
+      allow create: if bankAdminDevice()
+        && validWish()
+        && request.resource.data.status == 'active'
+        && request.resource.data.balanceCents == 0
+        && !('lastTransactionId' in request.resource.data)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow update: if bankAdminDevice()
+        && resource.data.status == 'active'
+        && validWish()
+        && validWishTransition(wishId);
+      allow delete: if false;
+    }
+    match /wish_transactions/{transactionId} {
+      allow read: if bankAdminDevice();
+      allow create: if bankAdminDevice()
+        && validWishTransaction()
+        && request.resource.data.createdAt == request.time
+        && exists(/databases/$(database)/documents/wishes/$(request.resource.data.wishId))
+        && get(/databases/$(database)/documents/wishes/$(request.resource.data.wishId)).data.status == 'active'
+        && getAfter(/databases/$(database)/documents/wishes/$(request.resource.data.wishId)).data.lastTransactionId == transactionId;
+      allow update, delete: if false;
+    }
     function isImprovementHistory(status) {
       return status in ['done', 'not_doing', 'duplicate'];
     }

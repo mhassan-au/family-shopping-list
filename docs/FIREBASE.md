@@ -144,6 +144,15 @@ Outstanding balances are calculated from the original loan minus all linked repa
 
 Forecast reads these existing owner-only collections and derives one outgoing entry for every repayment on its `repaidDate`. It does not create a duplicate Expense or Forecast document.
 
+### Wish List collections
+
+Wish List data is owner-only under the same `bank_admin_devices/{uid}` boundary as Forecast.
+
+- `wishes` stores the immutable name, target in integer cents, savings deadline, event date, current balance in integer cents, lifecycle status, last transaction ID, and audit timestamps. Documents cannot be deleted.
+- `wish_transactions` is an append-only ledger containing `contribution`, `withdrawal`, or `termination_refund` records. Each record stores the Wish ID, integer-cent amount, local transaction date, optional note, actor, and timestamp.
+
+Every balance change and ledger entry is committed in one Firestore transaction. Rules require the Wish's `lastTransactionId` to reference the matching newly created transaction, prevent withdrawals above the current balance, and require termination to reduce the balance to zero. Forecast derives contributions as outgoing entries and withdrawals/refunds as incoming entries without copying them into Forecast or Expenses.
+
 ### `improvement_logs/{entryId}`
 
 Owner-only private backlog entries use the same `bank_admin_devices/{uid}` boundary as the Admin dashboard. Each entry stores its type, title, optional notes, lifecycle status, actor, and timestamps. Only `inbox` entries may have their description edited or be deleted. After the owner approves work in Codex, the entry moves directly to `in_progress`; the legacy `agreed` value remains accepted for compatibility but is not produced by the UI. `in_progress` entries preserve their recorded description. `done`, `not_doing`, and `duplicate` entries require a fix/implementation summary and become immutable, non-deletable history.
@@ -186,6 +195,8 @@ To publish manually:
 11. Confirm an owner can exclude today’s recurring expense occurrence without changing the recurring schedule or a future occurrence
 12. Confirm an owner can add, edit, and remove an Inbox improvement, then move another entry to History with a summary
 13. Confirm History improvements cannot be edited or deleted and a contributor cannot read `improvement_logs`
+14. Confirm an owner can create a Wish, add savings, withdraw no more than its balance, and terminate it
+15. Confirm Wish contributions reduce Daily Projection, withdrawals/refunds restore it, and a contributor cannot read either Wish collection
 
 Vercel does not deploy Firestore Rules.
 

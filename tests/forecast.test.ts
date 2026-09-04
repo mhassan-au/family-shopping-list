@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildMonthlyProjection, calculateForecastExpenseTotal, forecastOneOffEntry, ForecastEntry, nextScheduleOccurrence, parseAustralianDate, personalLoanRepaymentEntry, scheduleOccurrences, scheduleOccurrencesBetween } from "../lib/forecast";
+import { buildMonthlyProjection, calculateForecastExpenseTotal, forecastOneOffEntry, ForecastEntry, nextScheduleOccurrence, parseAustralianDate, personalLoanRepaymentEntry, scheduleOccurrences, scheduleOccurrencesBetween, wishTransactionEntry } from "../lib/forecast";
 import { ForecastOverride, ForecastSchedule } from "../lib/types";
 
 const entries: ForecastEntry[] = [
@@ -56,6 +56,14 @@ test("personal loan repayments appear once as dated projection expenses", () => 
   assert.equal(projection.closingBalance, 425);
   assert.equal(entry.description, "Loan repayment: Family");
   assert.equal(entry.id, "loan-repayment-repayment");
+});
+
+test("wish contributions reduce projection and withdrawals restore it", () => {
+  const saved = wishTransactionEntry({ id: "save", wishId: "wish", type: "contribution", amountCents: 12_500, dateKey: "2026-09-05", note: "", createdAtMs: 1, createdBy: "Owner" });
+  const returned = wishTransactionEntry({ id: "return", wishId: "wish", type: "withdrawal", amountCents: 5_000, dateKey: "2026-09-12", note: "", createdAtMs: 2, createdBy: "Owner" });
+  const projection = buildMonthlyProjection({ year: 2026, monthIndex: 8, openingBalance: 500, entries: [saved, returned], todayKey: "2026-09-30" });
+  assert.equal(projection.closingBalance, 425);
+  assert.deepEqual([saved.direction, returned.direction], ["expense", "income"]);
 });
 
 test("quarterly schedules recur every three calendar months", () => {

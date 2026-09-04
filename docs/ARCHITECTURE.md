@@ -9,8 +9,8 @@
 5. Approved devices render `HouseholdApp`.
 6. The bottom menu switches between `ShoppingList`, `Expenses`, and the staged `Forecast` section without a page reload.
 7. A single shared top banner changes identity by section: MyGrocery for Shopping, MyExpenses for Expenses, and MyCashFlow for Forecast. `ExpenseReport` opens from the report icon in the weekly Expenses summary while the Expenses navigation tab stays active; secondary Settings and report views hide the shared banner.
-8. Owner-only administration and the Personal Loan Ledger open from the top menu without occupying primary navigation tabs.
-9. The shopping, expense, forecast, and personal-loan hooks maintain their real-time Firestore listeners.
+8. Owner-only administration, Personal Loan Ledger, Wish List, and Improvement Log open from the top menu without occupying primary navigation tabs.
+9. The shopping, expense, forecast, personal-loan, and Wish List hooks maintain their real-time Firestore listeners.
 
 ## Key files
 
@@ -32,6 +32,10 @@
 | `hooks/usePersonalLoans.ts` | Live owner-only loan and repayment listeners |
 | `lib/personalLoanStore.ts` | Append-only personal loan and repayment writes |
 | `lib/personalLoans.ts` | Loan validation and outstanding-balance calculations |
+| `components/WishList.tsx` | Owner-only savings goals, current/history views, and contribution, withdrawal, and termination controls |
+| `hooks/useWishes.ts` | Live owner-only Wish and immutable transaction listeners |
+| `lib/wishStore.ts` | Atomic Wish balance and append-only transaction writes |
+| `lib/wishes.ts` | Integer-cent validation, conversion, and progress calculations |
 | `hooks/useShoppingList.ts` | Real-time state, optimistic updates, reconnects |
 | `hooks/useExpenses.ts` | Real-time expense state |
 | `lib/shopping.ts` | Firestore shopping-item and price-history operations |
@@ -92,5 +96,7 @@ UP Bank sync is deliberately manual and separate for Peu and Shamir. The browser
 Whole-number money input remains optimized for cents, but can be ambiguous: `12` may mean `$0.12` or `$12.00`. Shopping completion and new-expense entry show the two-choice confirmation only when the cents-first result is unusual—below $1 or above $1,000. Values from $1 through $1,000 save normally; entering a decimal or using the `>>` action also removes the ambiguity.
 
 Personal loans are an owner-only ledger separate from Expenses. Each `personal_loans` record preserves the original lender, reason, amount, and borrowing date. Partial or full returns are appended to `personal_loan_repayments`; future repayment dates are rejected, and the UI derives repaid and outstanding totals without updating or deleting historical records. Forecast derives one outgoing daily entry from each immutable repayment record without copying it into Expenses or another Firestore collection. Unpaid loans are listed first, while fully paid loans move to the bottom, use a muted grey treatment, and collapse by default.
+
+Wish List is an owner-only reserved-money ledger. A Wish records a target, savings deadline, event date, current integer-cent balance, and active or terminated status. Contributions reduce Daily Projection on their transaction dates; withdrawals and termination refunds increase it. Balance changes and their immutable `wish_transactions` records are written atomically. A Wish can never be deleted, target completion is informational, and termination returns any remaining balance before moving the Wish to History. Later purchases continue through the normal Expenses workflow and are not linked to a Wish.
 
 The owner-only Improvement Log records bugs, UI changes, and small feature ideas in `improvement_logs`. Unreviewed entries may be edited or deleted before Codex begins work. After explicit approval in the Codex conversation, the selected entry moves directly to in-progress; there is no separate in-app Agree action. In-progress entries preserve their original description, while done, not-doing, and duplicate outcomes move to immutable history with a required resolution summary. Current and history lists are paginated in the UI, and history is retained to prevent later duplicate work.

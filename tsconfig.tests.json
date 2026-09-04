@@ -13,6 +13,7 @@
     "lib/bankSyncPolicy.ts",
     "lib/securityPolicy.ts",
     "lib/forecast.ts",
+    "lib/wishes.ts",
     "lib/validation.ts",
     "tests/**/*.test.ts"
   ]

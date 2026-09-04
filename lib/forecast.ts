@@ -4,12 +4,13 @@ export type ForecastEntry = {
   description: string;
   amount: number;
   direction: "income" | "expense";
-  source: "scheduled" | "recurring" | "one-off" | "actual" | "loan-repayment";
+  source: "scheduled" | "recurring" | "one-off" | "actual" | "loan-repayment" | "wish";
   excluded?: boolean;
   scheduleId?: string;
 };
 
-import type { Expense, ForecastFrequency, ForecastOneOff, ForecastOverride, ForecastSchedule, PersonalLoan, PersonalLoanRepayment } from "./types";
+import type { Expense, ForecastFrequency, ForecastOneOff, ForecastOverride, ForecastSchedule, PersonalLoan, PersonalLoanRepayment, Wish, WishTransaction } from "./types";
+import { fromCents } from "./wishes";
 
 export function forecastOneOffEntry(entry: ForecastOneOff): ForecastEntry {
   const adjustment = entry.kind === "adjustment";
@@ -31,6 +32,18 @@ export function personalLoanRepaymentEntry(repayment: PersonalLoanRepayment, loa
     amount: repayment.amount,
     direction: "expense",
     source: "loan-repayment",
+  };
+}
+
+export function wishTransactionEntry(transaction: WishTransaction, wish?: Wish): ForecastEntry {
+  const returning = transaction.type !== "contribution";
+  return {
+    id: `wish-${transaction.id}`,
+    dateKey: transaction.dateKey,
+    description: wish ? `${returning ? "Wish returned" : "Wish savings"}: ${wish.name}` : returning ? "Wish savings returned" : "Wish savings",
+    amount: fromCents(transaction.amountCents),
+    direction: returning ? "income" : "expense",
+    source: "wish",
   };
 }
 

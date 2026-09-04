@@ -62,6 +62,19 @@ test("personal loan and repayment ledgers are owner-only and append-only", () =>
   assert.match(rules, /exists\(\/databases\/\$\(database\)\/documents\/personal_loans\/\$\(data\.loanId\)\)/);
 });
 
+test("Wish List is owner-only, non-deletable, and transaction-backed", () => {
+  const wishes = ruleBlock("wishes/{wishId}");
+  const transactions = ruleBlock("wish_transactions/{transactionId}");
+  assert.match(wishes, /allow read: if bankAdminDevice\(\)/);
+  assert.match(wishes, /allow delete: if false/);
+  assert.match(wishes, /validWishTransition\(wishId\)/);
+  assert.match(transactions, /allow read: if bankAdminDevice\(\)/);
+  assert.match(transactions, /allow update, delete: if false/);
+  assert.match(transactions, /getAfter\(\/databases\/\$\(database\)\/documents\/wishes/);
+  assert.match(rules, /data\.type in \['contribution', 'withdrawal', 'termination_refund'\]/);
+  assert.match(rules, /entry\.amountCents <= resource\.data\.balanceCents/);
+});
+
 test("improvement log history is owner-only and cannot be edited or deleted", () => {
   const block = ruleBlock("improvement_logs/{entryId}");
   assert.match(block, /allow read: if bankAdminDevice\(\)/);
