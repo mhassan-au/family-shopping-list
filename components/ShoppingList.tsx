@@ -260,7 +260,7 @@ export default function ShoppingList() {
   }
 
   return (
-    <main className="w-full max-w-md mx-auto p-4 pb-24 sm:p-5 sm:pb-24">
+    <main className="w-full max-w-md mx-auto p-4 pb-40 sm:p-5 sm:pb-40">
       <section className="mb-4 rounded-xl border border-blue-200 bg-blue-100/95 p-2 text-center text-blue-900 shadow-sm backdrop-blur dark:border-blue-800 dark:bg-blue-950/95 dark:text-blue-100">
         <div className="px-2 py-1 text-sm font-medium">
           <time dateTime={todayDateTime} suppressHydrationWarning>{todayLabel}</time>
@@ -401,9 +401,11 @@ export default function ShoppingList() {
       </section>
 
       {completedItems.length > 0 && (
-        <button type="button" onClick={() => setShowClearConfirm(true)} className="mt-3 w-full rounded-lg border border-blue-300 bg-gradient-to-r from-blue-50 to-cyan-100 px-4 py-2 text-lg font-bold text-red-600 shadow-sm transition hover:from-blue-100 hover:to-cyan-200 active:scale-[0.99] dark:border-blue-700 dark:from-blue-900 dark:to-cyan-950 dark:text-red-400 dark:hover:from-blue-800 dark:hover:to-cyan-900">
-          {UI_TEXT.items.total(completedTotal)}
-        </button>
+        <div className="fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-30 mx-auto w-full max-w-md px-4 sm:px-5">
+          <button type="button" onClick={() => setShowClearConfirm(true)} className="w-full rounded-lg border border-blue-300 bg-gradient-to-r from-blue-50 to-cyan-100 px-4 py-2 text-lg font-bold text-red-600 shadow-lg transition hover:from-blue-100 hover:to-cyan-200 active:scale-[0.99] dark:border-blue-700 dark:from-blue-900 dark:to-cyan-950 dark:text-red-400 dark:hover:from-blue-800 dark:hover:to-cyan-900">
+            {UI_TEXT.items.total(completedTotal)}
+          </button>
+        </div>
       )}
 
       {!loading && items.length === 0 && (
