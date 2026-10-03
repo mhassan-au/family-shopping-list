@@ -260,7 +260,7 @@ export const UI_TEXT = {
     duplicateConfirm: "This expense appears to have already been added today. Save it again?",
     saveAnyway: "Save anyway",
     loadFailed: "Could not refresh expenses. Check your connection and try again.",
-    invalidDescription: "Enter a short description using valid characters.",
+    invalidDescription: "Enter a description of 80 characters or fewer.",
     invalidAmount: "Enter an amount greater than $0 with up to two decimal places.",
     shiftDecimal: "Shift decimal two places right",
     amend: "Amend",
@@ -437,8 +437,7 @@ export const UI_TEXT = {
     maxItems: (count: number) => `Add no more than ${count} items at once`,
     maxLength: (count: number) =>
       `Each item must be ${count} characters or fewer`,
-    invalidCharacters:
-      "Items can use letters, numbers, spaces, and common shopping punctuation only.",
+    invalidCharacters: "Item name could not be added.",
     alreadyAdded: (names: string[], plural: boolean) =>
       `${names.join(", ")} ${plural ? "are" : "is"} already added`,
     duplicatesSkipped: (names: string[]) =>

@@ -12,7 +12,6 @@ export const INPUT_LIMITS = {
 } as const;
 
 const LOGIN_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
-const ITEM_NAME_PATTERN = /^[\p{L}\p{M}\p{N} &'()+./%\-]+$/u;
 const CONTROL_CHAR_PATTERN = /[\u0000-\u001F\u007F]/;
 
 export function isValidFamilyCode(value: string) {
@@ -42,8 +41,7 @@ export function isValidPassword(value: string) {
 export function isValidItemName(value: string) {
   return (
     value.length >= 1 &&
-    value.length <= INPUT_LIMITS.itemName &&
-    ITEM_NAME_PATTERN.test(value)
+    value.length <= INPUT_LIMITS.itemName
   );
 }
 
@@ -78,8 +76,7 @@ export function isValidPriceInput(value: string) {
 export function isValidExpenseDescription(value: string) {
   return (
     value.trim().length >= 1 &&
-    value.trim().length <= INPUT_LIMITS.expenseDescription &&
-    ITEM_NAME_PATTERN.test(value.trim())
+    value.trim().length <= INPUT_LIMITS.expenseDescription
   );
 }
 

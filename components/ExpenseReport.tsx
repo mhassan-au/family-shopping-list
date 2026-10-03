@@ -19,8 +19,11 @@ import {
 import { Expense } from "@/lib/types";
 import { UI_TEXT } from "@/lib/uiText";
 import { normalizeConfiguredCategory, useCategoryConfig } from "@/hooks/useCategoryConfig";
-
-type ReportPeriod = "day" | "week" | "month" | "year";
+import {
+  getPeriodRange,
+  shiftPeriod,
+  type ReportPeriod,
+} from "@/lib/expenseReportPeriods";
 
 function expenseDate(expense: Expense) {
   return expense.createdAt?.toDate() ?? new Date(expense.createdAtMs);
@@ -40,36 +43,6 @@ function formatCompactCurrency(amount: number) {
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(amount);
-}
-
-function getPeriodRange(period: ReportPeriod, anchor: Date) {
-  const start = new Date(anchor);
-  start.setHours(0, 0, 0, 0);
-
-  if (period === "week") {
-    const day = start.getDay();
-    start.setDate(start.getDate() - (day === 0 ? 6 : day - 1));
-  } else if (period === "month") {
-    start.setDate(1);
-  } else if (period === "year") {
-    start.setMonth(0, 1);
-  }
-
-  const end = new Date(start);
-  if (period === "day") end.setDate(end.getDate() + 1);
-  if (period === "week") end.setDate(end.getDate() + 7);
-  if (period === "month") end.setMonth(end.getMonth() + 1);
-  if (period === "year") end.setFullYear(end.getFullYear() + 1);
-  return { start, end };
-}
-
-function shiftPeriod(date: Date, period: ReportPeriod, direction: number) {
-  const shifted = new Date(date);
-  if (period === "day") shifted.setDate(shifted.getDate() + direction);
-  if (period === "week") shifted.setDate(shifted.getDate() + direction * 7);
-  if (period === "month") shifted.setMonth(shifted.getMonth() + direction);
-  if (period === "year") shifted.setFullYear(shifted.getFullYear() + direction);
-  return shifted;
 }
 
 function formatPeriodLabel(period: ReportPeriod, start: Date, end: Date) {
