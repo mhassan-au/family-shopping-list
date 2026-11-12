@@ -80,7 +80,7 @@ service cloud.firestore {
     match /shopping_price_history/{historyId} {
       allow read: if approvedDevice();
       allow create, update: if approvedDevice() && validShoppingPriceHistory();
-      allow delete: if false;
+      allow delete: if bankAdminDevice() && resource.data.active == false;
     }
     function validExpense() {
       let data = request.resource.data;
@@ -298,7 +298,9 @@ service cloud.firestore {
         && validText(data.createdBy, 40)
         && (data.active
           ? !('inactiveAt' in data) && !('inactiveReason' in data)
-          : validDateKey(data.inactiveAt) && validText(data.inactiveReason, 160));
+          : validDateKey(data.inactiveAt)
+            && data.inactiveAt >= data.firstDate
+            && validText(data.inactiveReason, 160));
     }
     match /forecast_schedules/{scheduleId} {
       allow read: if bankAdminDevice();
@@ -307,7 +309,7 @@ service cloud.firestore {
         && resource.data.active == true && request.resource.data.active == false
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active', 'inactiveAt', 'inactiveReason'])
         && validForecastSchedule();
-      allow delete: if false;
+      allow delete: if bankAdminDevice() && resource.data.active == false;
     }
     function validForecastOneOff() {
       let data = request.resource.data;
@@ -323,7 +325,8 @@ service cloud.firestore {
     match /forecast_one_offs/{entryId} {
       allow read: if bankAdminDevice();
       allow create: if bankAdminDevice() && validForecastOneOff() && request.resource.data.createdAt == request.time;
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if bankAdminDevice();
     }
     function validForecastMonth(monthId) {
       let data = request.resource.data;
@@ -336,7 +339,7 @@ service cloud.firestore {
     match /forecast_months/{monthId} {
       allow read: if bankAdminDevice();
       allow create, update: if bankAdminDevice() && validForecastMonth(monthId) && request.resource.data.updatedAt == request.time;
-      allow delete: if false;
+      allow delete: if bankAdminDevice();
     }
     function validForecastOverride(overrideId) {
       let data = request.resource.data;
@@ -351,7 +354,7 @@ service cloud.firestore {
     match /forecast_overrides/{overrideId} {
       allow read: if bankAdminDevice();
       allow create, update: if bankAdminDevice() && validForecastOverride(overrideId) && request.resource.data.updatedAt == request.time;
-      allow delete: if false;
+      allow delete: if bankAdminDevice();
     }
     function validForecastOccurrenceOverride(occurrenceId) {
       let data = request.resource.data;
@@ -369,20 +372,22 @@ service cloud.firestore {
     match /forecast_occurrence_overrides/{occurrenceId} {
       allow read: if bankAdminDevice();
       allow create: if bankAdminDevice() && validForecastOccurrenceOverride(occurrenceId) && request.resource.data.createdAt == request.time;
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if bankAdminDevice();
     }
     function validForecastAudit() {
       let data = request.resource.data;
       return data.keys().hasOnly(['action', 'subject', 'oldValue', 'newValue', 'reason', 'createdAt', 'createdAtMs', 'createdBy'])
         && data.keys().hasAll(['action', 'subject', 'oldValue', 'newValue', 'reason', 'createdAt', 'createdAtMs', 'createdBy'])
-        && data.action in ['opening_balance_changed', 'daily_expense_adjusted', 'daily_expense_excluded', 'daily_expense_selection_changed', 'daily_expense_amount_locked', 'recurring_occurrence_excluded', 'schedule_created', 'schedule_inactivated', 'one_off_created']
+        && data.action in ['opening_balance_changed', 'daily_expense_adjusted', 'daily_expense_excluded', 'daily_expense_selection_changed', 'daily_expense_amount_locked', 'recurring_occurrence_excluded', 'schedule_created', 'schedule_inactivated', 'one_off_created', 'forecast_purged']
         && validText(data.subject, 120) && validOptionalText(data.oldValue, 120) && validOptionalText(data.newValue, 120)
         && validText(data.reason, 160) && data.createdAt is timestamp && data.createdAtMs is number && validText(data.createdBy, 40);
     }
     match /forecast_audit/{auditId} {
       allow read: if bankAdminDevice();
       allow create: if bankAdminDevice() && validForecastAudit() && request.resource.data.createdAt == request.time;
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if bankAdminDevice();
     }
     function validPersonalLoan() {
       let data = request.resource.data;

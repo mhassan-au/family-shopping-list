@@ -39,18 +39,23 @@ test("bank collections require bank-admin devices", () => {
   assert.match(ruleBlock("bank_sync_audit/{auditId}"), /request\.resource\.data\.occurredAt == request\.time/);
 });
 
-test("forecast collections are owner-only and historical ledgers are append-only", () => {
+test("forecast collections are owner-only and retention deletes stay owner-controlled", () => {
   for (const collection of ["forecast_schedules/{scheduleId}", "forecast_one_offs/{entryId}", "forecast_months/{monthId}", "forecast_overrides/{overrideId}", "forecast_occurrence_overrides/{occurrenceId}", "forecast_audit/{auditId}"]) assert.match(ruleBlock(collection), /bankAdminDevice\(\)/);
-  assert.match(ruleBlock("forecast_one_offs/{entryId}"), /allow update, delete: if false/);
-  assert.match(ruleBlock("forecast_audit/{auditId}"), /allow update, delete: if false/);
+  assert.match(ruleBlock("forecast_one_offs/{entryId}"), /allow update: if false/);
+  assert.match(ruleBlock("forecast_audit/{auditId}"), /allow update: if false/);
   assert.match(ruleBlock("forecast_schedules/{scheduleId}"), /resource\.data\.active == true && request\.resource\.data\.active == false/);
+  assert.match(rules, /data\.inactiveAt >= data\.firstDate/);
   assert.match(rules, /data\.frequency in \['weekly', 'fortnightly', 'monthly', 'quarterly', 'yearly'\]/);
   assert.match(rules, /data\.kind in \['income', 'expense', 'adjustment'\]/);
   assert.match(rules, /data\.amount != 0/);
   assert.match(rules, /data\.excludedExpenseIds is list && data\.excludedExpenseIds\.size\(\) <= 200/);
   assert.match(rules, /'daily_expense_selection_changed', 'daily_expense_amount_locked'/);
-  assert.match(ruleBlock("forecast_occurrence_overrides/{occurrenceId}"), /allow update, delete: if false/);
+  assert.match(ruleBlock("forecast_schedules/{scheduleId}"), /allow delete: if bankAdminDevice\(\) && resource\.data\.active == false/);
+  for (const collection of ["forecast_one_offs/{entryId}", "forecast_months/{monthId}", "forecast_overrides/{overrideId}", "forecast_occurrence_overrides/{occurrenceId}", "forecast_audit/{auditId}"]) {
+    assert.match(ruleBlock(collection), /allow delete: if bankAdminDevice\(\)/);
+  }
   assert.match(rules, /'recurring_occurrence_excluded'/);
+  assert.match(rules, /'forecast_purged'/);
 });
 
 test("personal loan and repayment ledgers are owner-only and append-only", () => {

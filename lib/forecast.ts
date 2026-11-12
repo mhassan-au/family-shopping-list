@@ -70,6 +70,11 @@ export function toDateKey(year: number, monthIndex: number, day: number) {
   return `${year}-${String(monthIndex + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
+export function forecastRetentionCutoff(referenceDate: Date) {
+  const previousMonth = new Date(referenceDate.getFullYear(), referenceDate.getMonth() - 1, 1);
+  return toDateKey(previousMonth.getFullYear(), previousMonth.getMonth(), 1);
+}
+
 export function buildMonthlyProjection({ year, monthIndex, openingBalance, entries, todayKey }: {
   year: number;
   monthIndex: number;
@@ -121,6 +126,10 @@ export function parseAustralianDate(value: string) {
   const date = new Date(year, month - 1, day);
   if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
   return toDateKey(year, month - 1, day);
+}
+
+export function isValidScheduleInactiveDate(schedule: ForecastSchedule, dateKey: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(dateKey) && dateKey >= schedule.firstDate;
 }
 
 function addCalendarMonths(date: Date, months: number, preferredDay: number) {

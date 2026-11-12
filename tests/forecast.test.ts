@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildMonthlyProjection, calculateForecastExpenseTotal, forecastOneOffEntry, ForecastEntry, nextScheduleOccurrence, parseAustralianDate, personalLoanRepaymentEntry, scheduleOccurrences, scheduleOccurrencesBetween, wishTransactionEntry } from "../lib/forecast";
+import { buildMonthlyProjection, calculateForecastExpenseTotal, forecastOneOffEntry, forecastRetentionCutoff, ForecastEntry, isValidScheduleInactiveDate, nextScheduleOccurrence, parseAustralianDate, personalLoanRepaymentEntry, scheduleOccurrences, scheduleOccurrencesBetween, wishTransactionEntry } from "../lib/forecast";
 import { ForecastOverride, ForecastSchedule } from "../lib/types";
 
 const entries: ForecastEntry[] = [
@@ -79,6 +79,26 @@ test("upcoming schedule helpers return the next date and exact window occurrence
 
 test("inactive schedules retain occurrences before the inactive date", () => {
   assert.deepEqual(scheduleOccurrences(schedule({ active: false, inactiveAt: "2026-09-20", inactiveReason: "Changed" }), 2026, 8).map((entry) => entry.dateKey), ["2026-09-02", "2026-09-16"]);
+});
+
+test("effective-dated deactivation works for recurring income and expenses", () => {
+  for (const kind of ["income", "expense"] as const) {
+    const effectiveDated = schedule({ kind, active: false, inactiveAt: "2026-09-30", inactiveReason: "Ended" });
+    assert.deepEqual(scheduleOccurrencesBetween(effectiveDated, "2026-09-01", "2026-10-31").map((entry) => entry.dateKey), ["2026-09-02", "2026-09-16"]);
+  }
+});
+
+test("schedule deactivation dates cannot precede the schedule start", () => {
+  const recurring = schedule({ firstDate: "2026-09-02" });
+  assert.equal(isValidScheduleInactiveDate(recurring, "2026-09-01"), false);
+  assert.equal(isValidScheduleInactiveDate(recurring, "2026-09-02"), true);
+  assert.equal(isValidScheduleInactiveDate(recurring, "2027-01-01"), true);
+  assert.equal(isValidScheduleInactiveDate(recurring, "not-a-date"), false);
+});
+
+test("Forecast retention keeps the current and previous calendar months", () => {
+  assert.equal(forecastRetentionCutoff(new Date(2026, 10, 12)), "2026-10-01");
+  assert.equal(forecastRetentionCutoff(new Date(2027, 0, 5)), "2026-12-01");
 });
 
 test("Australian recurring-date input converts to an ISO date key", () => {
