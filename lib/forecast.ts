@@ -169,6 +169,17 @@ export function nextScheduleOccurrence(schedule: ForecastSchedule, fromDateKey: 
   return schedule.active || !schedule.inactiveAt || dateKey < schedule.inactiveAt ? dateKey : null;
 }
 
+export function sortSchedulesByNextOccurrence(schedules: ForecastSchedule[], fromDateKey: string) {
+  return [...schedules].sort((left, right) => {
+    const leftNext = nextScheduleOccurrence(left, fromDateKey);
+    const rightNext = nextScheduleOccurrence(right, fromDateKey);
+    if (leftNext && rightNext && leftNext !== rightNext) return leftNext.localeCompare(rightNext);
+    if (leftNext) return -1;
+    if (rightNext) return 1;
+    return left.name.localeCompare(right.name, "en-AU", { sensitivity: "base" });
+  });
+}
+
 export function scheduleOccurrences(schedule: ForecastSchedule, year: number, monthIndex: number): ForecastEntry[] {
   const [startYear, startMonth, startDay] = schedule.firstDate.split("-").map(Number);
   let occurrence = new Date(startYear, startMonth - 1, startDay);

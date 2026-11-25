@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildMonthlyProjection, calculateForecastExpenseTotal, forecastOneOffEntry, forecastRetentionCutoff, ForecastEntry, isValidScheduleInactiveDate, nextScheduleOccurrence, parseAustralianDate, personalLoanRepaymentEntry, scheduleOccurrences, scheduleOccurrencesBetween, wishTransactionEntry } from "../lib/forecast";
+import { buildMonthlyProjection, calculateForecastExpenseTotal, forecastOneOffEntry, forecastRetentionCutoff, ForecastEntry, isValidScheduleInactiveDate, nextScheduleOccurrence, parseAustralianDate, personalLoanRepaymentEntry, scheduleOccurrences, scheduleOccurrencesBetween, sortSchedulesByNextOccurrence, wishTransactionEntry } from "../lib/forecast";
 import { ForecastOverride, ForecastSchedule } from "../lib/types";
 
 const entries: ForecastEntry[] = [
@@ -75,6 +75,13 @@ test("upcoming schedule helpers return the next date and exact window occurrence
   const fortnightly = schedule({ frequency: "fortnightly", firstDate: "2026-09-02" });
   assert.equal(nextScheduleOccurrence(fortnightly, "2026-09-03"), "2026-09-16");
   assert.deepEqual(scheduleOccurrencesBetween(fortnightly, "2026-09-01", "2026-09-30").map((entry) => entry.dateKey), ["2026-09-02", "2026-09-16", "2026-09-30"]);
+});
+
+test("recurring settings order schedules by next occurrence", () => {
+  const later = schedule({ id: "later", name: "Later", firstDate: "2026-09-09" });
+  const sooner = schedule({ id: "sooner", name: "Sooner", firstDate: "2026-09-02" });
+  const inactive = schedule({ id: "inactive", name: "Ended", active: false, inactiveAt: "2026-09-03", inactiveReason: "Ended" });
+  assert.deepEqual(sortSchedulesByNextOccurrence([later, inactive, sooner], "2026-09-03").map((item) => item.id), ["later", "sooner", "inactive"]);
 });
 
 test("inactive schedules retain occurrences before the inactive date", () => {
