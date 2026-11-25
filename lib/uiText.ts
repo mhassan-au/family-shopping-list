@@ -183,7 +183,7 @@ export const UI_TEXT = {
     openForecastAudit: "View forecast audit trail",
     purgeForecast: "Purge old forecast data",
     purgeForecastTitle: "Purge old forecast data?",
-    purgeForecastHelp: (cutoff: string) => `This permanently removes Forecast-only records before ${cutoff}. The current month, previous month, future Forecast data, Expenses, loans, and Wishes are not changed.`,
+    purgeForecastHelp: (cutoff: string) => `This permanently removes up to 400 inactive recurring Forecast income and expense schedules that ended before ${cutoff}. The cutoff uses UTC calendar months.`,
     purgeForecastConfirm: "Purge old Forecast data",
     purgeForecastSuccess: (count: number) => count === 0 ? "No old Forecast records needed purging." : `Purged ${count} old Forecast record${count === 1 ? "" : "s"}.`,
     purgeForecastFailed: "Could not purge old Forecast data. Please try again.",

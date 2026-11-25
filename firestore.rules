@@ -80,7 +80,7 @@ service cloud.firestore {
     match /shopping_price_history/{historyId} {
       allow read: if approvedDevice();
       allow create, update: if approvedDevice() && validShoppingPriceHistory();
-      allow delete: if bankAdminDevice() && resource.data.active == false;
+      allow delete: if false;
     }
     function validExpense() {
       let data = request.resource.data;
@@ -302,6 +302,11 @@ service cloud.firestore {
             && data.inactiveAt >= data.firstDate
             && validText(data.inactiveReason, 160));
     }
+    function pastForecastRetention(dateKey) {
+      let parts = dateKey.split('-');
+      return dateKey.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$')
+        && int(parts[0]) * 12 + int(parts[1]) < request.time.year() * 12 + request.time.month() - 2;
+    }
     match /forecast_schedules/{scheduleId} {
       allow read: if bankAdminDevice();
       allow create: if bankAdminDevice() && validForecastSchedule() && request.resource.data.active == true && request.resource.data.createdAt == request.time;
@@ -309,7 +314,8 @@ service cloud.firestore {
         && resource.data.active == true && request.resource.data.active == false
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active', 'inactiveAt', 'inactiveReason'])
         && validForecastSchedule();
-      allow delete: if bankAdminDevice() && resource.data.active == false;
+      allow delete: if bankAdminDevice() && resource.data.active == false
+        && validDateKey(resource.data.inactiveAt) && pastForecastRetention(resource.data.inactiveAt);
     }
     function validForecastOneOff() {
       let data = request.resource.data;
@@ -326,7 +332,7 @@ service cloud.firestore {
       allow read: if bankAdminDevice();
       allow create: if bankAdminDevice() && validForecastOneOff() && request.resource.data.createdAt == request.time;
       allow update: if false;
-      allow delete: if bankAdminDevice();
+      allow delete: if false;
     }
     function validForecastMonth(monthId) {
       let data = request.resource.data;
@@ -339,7 +345,7 @@ service cloud.firestore {
     match /forecast_months/{monthId} {
       allow read: if bankAdminDevice();
       allow create, update: if bankAdminDevice() && validForecastMonth(monthId) && request.resource.data.updatedAt == request.time;
-      allow delete: if bankAdminDevice();
+      allow delete: if false;
     }
     function validForecastOverride(overrideId) {
       let data = request.resource.data;
@@ -354,7 +360,7 @@ service cloud.firestore {
     match /forecast_overrides/{overrideId} {
       allow read: if bankAdminDevice();
       allow create, update: if bankAdminDevice() && validForecastOverride(overrideId) && request.resource.data.updatedAt == request.time;
-      allow delete: if bankAdminDevice();
+      allow delete: if false;
     }
     function validForecastOccurrenceOverride(occurrenceId) {
       let data = request.resource.data;
@@ -373,7 +379,7 @@ service cloud.firestore {
       allow read: if bankAdminDevice();
       allow create: if bankAdminDevice() && validForecastOccurrenceOverride(occurrenceId) && request.resource.data.createdAt == request.time;
       allow update: if false;
-      allow delete: if bankAdminDevice();
+      allow delete: if false;
     }
     function validForecastAudit() {
       let data = request.resource.data;
@@ -387,7 +393,7 @@ service cloud.firestore {
       allow read: if bankAdminDevice();
       allow create: if bankAdminDevice() && validForecastAudit() && request.resource.data.createdAt == request.time;
       allow update: if false;
-      allow delete: if bankAdminDevice();
+      allow delete: if false;
     }
     function validPersonalLoan() {
       let data = request.resource.data;

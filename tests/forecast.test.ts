@@ -104,8 +104,8 @@ test("schedule deactivation dates cannot precede the schedule start", () => {
 });
 
 test("Forecast retention keeps the current and previous calendar months", () => {
-  assert.equal(forecastRetentionCutoff(new Date(2026, 10, 12)), "2026-10-01");
-  assert.equal(forecastRetentionCutoff(new Date(2027, 0, 5)), "2026-12-01");
+  assert.equal(forecastRetentionCutoff(new Date("2026-11-12T00:00:00Z")), "2026-09-01");
+  assert.equal(forecastRetentionCutoff(new Date("2027-01-05T00:00:00Z")), "2026-11-01");
 });
 
 test("Australian recurring-date input converts to an ISO date key", () => {

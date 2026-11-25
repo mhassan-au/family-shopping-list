@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, onSnapshot, serverTimestamp, writeBatch, type DocumentReference } from "firebase/firestore";
+import { collection, doc, getDocsFromServer, limit, onSnapshot, query, serverTimestamp, where, writeBatch } from "firebase/firestore";
 import { db } from "./firebase";
 import { getCurrentUsername } from "./currentUser";
 import type { ForecastAuditRecord, ForecastDirection, ForecastFrequency, ForecastMonth, ForecastOccurrenceOverride, ForecastOneOff, ForecastOneOffKind, ForecastOverride, ForecastSchedule } from "./types";
@@ -73,26 +73,12 @@ export async function inactivateForecastSchedule(schedule: ForecastSchedule, ina
 
 export async function purgeOldForecastData(cutoffDateKey: string) {
   if (!/^\d{4}-\d{2}-01$/.test(cutoffDateKey)) throw new Error("Invalid Forecast purge cutoff");
-  const cutoffMonth = cutoffDateKey.slice(0, 7);
-  const cutoffMs = new Date(`${cutoffDateKey}T00:00:00`).getTime();
-  const [scheduleDocs, oneOffDocs, monthDocs, overrideDocs, occurrenceDocs, auditDocs] = await Promise.all([
-    getDocs(schedules), getDocs(oneOffs), getDocs(months), getDocs(overrides), getDocs(occurrenceOverrides), getDocs(audit),
-  ]);
-  const refs: DocumentReference[] = [];
-  scheduleDocs.forEach((item) => { const data = item.data() as ForecastSchedule; if (!data.active && data.inactiveAt && data.inactiveAt < cutoffDateKey) refs.push(item.ref); });
-  oneOffDocs.forEach((item) => { if (String(item.data().dateKey) < cutoffDateKey) refs.push(item.ref); });
-  monthDocs.forEach((item) => { if (item.id < cutoffMonth) refs.push(item.ref); });
-  overrideDocs.forEach((item) => { if (String(item.data().dateKey) < cutoffDateKey) refs.push(item.ref); });
-  occurrenceDocs.forEach((item) => { if (String(item.data().dateKey) < cutoffDateKey) refs.push(item.ref); });
-  auditDocs.forEach((item) => { if (Number(item.data().createdAtMs) < cutoffMs) refs.push(item.ref); });
-  if (refs.length === 0) return 0;
-  for (let offset = 0; offset < refs.length; offset += 400) {
-    const batch = writeBatch(db);
-    refs.slice(offset, offset + 400).forEach((ref) => batch.delete(ref));
-    await batch.commit();
-  }
-  const summary = writeBatch(db);
-  summary.set(doc(audit), auditData("forecast_purged", `Before ${cutoffDateKey}`, `${refs.length} records`, "Purged", "Owner confirmed Forecast retention cleanup"));
-  await summary.commit();
-  return refs.length;
+  const snapshot = await getDocsFromServer(query(schedules, where("inactiveAt", "<", cutoffDateKey), limit(400)));
+  const eligible = snapshot.docs.filter((item) => item.data().active === false);
+  if (!eligible.length) return 0;
+  const batch = writeBatch(db);
+  eligible.forEach((item) => batch.delete(item.ref));
+  batch.set(doc(audit), auditData("forecast_purged", `Before ${cutoffDateKey}`, `${eligible.length} schedules`, "Purged", "Owner confirmed cleanup of inactive recurring schedules"));
+  await batch.commit();
+  return eligible.length;
 }

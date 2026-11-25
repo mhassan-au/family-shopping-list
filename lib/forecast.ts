@@ -71,8 +71,8 @@ export function toDateKey(year: number, monthIndex: number, day: number) {
 }
 
 export function forecastRetentionCutoff(referenceDate: Date) {
-  const previousMonth = new Date(referenceDate.getFullYear(), referenceDate.getMonth() - 1, 1);
-  return toDateKey(previousMonth.getFullYear(), previousMonth.getMonth(), 1);
+  const firstRetainedMonth = new Date(Date.UTC(referenceDate.getUTCFullYear(), referenceDate.getUTCMonth() - 2, 1));
+  return toDateKey(firstRetainedMonth.getUTCFullYear(), firstRetainedMonth.getUTCMonth(), 1);
 }
 
 export function buildMonthlyProjection({ year, monthIndex, openingBalance, entries, todayKey }: {

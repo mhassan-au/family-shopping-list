@@ -52,10 +52,11 @@ test("forecast collections are owner-only and retention deletes stay owner-contr
   assert.match(rules, /'daily_expense_selection_changed', 'daily_expense_amount_locked'/);
   assert.match(ruleBlock("forecast_schedules/{scheduleId}"), /allow delete: if bankAdminDevice\(\) && resource\.data\.active == false/);
   for (const collection of ["forecast_one_offs/{entryId}", "forecast_months/{monthId}", "forecast_overrides/{overrideId}", "forecast_occurrence_overrides/{occurrenceId}", "forecast_audit/{auditId}"]) {
-    assert.match(ruleBlock(collection), /allow delete: if bankAdminDevice\(\)/);
+    assert.match(ruleBlock(collection), /allow delete: if false/);
   }
   assert.match(rules, /'recurring_occurrence_excluded'/);
   assert.match(rules, /'forecast_purged'/);
+  assert.match(ruleBlock("forecast_schedules/{scheduleId}"), /pastForecastRetention\(resource\.data\.inactiveAt\)/);
 });
 
 test("personal loan and repayment ledgers are owner-only and append-only", () => {
