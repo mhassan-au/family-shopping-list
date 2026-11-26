@@ -10,8 +10,8 @@ import { BANK_ACCOUNTS, runManualBankSync } from "@/lib/bankSync";
 import { BankAccountKey, BankSyncAuditRecord } from "@/lib/types";
 import type { ForecastAuditRecord, ForecastSchedule } from "@/lib/types";
 import { useForecast } from "@/hooks/useForecast";
-import { addForecastSchedule, editFutureForecastExpense, inactivateForecastSchedule, purgeOldForecastData } from "@/lib/forecastStore";
-import { forecastRetentionCutoff, isValidScheduleInactiveDate, nextScheduleOccurrence, scheduleOccurrencesBetween, sortSchedulesByNextOccurrence, toDateKey } from "@/lib/forecast";
+import { addForecastSchedule, editFutureForecastExpense, inactivateForecastSchedule, deleteInactiveForecastSchedule } from "@/lib/forecastStore";
+import { isValidScheduleInactiveDate, nextScheduleOccurrence, scheduleOccurrencesBetween, sortSchedulesByNextOccurrence, toDateKey } from "@/lib/forecast";
 import DeviceDebugId from "./DeviceDebugId";
 import ImprovementLog from "./ImprovementLog";
 
@@ -90,8 +90,8 @@ export default function AdminDashboard({
   const [inactiveError, setInactiveError] = useState("");
   const [savingExpenseEdit, setSavingExpenseEdit] = useState(false);
   const [showForecastAudit, setShowForecastAudit] = useState(false);
-  const [showPurgeForecast, setShowPurgeForecast] = useState(false);
-  const [purgingForecast, setPurgingForecast] = useState(false);
+  const [scheduleToDelete, setScheduleToDelete] = useState<ForecastSchedule | null>(null);
+  const [deletingSchedule, setDeletingSchedule] = useState(false);
   const [showBankSyncReport, setShowBankSyncReport] = useState(false);
   const [showImprovementLog, setShowImprovementLog] = useState(false);
   const [draggedCategoryIndex, setDraggedCategoryIndex] = useState<number | null>(null);
@@ -102,8 +102,6 @@ export default function AdminDashboard({
 
   const todayDate = new Date();
   const todayKey = toDateKey(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
-  const forecastPurgeCutoff = forecastRetentionCutoff(todayDate);
-  const forecastPurgeCutoffLabel = new Intl.DateTimeFormat("en-AU", { dateStyle: "long" }).format(new Date(`${forecastPurgeCutoff}T00:00:00`));
   const upcomingEnd = new Date(todayDate);
   upcomingEnd.setDate(upcomingEnd.getDate() + 29);
   const upcomingEndKey = toDateKey(upcomingEnd.getFullYear(), upcomingEnd.getMonth(), upcomingEnd.getDate());
@@ -272,18 +270,20 @@ export default function AdminDashboard({
       });
   }
 
-  async function handleForecastPurge() {
-    setPurgingForecast(true);
+  async function handleScheduleDelete() {
+    if (!scheduleToDelete || deletingSchedule) return;
+    setDeletingSchedule(true);
     setMessage(null);
     try {
-      const count = await purgeOldForecastData(forecastPurgeCutoff);
-      setMessage({ text: UI_TEXT.admin.purgeForecastSuccess(count), error: false });
-      setShowPurgeForecast(false);
+      await deleteInactiveForecastSchedule(scheduleToDelete);
+      closeScheduleHistory();
+      setMessage({ text: UI_TEXT.admin.deleteScheduleSuccess, error: false });
+      setScheduleToDelete(null);
     } catch (error) {
-      console.error("Purging old Forecast data failed", error);
-      setMessage({ text: UI_TEXT.admin.purgeForecastFailed, error: true });
+      console.error("Deleting inactive Forecast schedule failed", error);
+      setMessage({ text: UI_TEXT.admin.deleteScheduleFailed, error: true });
     } finally {
-      setPurgingForecast(false);
+      setDeletingSchedule(false);
     }
   }
 
@@ -365,7 +365,7 @@ export default function AdminDashboard({
             <div className="flex items-center gap-2"><h2 className="font-bold">{UI_TEXT.admin.forecastSchedules}</h2><span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-slate-900 dark:text-emerald-300">{UI_TEXT.admin.previewOnly}</span></div>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{UI_TEXT.admin.forecastSchedulesHelp}</p>
           </div>
-          <div className="flex shrink-0 gap-2"><button type="button" onClick={() => setShowPurgeForecast(true)} className="flex size-9 items-center justify-center rounded-lg border border-rose-300 bg-white/80 text-rose-700 hover:bg-white dark:border-rose-800 dark:bg-slate-900/70 dark:text-rose-300" aria-label={UI_TEXT.admin.purgeForecast} title={UI_TEXT.admin.purgeForecast}><FiTrash2 aria-hidden="true" /></button><button type="button" onClick={() => setShowForecastAudit(true)} className="flex size-9 items-center justify-center rounded-lg border border-emerald-300 bg-white/80 text-emerald-800 hover:bg-white dark:border-emerald-800 dark:bg-slate-900/70 dark:text-emerald-200" aria-label={UI_TEXT.admin.openForecastAudit} title={UI_TEXT.admin.openForecastAudit}><FiClock aria-hidden="true" /></button></div>
+          <div className="flex shrink-0 gap-2"><button type="button" onClick={() => setShowForecastAudit(true)} className="flex size-9 items-center justify-center rounded-lg border border-emerald-300 bg-white/80 text-emerald-800 hover:bg-white dark:border-emerald-800 dark:bg-slate-900/70 dark:text-emerald-200" aria-label={UI_TEXT.admin.openForecastAudit} title={UI_TEXT.admin.openForecastAudit}><FiClock aria-hidden="true" /></button></div>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-1 rounded-xl bg-white/70 p-1 dark:bg-slate-950/40">
           {(["income", "expense"] as const).map((kind) => (
@@ -509,6 +509,7 @@ export default function AdminDashboard({
                 </div>
               ))}
             </div>
+            {!historySchedule.active && <button type="button" onClick={() => setScheduleToDelete(historySchedule)} className="mt-4 rounded-lg border border-rose-300 px-3 py-2 text-rose-700 dark:text-rose-300">{UI_TEXT.admin.deleteSchedule}</button>}
             {nextEditDate && <form key={historySchedule.id} onSubmit={saveFutureExpense} className="mt-4 space-y-2 rounded-lg border p-3">
               <p className="font-semibold">{UI_TEXT.admin.editFutureExpense}</p>
               <p className="text-sm">{UI_TEXT.admin.editFutureExpenseFrom(formatUpcomingDate(nextEditDate))}</p>
@@ -522,11 +523,12 @@ export default function AdminDashboard({
         </div>
       )}
 
-      {showPurgeForecast && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-3 backdrop-blur-sm" onMouseDown={(event) => { if (!purgingForecast && event.target === event.currentTarget) setShowPurgeForecast(false); }}>
+      {scheduleToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-3 backdrop-blur-sm" onMouseDown={(event) => { if (!deletingSchedule && event.target === event.currentTarget) setScheduleToDelete(null); }}>
           <section className="w-full max-w-sm rounded-2xl bg-white p-4 shadow-2xl dark:bg-slate-900" role="alertdialog" aria-modal="true" aria-labelledby="purge-forecast-title">
-            <div className="flex items-start justify-between gap-3"><div><h2 id="purge-forecast-title" className="text-lg font-bold text-rose-700 dark:text-rose-300">{UI_TEXT.admin.purgeForecastTitle}</h2><p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{UI_TEXT.admin.purgeForecastHelp(forecastPurgeCutoffLabel)}</p></div><button type="button" onClick={() => setShowPurgeForecast(false)} disabled={purgingForecast} className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 disabled:opacity-40 dark:hover:bg-slate-800" aria-label={UI_TEXT.common.close}><FiX size={18} aria-hidden="true" /></button></div>
-            <div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setShowPurgeForecast(false)} disabled={purgingForecast} className="rounded-lg border border-slate-300 px-3 py-2 font-semibold disabled:opacity-40 dark:border-slate-700">{UI_TEXT.common.cancel}</button><button type="button" onClick={() => void handleForecastPurge()} disabled={purgingForecast} className="flex items-center justify-center gap-2 rounded-lg bg-rose-600 px-3 py-2 font-semibold text-white disabled:opacity-50"><FiTrash2 aria-hidden="true" />{purgingForecast ? UI_TEXT.common.pleaseWait : UI_TEXT.admin.purgeForecastConfirm}</button></div>
+            {message?.text === UI_TEXT.admin.deleteScheduleFailed && <p role="alert" className="mb-2 text-sm text-rose-700 dark:text-rose-300">{message.text}</p>}
+            <div className="flex items-start justify-between gap-3"><div><h2 id="purge-forecast-title" className="text-lg font-bold text-rose-700 dark:text-rose-300">{UI_TEXT.admin.deleteSchedule}</h2><p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{UI_TEXT.admin.deleteScheduleHelp(scheduleToDelete.name)}</p></div><button type="button" onClick={() => setScheduleToDelete(null)} disabled={deletingSchedule} className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 disabled:opacity-40 dark:hover:bg-slate-800" aria-label={UI_TEXT.common.close}><FiX size={18} aria-hidden="true" /></button></div>
+            <div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setScheduleToDelete(null)} disabled={deletingSchedule} className="rounded-lg border border-slate-300 px-3 py-2 font-semibold disabled:opacity-40 dark:border-slate-700">{UI_TEXT.common.cancel}</button><button type="button" onClick={() => void handleScheduleDelete()} disabled={deletingSchedule} className="flex items-center justify-center gap-2 rounded-lg bg-rose-600 px-3 py-2 font-semibold text-white disabled:opacity-50"><FiTrash2 aria-hidden="true" />{deletingSchedule ? UI_TEXT.common.pleaseWait : UI_TEXT.admin.deleteSchedule}</button></div>
           </section>
         </div>
       )}
@@ -543,7 +545,7 @@ function BankSyncReport({ records, onClose }: { records: BankSyncAuditRecord[]; 
 }
 
 function ForecastAuditPage({ records: sourceRecords, onClose }: { records: ForecastAuditRecord[]; onClose: () => void }) {
-  const titles: Record<ForecastAuditRecord["action"], string> = { opening_balance_changed: UI_TEXT.admin.auditOpeningBalance, daily_expense_adjusted: UI_TEXT.admin.auditDailyExpense, daily_expense_excluded: UI_TEXT.admin.auditExcluded, daily_expense_selection_changed: UI_TEXT.admin.auditExpenseSelection, daily_expense_amount_locked: UI_TEXT.admin.auditExpenseLocked, recurring_occurrence_excluded: UI_TEXT.admin.auditOccurrenceExcluded, schedule_created: UI_TEXT.admin.auditScheduleCreated, schedule_inactivated: UI_TEXT.admin.auditScheduleInactive, one_off_created: UI_TEXT.admin.auditOneOffCreated, forecast_purged: UI_TEXT.admin.auditForecastPurged };
+  const titles: Record<ForecastAuditRecord["action"], string> = { opening_balance_changed: UI_TEXT.admin.auditOpeningBalance, daily_expense_adjusted: UI_TEXT.admin.auditDailyExpense, daily_expense_excluded: UI_TEXT.admin.auditExcluded, daily_expense_selection_changed: UI_TEXT.admin.auditExpenseSelection, daily_expense_amount_locked: UI_TEXT.admin.auditExpenseLocked, recurring_occurrence_excluded: UI_TEXT.admin.auditOccurrenceExcluded, schedule_created: UI_TEXT.admin.auditScheduleCreated, schedule_inactivated: UI_TEXT.admin.auditScheduleInactive, one_off_created: UI_TEXT.admin.auditOneOffCreated, forecast_purged: UI_TEXT.admin.auditForecastPurged, schedule_deleted: UI_TEXT.admin.deleteScheduleSuccess };
   const records = sourceRecords.map((record) => ({ id: record.id, title: titles[record.action], subject: `${record.subject} · ${record.oldValue} → ${record.newValue}`, date: new Date(record.createdAtMs).toLocaleString("en-AU"), reason: record.reason }));
   return <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-3 backdrop-blur-sm" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section role="dialog" aria-modal="true" aria-labelledby="forecast-audit-title" className="flex max-h-[88vh] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-900"><header className="flex items-start justify-between gap-3 border-b border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950"><div><h2 id="forecast-audit-title" className="font-bold">{UI_TEXT.admin.forecastAuditTitle}</h2><p className="text-xs text-slate-600 dark:text-slate-300">{UI_TEXT.admin.forecastAuditHelp}</p></div><button type="button" onClick={onClose} className="flex size-9 shrink-0 items-center justify-center rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900" aria-label={UI_TEXT.common.close}><FiX aria-hidden="true" /></button></header><div className="overflow-y-auto p-4"><div className="mb-3 flex items-center justify-between"><p className="text-sm font-semibold">{UI_TEXT.admin.auditAll}</p><span className="rounded-full bg-slate-200 px-2 py-1 text-xs font-bold dark:bg-slate-800">{records.length}</span></div>{records.length === 0 ? <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500 dark:bg-slate-800">{UI_TEXT.admin.auditEmpty}</p> : <ol className="space-y-3">{records.map((record) => <li key={record.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"><div className="flex items-start gap-3"><span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"><FiClock size={15} aria-hidden="true" /></span><div className="min-w-0"><p className="font-semibold">{record.title}</p><p className="mt-0.5 text-sm text-slate-700 dark:text-slate-200">{record.subject}</p><p className="mt-2 text-xs text-slate-500">{UI_TEXT.admin.auditByOwner} · {record.date}</p><p className="mt-1 rounded-lg bg-slate-50 px-2 py-1.5 text-xs dark:bg-slate-800">{UI_TEXT.admin.auditReason(record.reason)}</p></div></div></li>)}</ol>}</div></section></div>;
 }

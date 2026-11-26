@@ -1,4 +1,4 @@
-import { collection, doc, getDocsFromServer, limit, onSnapshot, query, serverTimestamp, where, writeBatch } from "firebase/firestore";
+import { collection, doc, onSnapshot, serverTimestamp, writeBatch } from "firebase/firestore";
 import { db } from "./firebase";
 import { getCurrentUsername } from "./currentUser";
 import type { ForecastAuditRecord, ForecastDirection, ForecastFrequency, ForecastMonth, ForecastOccurrenceOverride, ForecastOneOff, ForecastOneOffKind, ForecastOverride, ForecastSchedule } from "./types";
@@ -94,14 +94,10 @@ export async function editFutureForecastExpense(schedule: ForecastSchedule, name
   await batch.commit();
 }
 
-export async function purgeOldForecastData(cutoffDateKey: string) {
-  if (!/^\d{4}-\d{2}-01$/.test(cutoffDateKey)) throw new Error("Invalid Forecast purge cutoff");
-  const snapshot = await getDocsFromServer(query(schedules, where("inactiveAt", "<", cutoffDateKey), limit(400)));
-  const eligible = snapshot.docs.filter((item) => item.data().active === false);
-  if (!eligible.length) return 0;
+export async function deleteInactiveForecastSchedule(schedule: ForecastSchedule) {
+  if (schedule.active !== false) throw new Error("Only inactive schedules can be deleted");
   const batch = writeBatch(db);
-  eligible.forEach((item) => batch.delete(item.ref));
-  batch.set(doc(audit), auditData("forecast_purged", `Before ${cutoffDateKey}`, `${eligible.length} schedules`, "Purged", "Owner confirmed cleanup of inactive recurring schedules"));
+  batch.delete(doc(schedules, schedule.id));
+  batch.set(doc(audit), auditData("schedule_deleted", schedule.name, "Inactive", "Deleted", "Owner confirmed schedule deletion"));
   await batch.commit();
-  return eligible.length;
 }

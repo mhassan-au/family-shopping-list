@@ -39,7 +39,7 @@ test("bank collections require bank-admin devices", () => {
   assert.match(ruleBlock("bank_sync_audit/{auditId}"), /request\.resource\.data\.occurredAt == request\.time/);
 });
 
-test("forecast collections are owner-only and retention deletes stay owner-controlled", () => {
+test("forecast collections are owner-only and inactive schedule deletes stay owner-controlled", () => {
   for (const collection of ["forecast_schedules/{scheduleId}", "forecast_one_offs/{entryId}", "forecast_months/{monthId}", "forecast_overrides/{overrideId}", "forecast_occurrence_overrides/{occurrenceId}", "forecast_audit/{auditId}"]) assert.match(ruleBlock(collection), /bankAdminDevice\(\)/);
   assert.match(ruleBlock("forecast_one_offs/{entryId}"), /allow update: if false/);
   assert.match(ruleBlock("forecast_audit/{auditId}"), /allow update: if false/);
@@ -56,7 +56,8 @@ test("forecast collections are owner-only and retention deletes stay owner-contr
   }
   assert.match(rules, /'recurring_occurrence_excluded'/);
   assert.match(rules, /'forecast_purged'/);
-  assert.match(ruleBlock("forecast_schedules/{scheduleId}"), /pastForecastRetention\(resource\.data\.inactiveAt\)/);
+  assert.match(rules, /'schedule_deleted'/);
+  assert.match(ruleBlock("forecast_schedules/{scheduleId}"), /allow delete: if bankAdminDevice\(\) && resource\.data\.active == false;/);
 });
 
 test("personal loan and repayment ledgers are owner-only and append-only", () => {

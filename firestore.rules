@@ -304,11 +304,6 @@ service cloud.firestore {
             && data.inactiveAt >= data.firstDate
             && validText(data.inactiveReason, 160));
     }
-    function pastForecastRetention(dateKey) {
-      let parts = dateKey.split('-');
-      return dateKey.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$')
-        && int(parts[0]) * 12 + int(parts[1]) < request.time.year() * 12 + request.time.month() - 2;
-    }
     match /forecast_schedules/{scheduleId} {
       allow read: if bankAdminDevice();
       allow create: if bankAdminDevice() && validForecastSchedule() && request.resource.data.active == true && request.resource.data.createdAt == request.time;
@@ -316,8 +311,7 @@ service cloud.firestore {
         && resource.data.active == true && request.resource.data.active == false
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active', 'inactiveAt', 'inactiveReason'])
         && validForecastSchedule();
-      allow delete: if bankAdminDevice() && resource.data.active == false
-        && validDateKey(resource.data.inactiveAt) && pastForecastRetention(resource.data.inactiveAt);
+      allow delete: if bankAdminDevice() && resource.data.active == false;
     }
     function validForecastOneOff() {
       let data = request.resource.data;
@@ -387,7 +381,7 @@ service cloud.firestore {
       let data = request.resource.data;
       return data.keys().hasOnly(['action', 'subject', 'oldValue', 'newValue', 'reason', 'createdAt', 'createdAtMs', 'createdBy'])
         && data.keys().hasAll(['action', 'subject', 'oldValue', 'newValue', 'reason', 'createdAt', 'createdAtMs', 'createdBy'])
-        && data.action in ['opening_balance_changed', 'daily_expense_adjusted', 'daily_expense_excluded', 'daily_expense_selection_changed', 'daily_expense_amount_locked', 'recurring_occurrence_excluded', 'schedule_created', 'schedule_inactivated', 'one_off_created', 'forecast_purged']
+        && data.action in ['opening_balance_changed', 'daily_expense_adjusted', 'daily_expense_excluded', 'daily_expense_selection_changed', 'daily_expense_amount_locked', 'recurring_occurrence_excluded', 'schedule_created', 'schedule_inactivated', 'one_off_created', 'forecast_purged', 'schedule_deleted']
         && validText(data.subject, 120) && validOptionalText(data.oldValue, 120) && validOptionalText(data.newValue, 120)
         && validText(data.reason, 160) && data.createdAt is timestamp && data.createdAtMs is number && validText(data.createdBy, 40);
     }

@@ -29,7 +29,7 @@ After publishing Rules that add recurring occurrence exclusions, exclude one rec
 
 After publishing Rules that validate effective-dated schedule deactivation, deactivate one recurring income and one recurring expense using past or future dates. Confirm occurrences before each effective date remain, occurrences on and after it disappear, the audit trail records the chosen date, and a date before the schedule start is rejected.
 
-Verify the inactive Forecast purge in an isolated test project. Check that the cutoff keeps the current and two preceding full UTC calendar months, contributor devices cannot delete schedules, and only eligible inactive schedules are deleted.
+Verify individual Forecast schedule deletion in an isolated test project. Confirm that owner devices can delete inactive income and expense schedules and that attempted deletes of active schedules or deletes by contributors are denied.
 
 After publishing Rules that add signed Forecast adjustments, create a `100` Adjustment and confirm the projected balance increases by $100. Create a `-100` Adjustment and confirm it decreases by $100. Confirm ordinary one-off income and expense entries still reject negative values.
 

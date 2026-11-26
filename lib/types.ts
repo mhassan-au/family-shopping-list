@@ -147,7 +147,7 @@ export interface ForecastOccurrenceOverride {
 
 export interface ForecastAuditRecord {
   id: string;
-  action: "opening_balance_changed" | "daily_expense_adjusted" | "daily_expense_excluded" | "daily_expense_selection_changed" | "daily_expense_amount_locked" | "recurring_occurrence_excluded" | "schedule_created" | "schedule_inactivated" | "one_off_created" | "forecast_purged";
+  action: "opening_balance_changed" | "daily_expense_adjusted" | "daily_expense_excluded" | "daily_expense_selection_changed" | "daily_expense_amount_locked" | "recurring_occurrence_excluded" | "schedule_created" | "schedule_inactivated" | "one_off_created" | "forecast_purged" | "schedule_deleted";
   subject: string;
   oldValue: string;
   newValue: string;

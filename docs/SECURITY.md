@@ -49,7 +49,7 @@
 - Shared shop and category configuration can be changed only by a manually approved bank-admin device.
 - Production responses include clickjacking, MIME-sniffing, referrer, transport, and browser-permission protections.
 - Unknown collections and notification requests are denied.
-- Forecast collections require the owner `bank_admin_devices` boundary. One-off entries, bounded non-zero signed adjustments, single-occurrence exclusions, and audit events are immutable. The owner-only purge can delete inactive recurring schedules that ended before the current and two preceding full UTC calendar months. Transaction selections and manual daily-total locks are audited, and source Expenses remain immutable.
+- Forecast collections require the owner `bank_admin_devices` boundary. One-off entries, bounded non-zero signed adjustments, single-occurrence exclusions, and audit events are immutable. Approved owner devices can delete individual inactive recurring schedules. Transaction selections and manual daily-total locks are audited, and source Expenses remain immutable.
 - Personal Loan and repayment collections require the owner `bank_admin_devices` boundary and are append-only. Contributors cannot read loan balances or repayment history.
 - Wish List collections require the owner `bank_admin_devices` boundary. Wishes cannot be deleted, transaction history is append-only, and Rules bind every balance update to its matching atomic transaction while preventing over-withdrawal.
 - Improvement Log records require the owner `bank_admin_devices` boundary. Only unreviewed Inbox entries may be edited or deleted; completed/archived history is immutable and requires a resolution summary.

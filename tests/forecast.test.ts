@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildMonthlyProjection, calculateForecastExpenseTotal, forecastOneOffEntry, forecastRetentionCutoff, ForecastEntry, isValidScheduleInactiveDate, nextScheduleOccurrence, parseAustralianDate, personalLoanRepaymentEntry, scheduleOccurrences, scheduleOccurrencesBetween, sortSchedulesByNextOccurrence, wishTransactionEntry } from "../lib/forecast";
+import { buildMonthlyProjection, calculateForecastExpenseTotal, forecastOneOffEntry, ForecastEntry, isValidScheduleInactiveDate, nextScheduleOccurrence, parseAustralianDate, personalLoanRepaymentEntry, scheduleOccurrences, scheduleOccurrencesBetween, sortSchedulesByNextOccurrence, wishTransactionEntry } from "../lib/forecast";
 import { ForecastOverride, ForecastSchedule } from "../lib/types";
 
 const entries: ForecastEntry[] = [
@@ -109,11 +109,6 @@ test("schedule deactivation dates cannot precede the schedule start", () => {
   assert.equal(isValidScheduleInactiveDate(recurring, "2026-09-02"), true);
   assert.equal(isValidScheduleInactiveDate(recurring, "2027-01-01"), true);
   assert.equal(isValidScheduleInactiveDate(recurring, "not-a-date"), false);
-});
-
-test("Forecast retention keeps the current and previous calendar months", () => {
-  assert.equal(forecastRetentionCutoff(new Date("2026-11-12T00:00:00Z")), "2026-09-01");
-  assert.equal(forecastRetentionCutoff(new Date("2027-01-05T00:00:00Z")), "2026-11-01");
 });
 
 test("Australian recurring-date input converts to an ISO date key", () => {
