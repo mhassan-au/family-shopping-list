@@ -286,13 +286,15 @@ service cloud.firestore {
     }
     function validForecastSchedule() {
       let data = request.resource.data;
-      return data.keys().hasOnly(['kind', 'name', 'amount', 'frequency', 'firstDate', 'active', 'createdAt', 'createdAtMs', 'createdBy', 'inactiveAt', 'inactiveReason'])
+      return data.keys().hasOnly(['kind', 'name', 'amount', 'frequency', 'firstDate', 'active', 'createdAt', 'createdAtMs', 'createdBy', 'anchorDay', 'inactiveAt', 'inactiveReason'])
         && data.keys().hasAll(['kind', 'name', 'amount', 'frequency', 'firstDate', 'active', 'createdAt', 'createdAtMs', 'createdBy'])
         && data.kind in ['income', 'expense']
         && validText(data.name, 80)
         && validForecastAmount(data.amount) && data.amount > 0
-        && data.frequency in ['weekly', 'fortnightly', 'monthly', 'quarterly', 'yearly']
+        && data.frequency in ['weekly', 'fortnightly', 'monthly', 'bimonthly', 'quarterly', 'yearly']
+        && (data.frequency != 'bimonthly' || data.kind == 'expense')
         && validDateKey(data.firstDate)
+        && (!('anchorDay' in data) || (data.anchorDay is int && data.anchorDay >= 1 && data.anchorDay <= 31))
         && data.active is bool
         && data.createdAt is timestamp && data.createdAtMs is number
         && validText(data.createdBy, 40)

@@ -10,7 +10,7 @@ import { BANK_ACCOUNTS, runManualBankSync } from "@/lib/bankSync";
 import { BankAccountKey, BankSyncAuditRecord } from "@/lib/types";
 import type { ForecastAuditRecord, ForecastSchedule } from "@/lib/types";
 import { useForecast } from "@/hooks/useForecast";
-import { addForecastSchedule, inactivateForecastSchedule, purgeOldForecastData } from "@/lib/forecastStore";
+import { addForecastSchedule, editFutureForecastExpense, inactivateForecastSchedule, purgeOldForecastData } from "@/lib/forecastStore";
 import { forecastRetentionCutoff, isValidScheduleInactiveDate, nextScheduleOccurrence, scheduleOccurrencesBetween, sortSchedulesByNextOccurrence, toDateKey } from "@/lib/forecast";
 import DeviceDebugId from "./DeviceDebugId";
 import ImprovementLog from "./ImprovementLog";
@@ -88,6 +88,7 @@ export default function AdminDashboard({
   const [inactiveReason, setInactiveReason] = useState("");
   const [inactiveDate, setInactiveDate] = useState("");
   const [inactiveError, setInactiveError] = useState("");
+  const [savingExpenseEdit, setSavingExpenseEdit] = useState(false);
   const [showForecastAudit, setShowForecastAudit] = useState(false);
   const [showPurgeForecast, setShowPurgeForecast] = useState(false);
   const [purgingForecast, setPurgingForecast] = useState(false);
@@ -295,6 +296,30 @@ export default function AdminDashboard({
         schedule.name.toLocaleLowerCase() === historySchedule.name.toLocaleLowerCase(),
       )
     : [];
+  const tomorrow = new Date(todayDate);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const nextEditDate = historySchedule?.active && historySchedule.kind === "expense"
+    ? nextScheduleOccurrence(historySchedule, toDateKey(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate()))
+    : null;
+
+  async function saveFutureExpense(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!historySchedule || !nextEditDate || savingExpenseEdit) return;
+    const fields = new FormData(event.currentTarget);
+    const name = String(fields.get("description")).trim();
+    const amount = Number(fields.get("amount"));
+    if (name === historySchedule.name && amount === historySchedule.amount) return;
+    setSavingExpenseEdit(true);
+    setInactiveError("");
+    try {
+      await editFutureForecastExpense(historySchedule, name, amount, nextEditDate);
+      closeScheduleHistory();
+    } catch {
+      setInactiveError(UI_TEXT.admin.saveFailed);
+    } finally {
+      setSavingExpenseEdit(false);
+    }
+  }
 
   return (
     <main className="mx-auto w-full max-w-md p-4 pb-10 sm:p-5">
@@ -460,7 +485,7 @@ export default function AdminDashboard({
             <div className="mt-4 space-y-3">
               <label className="block text-sm font-semibold">{UI_TEXT.admin.scheduleName}<input value={scheduleName} onChange={(event) => setScheduleName(event.target.value)} className="input mt-1 w-full px-3 py-2" placeholder={scheduleDialog === "income" ? UI_TEXT.admin.incomePlaceholder : UI_TEXT.admin.expensePlaceholder} maxLength={40} required autoFocus /></label>
               <label className="block text-sm font-semibold">{UI_TEXT.admin.scheduleAmount}<input value={scheduleAmount} onChange={(event) => setScheduleAmount(event.target.value)} className="input mt-1 w-full px-3 py-2" type="number" min="0.01" step="0.01" inputMode="decimal" placeholder="0.00" required /></label>
-              <label className="block text-sm font-semibold">{UI_TEXT.admin.frequency}<select value={scheduleFrequency} onChange={(event) => setScheduleFrequency(event.target.value as MockSchedule["frequency"])} className="input mt-1 w-full px-3 py-2"><option value="weekly">{UI_TEXT.admin.weekly}</option><option value="fortnightly">{UI_TEXT.admin.fortnightly}</option><option value="monthly">{UI_TEXT.admin.monthly}</option><option value="quarterly">{UI_TEXT.admin.quarterly}</option><option value="yearly">{UI_TEXT.admin.yearly}</option></select></label>
+              <label className="block text-sm font-semibold">{UI_TEXT.admin.frequency}<select value={scheduleFrequency} onChange={(event) => setScheduleFrequency(event.target.value as MockSchedule["frequency"])} className="input mt-1 w-full px-3 py-2"><option value="weekly">{UI_TEXT.admin.weekly}</option><option value="fortnightly">{UI_TEXT.admin.fortnightly}</option><option value="monthly">{UI_TEXT.admin.monthly}</option>{scheduleDialog === "expense" && <option value="bimonthly">{UI_TEXT.admin.bimonthly}</option>}<option value="quarterly">{UI_TEXT.admin.quarterly}</option><option value="yearly">{UI_TEXT.admin.yearly}</option></select></label>
               <label className="block text-sm font-semibold">{UI_TEXT.admin.firstDate}<input value={scheduleDate} onChange={(event) => setScheduleDate(event.target.value)} className="input mt-1 w-full px-3 py-2" type="date" lang="en-AU" required /></label>
               <label className="block text-sm font-semibold">{UI_TEXT.forecast.changeReason}<textarea value={scheduleReason} onChange={(event) => setScheduleReason(event.target.value)} className="input mt-1 w-full resize-none px-3 py-2" rows={2} maxLength={160} required /></label>
             </div>
@@ -472,7 +497,7 @@ export default function AdminDashboard({
 
       {historySchedule && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-3 backdrop-blur-sm" onMouseDown={(event) => { if (event.target === event.currentTarget) closeScheduleHistory(); }}>
-          <section className="w-full max-w-sm rounded-2xl bg-white p-4 shadow-2xl dark:bg-slate-900" role="dialog" aria-modal="true" aria-labelledby="schedule-history-title">
+          <section className="max-h-[90dvh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl dark:bg-slate-900" role="dialog" aria-modal="true" aria-labelledby="schedule-history-title">
             <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-wide text-violet-600">{UI_TEXT.admin.previewOnly}</p><h2 id="schedule-history-title" className="text-lg font-bold">{historySchedule.name}</h2><p className="text-sm text-slate-500 dark:text-slate-400">{UI_TEXT.admin.scheduleHistoryHelp}</p></div><button type="button" onClick={closeScheduleHistory} className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label={UI_TEXT.common.close}><FiX size={18} aria-hidden="true" /></button></div>
             <div className="mt-4 space-y-2">
               {scheduleHistory.map((record) => (
@@ -484,6 +509,13 @@ export default function AdminDashboard({
                 </div>
               ))}
             </div>
+            {nextEditDate && <form key={historySchedule.id} onSubmit={saveFutureExpense} className="mt-4 space-y-2 rounded-lg border p-3">
+              <p className="font-semibold">{UI_TEXT.admin.editFutureExpense}</p>
+              <p className="text-sm">{UI_TEXT.admin.editFutureExpenseFrom(formatUpcomingDate(nextEditDate))}</p>
+              <label className="block">{UI_TEXT.expenses.description}<input name="description" className="input w-full" defaultValue={historySchedule.name} maxLength={80} required /></label>
+              <label className="block">{UI_TEXT.admin.scheduleAmount}<input name="amount" className="input w-full" type="number" min="0.01" max="9999999.99" step="0.01" defaultValue={historySchedule.amount} required /></label>
+              <button type="submit" disabled={savingExpenseEdit} className="rounded-lg bg-violet-600 px-3 py-2 text-white">{savingExpenseEdit ? UI_TEXT.common.pleaseWait : UI_TEXT.common.save}</button>
+            </form>}
             {historySchedule.active && <div className="mt-4 space-y-3"><label className="block text-sm font-semibold">{UI_TEXT.admin.inactiveEffectiveDate}<input type="date" lang="en-AU" min={historySchedule.firstDate} value={inactiveDate} onChange={(event) => { setInactiveDate(event.target.value); setInactiveError(""); }} className="input mt-1 w-full px-3 py-2" required /></label><p className="text-xs text-slate-500 dark:text-slate-400">{UI_TEXT.admin.inactiveEffectiveDateHelp}</p><label className="block text-sm font-semibold">{UI_TEXT.admin.inactiveReason}<textarea value={inactiveReason} onChange={(event) => { setInactiveReason(event.target.value); setInactiveError(""); }} rows={2} maxLength={160} placeholder={UI_TEXT.admin.inactiveReasonPlaceholder} className="input mt-1 w-full resize-none px-3 py-2" required /></label>{inactiveError && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-200" role="alert">{inactiveError}</p>}</div>}
             <div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={closeScheduleHistory} className="rounded-lg border border-slate-300 px-3 py-2 font-semibold dark:border-slate-700">{UI_TEXT.common.close}</button><button type="button" onClick={() => makeMockScheduleInactive(historySchedule.id)} disabled={!historySchedule.active || !inactiveReason.trim() || !isValidScheduleInactiveDate(historySchedule, inactiveDate)} className="rounded-lg bg-slate-700 px-3 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40 dark:bg-slate-600">{historySchedule.active ? UI_TEXT.admin.makeInactive : UI_TEXT.admin.alreadyInactive}</button></div>
           </section>

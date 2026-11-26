@@ -71,6 +71,14 @@ test("quarterly schedules recur every three calendar months", () => {
   assert.deepEqual(scheduleOccurrences(schedule({ frequency: "quarterly", firstDate: "2026-01-31" }), 2026, 6).map((entry) => entry.dateKey), ["2026-07-31"]);
 });
 
+test("editing a bimonthly expense at a short-month occurrence preserves its history and anchor", () => {
+  const original = schedule({ kind: "expense", firstDate: "2026-12-31", frequency: "bimonthly", active: false, inactiveAt: "2027-02-28" });
+  const revised = schedule({ kind: "expense", firstDate: "2027-02-28", frequency: "bimonthly", anchorDay: 31, amount: 150, name: "New amount" });
+  assert.deepEqual(scheduleOccurrencesBetween(original, "2026-12-01", "2027-06-30").map(({ dateKey, amount }) => [dateKey, amount]), [["2026-12-31", 100]]);
+  assert.deepEqual(scheduleOccurrencesBetween(revised, "2026-12-01", "2027-06-30").map(({ dateKey, amount }) => [dateKey, amount]), [["2027-02-28", 150], ["2027-04-30", 150], ["2027-06-30", 150]]);
+  assert.equal(nextScheduleOccurrence(revised, "2027-07-01"), "2027-08-31");
+});
+
 test("upcoming schedule helpers return the next date and exact window occurrences", () => {
   const fortnightly = schedule({ frequency: "fortnightly", firstDate: "2026-09-02" });
   assert.equal(nextScheduleOccurrence(fortnightly, "2026-09-03"), "2026-09-16");

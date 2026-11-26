@@ -45,7 +45,7 @@ test("forecast collections are owner-only and retention deletes stay owner-contr
   assert.match(ruleBlock("forecast_audit/{auditId}"), /allow update: if false/);
   assert.match(ruleBlock("forecast_schedules/{scheduleId}"), /resource\.data\.active == true && request\.resource\.data\.active == false/);
   assert.match(rules, /data\.inactiveAt >= data\.firstDate/);
-  assert.match(rules, /data\.frequency in \['weekly', 'fortnightly', 'monthly', 'quarterly', 'yearly'\]/);
+  assert.match(rules, /data\.frequency in \['weekly', 'fortnightly', 'monthly', 'bimonthly', 'quarterly', 'yearly'\]/);
   assert.match(rules, /data\.kind in \['income', 'expense', 'adjustment'\]/);
   assert.match(rules, /data\.amount != 0/);
   assert.match(rules, /data\.excludedExpenseIds is list && data\.excludedExpenseIds\.size\(\) <= 200/);

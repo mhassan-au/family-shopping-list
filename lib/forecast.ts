@@ -144,19 +144,19 @@ function nextOccurrence(date: Date, frequency: ForecastFrequency, preferredDay: 
     next.setDate(next.getDate() + (frequency === "weekly" ? 7 : 14));
     return next;
   }
-  return addCalendarMonths(date, frequency === "monthly" ? 1 : frequency === "quarterly" ? 3 : 12, preferredDay);
+  return addCalendarMonths(date, frequency === "monthly" ? 1 : frequency === "bimonthly" ? 2 : frequency === "quarterly" ? 3 : 12, preferredDay);
 }
 
 export function scheduleOccurrencesBetween(schedule: ForecastSchedule, startDateKey: string, endDateKey: string): ForecastEntry[] {
   const [startYear, startMonth, startDay] = schedule.firstDate.split("-").map(Number);
   let occurrence = new Date(startYear, startMonth - 1, startDay);
-  while (toDateKey(occurrence.getFullYear(), occurrence.getMonth(), occurrence.getDate()) < startDateKey) occurrence = nextOccurrence(occurrence, schedule.frequency, startDay);
+  while (toDateKey(occurrence.getFullYear(), occurrence.getMonth(), occurrence.getDate()) < startDateKey) occurrence = nextOccurrence(occurrence, schedule.frequency, schedule.anchorDay ?? startDay);
   const entries: ForecastEntry[] = [];
   while (true) {
     const dateKey = toDateKey(occurrence.getFullYear(), occurrence.getMonth(), occurrence.getDate());
     if (dateKey > endDateKey) break;
     if (schedule.active || !schedule.inactiveAt || dateKey < schedule.inactiveAt) entries.push({ id: `${schedule.id}-${dateKey}`, scheduleId: schedule.id, dateKey, description: schedule.name, amount: schedule.amount, direction: schedule.kind, source: "recurring" });
-    occurrence = nextOccurrence(occurrence, schedule.frequency, startDay);
+    occurrence = nextOccurrence(occurrence, schedule.frequency, schedule.anchorDay ?? startDay);
   }
   return entries;
 }
@@ -164,7 +164,7 @@ export function scheduleOccurrencesBetween(schedule: ForecastSchedule, startDate
 export function nextScheduleOccurrence(schedule: ForecastSchedule, fromDateKey: string) {
   const [startYear, startMonth, startDay] = schedule.firstDate.split("-").map(Number);
   let occurrence = new Date(startYear, startMonth - 1, startDay);
-  while (toDateKey(occurrence.getFullYear(), occurrence.getMonth(), occurrence.getDate()) < fromDateKey) occurrence = nextOccurrence(occurrence, schedule.frequency, startDay);
+  while (toDateKey(occurrence.getFullYear(), occurrence.getMonth(), occurrence.getDate()) < fromDateKey) occurrence = nextOccurrence(occurrence, schedule.frequency, schedule.anchorDay ?? startDay);
   const dateKey = toDateKey(occurrence.getFullYear(), occurrence.getMonth(), occurrence.getDate());
   return schedule.active || !schedule.inactiveAt || dateKey < schedule.inactiveAt ? dateKey : null;
 }
@@ -185,12 +185,12 @@ export function scheduleOccurrences(schedule: ForecastSchedule, year: number, mo
   let occurrence = new Date(startYear, startMonth - 1, startDay);
   const monthStart = new Date(year, monthIndex, 1);
   const monthEnd = new Date(year, monthIndex + 1, 0);
-  while (occurrence < monthStart) occurrence = nextOccurrence(occurrence, schedule.frequency, startDay);
+  while (occurrence < monthStart) occurrence = nextOccurrence(occurrence, schedule.frequency, schedule.anchorDay ?? startDay);
   const entries: ForecastEntry[] = [];
   while (occurrence <= monthEnd) {
     const dateKey = toDateKey(occurrence.getFullYear(), occurrence.getMonth(), occurrence.getDate());
     if (schedule.active || !schedule.inactiveAt || dateKey < schedule.inactiveAt) entries.push({ id: `${schedule.id}-${dateKey}`, scheduleId: schedule.id, dateKey, description: schedule.name, amount: schedule.amount, direction: schedule.kind, source: "recurring" });
-    occurrence = nextOccurrence(occurrence, schedule.frequency, startDay);
+    occurrence = nextOccurrence(occurrence, schedule.frequency, schedule.anchorDay ?? startDay);
   }
   return entries;
 }

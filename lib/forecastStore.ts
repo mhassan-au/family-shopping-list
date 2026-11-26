@@ -2,7 +2,7 @@ import { collection, doc, getDocsFromServer, limit, onSnapshot, query, serverTim
 import { db } from "./firebase";
 import { getCurrentUsername } from "./currentUser";
 import type { ForecastAuditRecord, ForecastDirection, ForecastFrequency, ForecastMonth, ForecastOccurrenceOverride, ForecastOneOff, ForecastOneOffKind, ForecastOverride, ForecastSchedule } from "./types";
-import { isValidScheduleInactiveDate } from "./forecast";
+import { isValidScheduleInactiveDate, nextScheduleOccurrence, toDateKey } from "./forecast";
 
 const schedules = collection(db, "forecast_schedules");
 const oneOffs = collection(db, "forecast_one_offs");
@@ -68,6 +68,29 @@ export async function inactivateForecastSchedule(schedule: ForecastSchedule, ina
   const batch = writeBatch(db);
   batch.update(doc(schedules, schedule.id), { active: false, inactiveAt, inactiveReason: reason.trim() });
   batch.set(doc(audit), auditData("schedule_inactivated", schedule.name, "Active", `Inactive from ${inactiveAt}`, reason));
+  await batch.commit();
+}
+
+export async function editFutureForecastExpense(schedule: ForecastSchedule, name: string, amount: number, effectiveDate: string) {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const from = toDateKey(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate());
+  name = name.trim();
+  if (!schedule.active || schedule.kind !== "expense" || !name || name.length > 80 ||
+      !Number.isFinite(amount) || amount <= 0 || amount > 9999999.99 ||
+      nextScheduleOccurrence(schedule, from) !== effectiveDate) {
+    throw new Error("Invalid future expense edit");
+  }
+  const batch = writeBatch(db);
+  const reason = "Edited future recurring expense";
+  batch.update(doc(schedules, schedule.id), { active: false, inactiveAt: effectiveDate, inactiveReason: reason });
+  batch.set(doc(schedules), {
+    kind: schedule.kind, name, amount, frequency: schedule.frequency,
+    firstDate: effectiveDate, anchorDay: schedule.anchorDay ?? Number(schedule.firstDate.slice(-2)),
+    active: true, createdAt: serverTimestamp(), createdAtMs: Date.now(), createdBy: getCurrentUsername(),
+  });
+  batch.set(doc(audit), auditData("schedule_inactivated", schedule.name, "Active", `Inactive from ${effectiveDate}`, reason));
+  batch.set(doc(audit), auditData("schedule_created", name, "Not set", `${schedule.kind}:${amount}:${schedule.frequency}`, reason));
   await batch.commit();
 }
 
